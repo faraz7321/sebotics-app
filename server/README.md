@@ -39,7 +39,7 @@ To create an **admin** user in the initial version:
 2. Update the user role in Postgres to `ADMIN`
 
 ## Autoxing Authentication (CSP API)
-Sebotics authenticates with Autoxing using the CSP API authentication flow (end users never do). The server creates an MD5 signature from `appId + timestamp + appSecret`, sends it to `/auth/v1.1/token`, and caches the returned access token until it expires.
+Sebotics authenticates with Autoxing using the CSP API authentication flow (end users never do). This is **service-to-service auth** that is separate from end-user auth. The server creates an MD5 signature from `appId + timestamp + appSecret`, sends it to `/auth/v1.1/token`, and caches the returned access token until it expires.
 
 Required env vars (see `.env.example`):
 - `AUTOXING_APP_ID`
@@ -47,6 +47,10 @@ Required env vars (see `.env.example`):
 - `AUTOXING_APP_CODE` (sent as the `Authorization` header)
 - `AUTOXING_BASE_URL` (defaults to `https://api.autoxing.com`)
 - `AUTOXING_TIMESTAMP_UNIT` (`ms` default, set to `s` if your tenant expects seconds)
+
+## Auth separation (summary)
+- **End user → Sebotics:** normal user auth (`/api/auth/register`, `/api/auth/login`) with JWTs issued by Sebotics.
+- **Sebotics → Autoxing:** server-to-server CSP API auth using `AUTOXING_*` credentials, never exposed to end users.
 
 ## Autoxing documentation
 

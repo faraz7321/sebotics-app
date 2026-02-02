@@ -2,6 +2,8 @@
 
 A single codebase client application for iOS, Android, and Windows that lets end users operate robots assigned to their account by Sebotics.
 
+Auth separation: end users authenticate only with Sebotics. The app never authenticates directly with Autoxing.
+
 ## Scope
 
 ### Operator experience
@@ -18,4 +20,3 @@ A single codebase client application for iOS, Android, and Windows that lets end
 - Shared TypeScript domain logic, API clients, and UI primitives
 
 ## Status
-

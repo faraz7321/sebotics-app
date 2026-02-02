@@ -8,7 +8,7 @@ This repo contains two **separate projects**:
 
 Each project has its own README and setup steps.
 
-Auth chain: **End user ↔ Sebotics ↔ Autoxing** (Sebotics authenticates with Autoxing; end users only authenticate with Sebotics).
+Auth chain: **End user ↔ Sebotics ↔ Autoxing** (auth is separated: end users authenticate with Sebotics; Sebotics authenticates with Autoxing).
 
 ## Project Readmes
 - Client app: `app/README.md`
