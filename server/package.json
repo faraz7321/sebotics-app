@@ -17,6 +17,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.9",
+    "@nestjs/swagger": "^7.4.2",
     "@prisma/client": "^5.22.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -29,6 +30,8 @@
   },
   "devDependencies": {
     "@autoxing/robot-js-sdk": "^1.0.138",
+    "@nestjs/cli": "^11.0.16",
+    "@nestjs/schematics": "^11.0.9",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.10.2",
     "@types/passport-jwt": "^4.0.1",
