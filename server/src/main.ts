@@ -45,6 +45,7 @@ async function bootstrap() {
   console.log(
     `Application is running on: http://localhost:${process.env.PORT ?? 4000}`,
   );
+  console.log(`Swagger UI available at: http://localhost:${process.env.PORT ?? 4000}/api`);
 }
 
 bootstrap();
