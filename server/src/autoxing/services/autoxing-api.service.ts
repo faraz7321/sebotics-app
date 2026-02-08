@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -12,7 +13,10 @@ export class AutoxingApiService {
   private readonly logger = new Logger(AutoxingApiService.name);
   private readonly baseUrl = (process.env.AUTOXING_BASE_URL ?? 'https://api.autoxing.com').replace(/\/$/, '');
 
-  constructor(private readonly autoxingAuthService: AutoxingAuthService) {}
+  constructor(
+    @Inject(AutoxingAuthService)
+    private readonly autoxingAuthService: AutoxingAuthService,
+  ) {}
 
   async get<T = unknown>(path: string, options?: AutoxingRequestOptions) {
     return this.requestJson<T>('GET', path, options);

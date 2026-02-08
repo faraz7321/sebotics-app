@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   AutoxingAreaListRequestDto,
   AutoxingPoiCreateRequestDto,
@@ -8,7 +8,10 @@ import { AutoxingApiService } from './autoxing-api.service';
 
 @Injectable()
 export class AutoxingMapService {
-  constructor(private readonly autoxingApiService: AutoxingApiService) {}
+  constructor(
+    @Inject(AutoxingApiService)
+    private readonly autoxingApiService: AutoxingApiService,
+  ) {}
 
   getPoiList(body: AutoxingPoiListRequestDto) {
     return this.autoxingApiService.post('/map/v1.1/poi/list', { body });

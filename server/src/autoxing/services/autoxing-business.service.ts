@@ -1,9 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AutoxingApiService } from './autoxing-api.service';
 
 @Injectable()
 export class AutoxingBusinessService {
-  constructor(private readonly autoxingApiService: AutoxingApiService) {}
+  constructor(
+    @Inject(AutoxingApiService)
+    private readonly autoxingApiService: AutoxingApiService,
+  ) {}
 
   getBuildingList() {
     return this.autoxingApiService.post('/building/v1.1/list');

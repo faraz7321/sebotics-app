@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Post,
   Query,
@@ -37,7 +38,10 @@ import { AutoxingTaskService } from '../services/autoxing-task.service';
 @Roles(Role.ADMIN)
 @Controller('autoxing/tasks')
 export class AutoxingTaskController {
-  constructor(private readonly autoxingTaskService: AutoxingTaskService) {}
+  constructor(
+    @Inject(AutoxingTaskService)
+    private readonly autoxingTaskService: AutoxingTaskService,
+  ) {}
 
   @Post('v3')
   @ApiOperation({ summary: 'Proxy Autoxing create task v3 endpoint' })

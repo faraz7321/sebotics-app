@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -25,7 +25,10 @@ import { AutoxingMapService } from '../services/autoxing-map.service';
 @Roles(Role.ADMIN)
 @Controller('autoxing/maps')
 export class AutoxingMapController {
-  constructor(private readonly autoxingMapService: AutoxingMapService) {}
+  constructor(
+    @Inject(AutoxingMapService)
+    private readonly autoxingMapService: AutoxingMapService,
+  ) {}
 
   @Post('pois/list')
   @ApiOperation({ summary: 'Proxy Autoxing POI list endpoint' })

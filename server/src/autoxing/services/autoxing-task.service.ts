@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   AutoxingTaskCreateV1Dto,
   AutoxingTaskCreateV3Dto,
@@ -10,7 +10,10 @@ import { AutoxingApiService } from './autoxing-api.service';
 
 @Injectable()
 export class AutoxingTaskService {
-  constructor(private readonly autoxingApiService: AutoxingApiService) {}
+  constructor(
+    @Inject(AutoxingApiService)
+    private readonly autoxingApiService: AutoxingApiService,
+  ) {}
 
   createTaskV3(body: AutoxingTaskCreateV3Dto) {
     return this.autoxingApiService.post('/task/v3/create', { body });

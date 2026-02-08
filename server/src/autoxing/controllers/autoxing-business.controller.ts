@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -20,7 +20,10 @@ import { AutoxingBusinessService } from '../services/autoxing-business.service';
 @Roles(Role.ADMIN)
 @Controller('autoxing')
 export class AutoxingBusinessController {
-  constructor(private readonly autoxingBusinessService: AutoxingBusinessService) {}
+  constructor(
+    @Inject(AutoxingBusinessService)
+    private readonly autoxingBusinessService: AutoxingBusinessService,
+  ) {}
 
   @Post('buildings/list')
   @ApiOperation({ summary: 'Proxy Autoxing building list endpoint' })

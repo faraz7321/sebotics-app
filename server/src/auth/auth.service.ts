@@ -8,8 +8,8 @@ import { UsersService } from '../users/users.service';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(JwtService) private readonly jwtService: JwtService,
     @Inject('REFRESH_TOKEN_OPTIONS') private readonly refreshOptions: any,
   ) {}
 
