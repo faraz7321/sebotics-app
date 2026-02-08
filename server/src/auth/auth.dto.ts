@@ -17,12 +17,12 @@ export class RegisterDto {
   @ApiProperty({
     description: 'Password for the new account',
     type: String,
-    minLength: 8,
+    minLength: 6,
     maxLength: 72,
     example: 'SecurePass123!',
   })
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   @MaxLength(72)
   password!: string;
 }
@@ -43,12 +43,12 @@ export class LoginDto {
   @ApiProperty({
     description: 'Password for login',
     type: String,
-    minLength: 8,
+    minLength: 6,
     maxLength: 72,
     example: 'SecurePass123!',
   })
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   @MaxLength(72)
   password!: string;
 }
