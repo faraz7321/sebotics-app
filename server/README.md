@@ -52,6 +52,38 @@ Required env vars (see `.env.example`):
 - **End user → Sebotics:** normal user auth (`/api/auth/register`, `/api/auth/login`) with JWTs issued by Sebotics.
 - **Sebotics → Autoxing:** server-to-server CSP API auth using `AUTOXING_*` credentials, never exposed to end users.
 
+## Autoxing module structure
+All Autoxing-specific code is under `src/autoxing`:
+- `src/autoxing/auth` → Autoxing token acquisition and caching
+- `src/autoxing/dto` → Request/response DTOs for proxied Autoxing endpoints
+- `src/autoxing/services` → API client and domain services (robot/map/task/business)
+- `src/autoxing/controllers` → Sebotics API controllers that proxy to Autoxing
+
+Current Autoxing proxy routes (admin-only):
+- `POST /api/autoxing/robots/list`
+- `GET /api/autoxing/robots/:robotId/state`
+- `GET /api/autoxing/robots/:robotId/state-v2`
+- `POST /api/autoxing/maps/pois/list`
+- `PUT /api/autoxing/maps/pois/:areaId`
+- `DELETE /api/autoxing/maps/pois/:poiId`
+- `GET /api/autoxing/maps/pois/:poiId`
+- `POST /api/autoxing/maps/areas/list`
+- `GET /api/autoxing/maps/areas/:areaId/base-map`
+- `GET /api/autoxing/maps/robots/:robotId/deploy`
+- `POST /api/autoxing/tasks/v3`
+- `POST /api/autoxing/tasks`
+- `POST /api/autoxing/tasks/list`
+- `GET /api/autoxing/tasks/v3/:taskId`
+- `GET /api/autoxing/tasks/:taskId`
+- `POST /api/autoxing/tasks/:taskId`
+- `DELETE /api/autoxing/tasks/:taskId`
+- `POST /api/autoxing/tasks/:taskId/execute`
+- `POST /api/autoxing/tasks/v3/:taskId/cancel`
+- `POST /api/autoxing/tasks/:taskId/cancel`
+- `GET /api/autoxing/tasks/v2/:taskId/state`
+- `POST /api/autoxing/buildings/list`
+- `POST /api/autoxing/businesses/list`
+
 ## Autoxing documentation
 
 References:
