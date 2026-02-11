@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -15,7 +14,7 @@ async function bootstrap() {
     credentials: true,
   });
   
-  const port = process.env.PORT ? Number(process.env.PORT) : 4000;
+  const port = process.env.PORT ? Number(process.env.PORT) : 8080;
   if (Number.isNaN(port)) {
     throw new Error('PORT must be a number');
   }
@@ -42,10 +41,8 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  console.log(
-    `Application is running on: http://localhost:${process.env.PORT ?? 4000}`,
-  );
-  console.log(`Swagger UI available at: http://localhost:${process.env.PORT ?? 4000}/api`);
+  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Swagger UI available at: http://localhost:${port}/api`);
 }
 
 bootstrap();

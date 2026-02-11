@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBadRequestResponse, ApiNotFoundResponse, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -14,7 +14,7 @@ import { RobotsService } from './robots.service';
 @ApiBearerAuth('JWT-auth')
 @Controller('robots')
 export class RobotsController {
-  constructor(private readonly robotsService: RobotsService) {}
+  constructor(@Inject(RobotsService) private readonly robotsService: RobotsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)

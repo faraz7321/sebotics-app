@@ -9,7 +9,7 @@ import { Request } from 'express';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    @Inject(AuthService) private readonly authService: AuthService,
     @Inject('REFRESH_TOKEN_OPTIONS') private readonly refreshOptions: any,
   ) { }
 
@@ -24,8 +24,6 @@ export class AuthController {
         sameSite: 'lax',
         maxAge,
       });
-
-      console.log(result.refreshToken);
 
       const { refreshToken, ...bodyOnly } = result;
       return bodyOnly as AuthResponseDto;
