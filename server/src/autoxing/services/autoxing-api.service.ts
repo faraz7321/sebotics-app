@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { AutoxingAuthService } from '../auth/autoxing-auth.service';
+import { AutoxingAccessToken, AutoxingAuthService } from '../auth/autoxing-auth.service';
 import { AutoxingEnvelope, AutoxingRequestOptions } from '../types/autoxing-api.types';
 
 @Injectable()
@@ -35,13 +35,20 @@ export class AutoxingApiService {
   }
 
   async getBinary(path: string, options?: AutoxingRequestOptions) {
-    const token = await this.autoxingAuthService.getAccessToken();
-    const response = await fetch(this.buildUrl(path, options?.query), {
-      method: 'GET',
-      headers: {
-        'X-Token': token.token,
-      },
-    });
+    const token = await this.getTokenOrThrow();
+    let response: Response;
+
+    try {
+      response = await fetch(this.buildUrl(path, options?.query), {
+        method: 'GET',
+        headers: {
+          'X-Token': token.token,
+        },
+      });
+    } catch (error) {
+      this.logger.error('Autoxing binary request failed', { path, error });
+      throw new BadGatewayException('Autoxing request failed');
+    }
 
     if (!response.ok) {
       const body = await response.text();
@@ -57,17 +64,25 @@ export class AutoxingApiService {
   }
 
   private async requestJson<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, options?: AutoxingRequestOptions) {
-    const token = await this.autoxingAuthService.getAccessToken();
+    const token = await this.getTokenOrThrow();
+
     const hasBody = options?.body !== undefined;
 
-    const response = await fetch(this.buildUrl(path, options?.query), {
-      method,
-      headers: {
-        'X-Token': token.token,
-        ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
-      },
-      ...(hasBody ? { body: JSON.stringify(options?.body) } : {}),
-    });
+    let response: Response;
+
+    try {
+      response = await fetch(this.buildUrl(path, options?.query), {
+        method,
+        headers: {
+          'X-Token': token.token,
+          ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+        },
+        ...(hasBody ? { body: JSON.stringify(options?.body) } : {}),
+      });
+    } catch (error) {
+      this.logger.error('Autoxing request failed', { method, path, error });
+      throw new BadGatewayException('Autoxing request failed');
+    }
 
     let payload: AutoxingEnvelope<T> | null = null;
     try {
@@ -87,6 +102,20 @@ export class AutoxingApiService {
     }
 
     return payload;
+  }
+
+  private async getTokenOrThrow(): Promise<AutoxingAccessToken> {
+    try {
+      const token = await this.autoxingAuthService.getAccessToken();
+      if (!token?.token) {
+        this.logger.error('Autoxing token missing or empty');
+        throw new Error('Autoxing token missing');
+      }
+      return token;
+    } catch (error) {
+      this.logger.error('Autoxing authentication failed', { error });
+      throw new BadGatewayException('Your request could not be authenticated with Autoxing. Please try again later');
+    }
   }
 
   private buildUrl(path: string, query?: Record<string, string | number | boolean | undefined>) {
