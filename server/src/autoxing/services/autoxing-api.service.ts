@@ -5,8 +5,12 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { AutoxingAccessToken, AutoxingAuthService } from '../auth/autoxing-auth.service';
-import { AutoxingEnvelope, AutoxingRequestOptions } from '../types/autoxing-api.types';
+import { AutoxingAuthService } from '../auth/autoxing-auth.service';
+import {
+  AutoxingAccessToken,
+  AutoxingEnvelope,
+  AutoxingRequestOptions,
+} from '../types/autoxing-api.types';
 
 @Injectable()
 export class AutoxingApiService {
