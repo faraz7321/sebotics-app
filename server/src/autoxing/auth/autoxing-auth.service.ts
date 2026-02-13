@@ -1,23 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
+import {
+  AutoxingAccessToken,
+  AutoxingTokenRequestSchema,
+  AutoxingTokenResponse,
+} from '../types/autoxing-api.types';
 
 const TOKEN_REFRESH_BUFFER_MS = 30_000;
-
-type AutoxingTokenResponse = {
-  status: number;
-  message: string;
-  data?: {
-    key: string;
-    token: string;
-    expireTime: number;
-  };
-};
-
-export type AutoxingAccessToken = {
-  token: string;
-  key: string;
-  expiresAt: number;
-};
 
 @Injectable()
 export class AutoxingAuthService {
@@ -46,18 +35,17 @@ export class AutoxingAuthService {
   }
 
   private async fetchToken(): Promise<AutoxingAccessToken> {
-    const appId = process.env.AUTOXING_APP_ID;
-    const appSecret = process.env.AUTOXING_APP_SECRET;
-    const appCode = process.env.AUTOXING_APP_CODE;
-    const baseUrl = process.env.AUTOXING_BASE_URL ?? 'https://api.autoxing.com';
-    const timestampUnit = process.env.AUTOXING_TIMESTAMP_UNIT ?? 'ms';
+    const appId = process.env.AUTOXING_APP_ID?.trim();
+    const appSecret = process.env.AUTOXING_APP_SECRET?.trim();
+    const appCode = process.env.AUTOXING_APP_CODE?.trim();
+    const baseUrl = (process.env.AUTOXING_BASE_URL ?? 'https://api.autoxing.com').trim();
+    const timestampUnit = (process.env.AUTOXING_TIMESTAMP_UNIT ?? 'ms').trim().toLowerCase();
 
     if (!appId || !appSecret || !appCode) {
       throw new Error('AUTOXING_APP_ID, AUTOXING_APP_SECRET, and AUTOXING_APP_CODE are required');
     }
 
-    const timestamp = timestampUnit === 's' ? Math.floor(Date.now() / 1000) : Date.now();
-    const sign = this.md5(`${appId}${timestamp}${appSecret}`);
+    const signedPayload = this.buildSignedPayload(appId, appSecret, timestampUnit);
 
     const response = await fetch(`${baseUrl.replace(/\/$/, '')}/auth/v1.1/token`, {
       method: 'POST',
@@ -65,11 +53,7 @@ export class AutoxingAuthService {
         Authorization: appCode,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        appId,
-        timestamp,
-        sign,
-      }),
+      body: JSON.stringify(signedPayload),
     });
 
     const payload = (await response.json()) as AutoxingTokenResponse;
@@ -94,5 +78,25 @@ export class AutoxingAuthService {
 
   private md5(value: string) {
     return createHash('md5').update(value).digest('hex');
+  }
+
+  private buildSignedPayload(
+    appId: string,
+    appSecret: string,
+    timestampUnit: string,
+  ): AutoxingTokenRequestSchema {
+    if (timestampUnit !== 'ms' && timestampUnit !== 's') {
+      throw new Error('AUTOXING_TIMESTAMP_UNIT must be either "ms" or "s"');
+    }
+
+    const timestamp = timestampUnit === 's' ? Math.floor(Date.now() / 1000) : Date.now();
+    // CSP rule: sign = MD5(appId + timestamp + appSecret)
+    const sign = this.md5(`${appId}${timestamp}${appSecret}`);
+
+    return {
+      appId,
+      timestamp,
+      sign,
+    };
   }
 }
