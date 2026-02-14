@@ -7,6 +7,8 @@ import { Button } from './components/ui/button';
 
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
+
+import RootLayout from './RootLayout';
 import DashBoard from './pages/dashboard/Dashboard';
 
 function App() {
@@ -23,8 +25,10 @@ function App() {
 
         {/* Protected Routes */}
         <Route path="/" element={<ProtectedRoute />}>
-          <Route index element={<Navigate to={ROUTES.DASHBOARD.HOME} replace /> } />
-          <Route path={ROUTES.DASHBOARD.HOME} element={<DashBoard />} />
+          <Route element={<RootLayout />}>
+            <Route index element={<Navigate to={ROUTES.DASHBOARD.HOME} replace />} />
+            <Route path={ROUTES.DASHBOARD.HOME} element={<DashBoard />} />
+          </Route>
         </Route>
 
         {/* 404 FallBack  */}
@@ -38,9 +42,9 @@ function App() {
           </div>
         } />
 
-    </Routes>
+      </Routes>
     </BrowserRouter >
   );
 }
 
-export default App
+export default App;
