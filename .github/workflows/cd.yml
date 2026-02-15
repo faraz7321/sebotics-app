@@ -27,6 +27,7 @@ jobs:
       GCP_SERVER_RUNTIME_SA: ${{ vars.GCP_SERVER_RUNTIME_SA || 'sebotics-ax-server-sa@sebotics.iam.gserviceaccount.com' }}
       GCP_APP_RUNTIME_SA: ${{ vars.GCP_APP_RUNTIME_SA || 'sebotics-ax-app-sa@sebotics.iam.gserviceaccount.com' }}
       GCP_CLOUDSQL_CONNECTION: ${{ vars.GCP_CLOUDSQL_CONNECTION }}
+      GCP_DATABASE_URL_SECRET: ${{ vars.GCP_DATABASE_URL_SECRET || 'SEBOTICS_AX_DATABASE_URL' }}
       GCP_API_BASE_URL: ${{ vars.GCP_API_BASE_URL || 'https://ax-server.sebotics.com/api' }}
       GCP_APP_PUBLIC_URL: ${{ vars.GCP_APP_PUBLIC_URL || 'https://ax-app.sebotics.com' }}
       GCP_SERVER_CORS_ORIGIN: ${{ vars.GCP_SERVER_CORS_ORIGIN || 'https://ax-app.sebotics.com' }}
@@ -53,6 +54,80 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run Prisma migrations
+        run: |
+          set -euo pipefail
+
+          test -n "${GCP_CLOUDSQL_CONNECTION}" || {
+            echo "Missing GCP_CLOUDSQL_CONNECTION variable."
+            exit 1
+          }
+          test -n "${GCP_DATABASE_URL_SECRET}" || {
+            echo "Missing GCP_DATABASE_URL_SECRET variable."
+            exit 1
+          }
+
+          ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          DATABASE_URL_RAW="$(gcloud secrets versions access latest \
+            --project "${GCP_PROJECT_ID}" \
+            --secret "${GCP_DATABASE_URL_SECRET}")"
+
+          DATABASE_URL="$(
+            DATABASE_URL_RAW="${DATABASE_URL_RAW}" python3 - <<'PY'
+          import os
+          from urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit, urlunsplit
+
+          raw = os.environ["DATABASE_URL_RAW"]
+          parsed = urlsplit(raw)
+          query = [(k, v) for (k, v) in parse_qsl(parsed.query, keep_blank_values=True) if k.lower() != "host"]
+
+          if parsed.username is not None:
+            user = quote(unquote(parsed.username), safe="")
+            password = quote(unquote(parsed.password or ""), safe="")
+            auth = f"{user}:{password}@"
+          else:
+            auth = ""
+
+          netloc = f"{auth}127.0.0.1:6543"
+          print(urlunsplit((parsed.scheme, netloc, parsed.path, urlencode(query), "")))
+          PY
+          )"
+
+          docker rm -f sebotics-ax-sql-proxy >/dev/null 2>&1 || true
+          docker run -d --rm --name sebotics-ax-sql-proxy \
+            -p 127.0.0.1:6543:5432 \
+            gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.18.2 \
+            --token "${ACCESS_TOKEN}" \
+            --address 0.0.0.0 \
+            "${GCP_CLOUDSQL_CONNECTION}" >/dev/null
+
+          cleanup() {
+            docker rm -f sebotics-ax-sql-proxy >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          for i in $(seq 1 20); do
+            if (echo > /dev/tcp/127.0.0.1/6543) >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+
+          if ! (echo > /dev/tcp/127.0.0.1/6543) >/dev/null 2>&1; then
+            echo "Cloud SQL proxy did not start."
+            docker logs sebotics-ax-sql-proxy || true
+            exit 1
+          fi
+
+          cd server
+          npm ci
+          DATABASE_URL="${DATABASE_URL}" npx prisma migrate deploy
 
       - name: Deploy server image and service
         run: |
