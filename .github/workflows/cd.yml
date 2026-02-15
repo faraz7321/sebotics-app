@@ -48,8 +48,6 @@ jobs:
           test -n "${GCP_ARTIFACT_REPO}" || { echo "Missing GCP_ARTIFACT_REPO (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_SERVER_SERVICE}" || { echo "Missing GCP_SERVER_SERVICE (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_APP_SERVICE}" || { echo "Missing GCP_APP_SERVICE (set it in GitHub Secrets or Variables)"; exit 1; }
-          test -n "${GCP_SERVER_RUNTIME_SA}" || { echo "Missing GCP_SERVER_RUNTIME_SA (set it in GitHub Secrets or Variables)"; exit 1; }
-          test -n "${GCP_APP_RUNTIME_SA}" || { echo "Missing GCP_APP_RUNTIME_SA (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_CLOUDSQL_CONNECTION}" || { echo "Missing GCP_CLOUDSQL_CONNECTION (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_DATABASE_URL_SECRET}" || { echo "Missing GCP_DATABASE_URL_SECRET (set it in GitHub Secrets or Variables)"; exit 1; }
 
