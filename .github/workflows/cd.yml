@@ -19,18 +19,18 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     env:
-      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'sebotics' }}
-      GCP_REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
-      GCP_ARTIFACT_REPO: ${{ vars.GCP_ARTIFACT_REPO || 'sebotics' }}
-      GCP_SERVER_SERVICE: ${{ vars.GCP_SERVER_SERVICE || 'sebotics-ax-server' }}
-      GCP_APP_SERVICE: ${{ vars.GCP_APP_SERVICE || 'sebotics-ax-app' }}
-      GCP_SERVER_RUNTIME_SA: ${{ vars.GCP_SERVER_RUNTIME_SA || 'sebotics-ax-server-sa@sebotics.iam.gserviceaccount.com' }}
-      GCP_APP_RUNTIME_SA: ${{ vars.GCP_APP_RUNTIME_SA || 'sebotics-ax-app-sa@sebotics.iam.gserviceaccount.com' }}
-      GCP_CLOUDSQL_CONNECTION: ${{ vars.GCP_CLOUDSQL_CONNECTION }}
-      GCP_DATABASE_URL_SECRET: ${{ vars.GCP_DATABASE_URL_SECRET || 'SEBOTICS_AX_DATABASE_URL' }}
-      GCP_API_BASE_URL: ${{ vars.GCP_API_BASE_URL || 'https://ax-server.sebotics.com/api' }}
-      GCP_APP_PUBLIC_URL: ${{ vars.GCP_APP_PUBLIC_URL || 'https://ax-app.sebotics.com' }}
-      GCP_SERVER_CORS_ORIGIN: ${{ vars.GCP_SERVER_CORS_ORIGIN || 'https://ax-app.sebotics.com' }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || secrets.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION || secrets.GCP_REGION }}
+      GCP_ARTIFACT_REPO: ${{ vars.GCP_ARTIFACT_REPO || secrets.GCP_ARTIFACT_REPO }}
+      GCP_SERVER_SERVICE: ${{ vars.GCP_SERVER_SERVICE || secrets.GCP_SERVER_SERVICE }}
+      GCP_APP_SERVICE: ${{ vars.GCP_APP_SERVICE || secrets.GCP_APP_SERVICE }}
+      GCP_SERVER_RUNTIME_SA: ${{ vars.GCP_SERVER_RUNTIME_SA || secrets.GCP_SERVER_RUNTIME_SA }}
+      GCP_APP_RUNTIME_SA: ${{ vars.GCP_APP_RUNTIME_SA || secrets.GCP_APP_RUNTIME_SA }}
+      GCP_CLOUDSQL_CONNECTION: ${{ vars.GCP_CLOUDSQL_CONNECTION || secrets.GCP_CLOUDSQL_CONNECTION }}
+      GCP_DATABASE_URL_SECRET: ${{ vars.GCP_DATABASE_URL_SECRET || secrets.GCP_DATABASE_URL_SECRET }}
+      GCP_API_BASE_URL: ${{ vars.GCP_API_BASE_URL || secrets.GCP_API_BASE_URL }}
+      GCP_APP_PUBLIC_URL: ${{ vars.GCP_APP_PUBLIC_URL || secrets.GCP_APP_PUBLIC_URL }}
+      GCP_SERVER_CORS_ORIGIN: ${{ vars.GCP_SERVER_CORS_ORIGIN || secrets.GCP_SERVER_CORS_ORIGIN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,6 +43,15 @@ jobs:
           set -euo pipefail
           test -n "${WIF_PROVIDER}" || { echo "Missing GCP_WORKLOAD_IDENTITY_PROVIDER (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${DEPLOYER_SA}" || { echo "Missing GCP_DEPLOYER_SERVICE_ACCOUNT (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_PROJECT_ID}" || { echo "Missing GCP_PROJECT_ID (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_REGION}" || { echo "Missing GCP_REGION (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_ARTIFACT_REPO}" || { echo "Missing GCP_ARTIFACT_REPO (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_SERVER_SERVICE}" || { echo "Missing GCP_SERVER_SERVICE (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_APP_SERVICE}" || { echo "Missing GCP_APP_SERVICE (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_SERVER_RUNTIME_SA}" || { echo "Missing GCP_SERVER_RUNTIME_SA (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_APP_RUNTIME_SA}" || { echo "Missing GCP_APP_RUNTIME_SA (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_CLOUDSQL_CONNECTION}" || { echo "Missing GCP_CLOUDSQL_CONNECTION (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_DATABASE_URL_SECRET}" || { echo "Missing GCP_DATABASE_URL_SECRET (set it in GitHub Secrets or Variables)"; exit 1; }
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
