@@ -77,8 +77,8 @@ export default function SignUp() {
       } else {
         setError(res.payload as string || "Registeration failed");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setIsLoading(false);
     }

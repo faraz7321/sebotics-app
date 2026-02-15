@@ -86,8 +86,8 @@ export default function SignIn() {
       } else {
         setError(res.payload as string || "Login failed");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setIsLoading(false);
     }

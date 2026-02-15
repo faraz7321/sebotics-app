@@ -1,12 +1,21 @@
 import { API_ENDPOINTS } from "@/config/routes";
-import type { AuthCreds } from "../types/AuthTypes";
+import type { AuthCreds, AuthResult, AuthUser } from "../types/AuthTypes";
 import api from "@/lib/api/axios";
 import axios from "axios";
 
+type AuthApiResponse = {
+  accessToken: string;
+  user: AuthUser;
+  message?: string;
+  error?: string;
+};
+
+type ServiceError = Error & { code?: string };
+
 class AuthService {
-  async login(credentials: AuthCreds): Promise<any> {
+  async login(credentials: AuthCreds): Promise<AuthResult> {
     try {
-      const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, {
+      const response = await api.post<AuthApiResponse>(API_ENDPOINTS.AUTH.LOGIN, {
         username: credentials.username,
         password: credentials.password,
       },
@@ -24,26 +33,14 @@ class AuthService {
         accessToken: response.data.accessToken,
         user: response.data.user,
       };
-    } catch (err) {
-      let errorMessage = "Signin failed";
-      let errorCode: string | undefined;
-
-      if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.message || errorMessage;
-        errorCode = err.response?.data?.error;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      const error = new Error(errorMessage);
-      (error as Error & { code?: string }).code = errorCode;
-      throw error;
+    } catch (err: unknown) {
+      throw this.buildServiceError(err, "Signin failed");
     }
   }
 
-  async register(credentials: AuthCreds): Promise<any> {
+  async register(credentials: AuthCreds): Promise<AuthResult> {
     try {
-      const response = await api.post(
+      const response = await api.post<AuthApiResponse>(
         API_ENDPOINTS.AUTH.REGISTER, {
         username: credentials.username,
         password: credentials.password,
@@ -62,15 +59,25 @@ class AuthService {
         accessToken: response.data.accessToken,
         user: response.data.user,
       };
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        throw new Error(
-          err.response?.data?.message || "Registration failed"
-        );
-      }
-
-      throw err;
+    } catch (err: unknown) {
+      throw this.buildServiceError(err, "Registration failed");
     }
+  }
+
+  private buildServiceError(err: unknown, fallbackMessage: string): ServiceError {
+    let errorMessage = fallbackMessage;
+    let errorCode: string | undefined;
+
+    if (axios.isAxiosError<AuthApiResponse>(err)) {
+      errorMessage = err.response?.data?.message || errorMessage;
+      errorCode = err.response?.data?.error;
+    } else if (err instanceof Error) {
+      errorMessage = err.message;
+    }
+
+    const error: ServiceError = new Error(errorMessage);
+    error.code = errorCode;
+    return error;
   }
 }
 

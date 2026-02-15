@@ -9,6 +9,11 @@ export type AuthCreds = {
   password: string;
 }
 
+export type AuthResult = {
+  accessToken: string;
+  user: AuthUser;
+}
+
 export interface AuthState {
   user: AuthUser | null;
   accessToken: string;
