@@ -28,9 +28,6 @@ jobs:
       GCP_APP_RUNTIME_SA: ${{ vars.GCP_APP_RUNTIME_SA || secrets.GCP_APP_RUNTIME_SA }}
       GCP_CLOUDSQL_CONNECTION: ${{ vars.GCP_CLOUDSQL_CONNECTION || secrets.GCP_CLOUDSQL_CONNECTION }}
       GCP_DATABASE_URL_SECRET: ${{ vars.GCP_DATABASE_URL_SECRET || secrets.GCP_DATABASE_URL_SECRET }}
-      GCP_API_BASE_URL: ${{ vars.GCP_API_BASE_URL || secrets.GCP_API_BASE_URL }}
-      GCP_APP_PUBLIC_URL: ${{ vars.GCP_APP_PUBLIC_URL || secrets.GCP_APP_PUBLIC_URL }}
-      GCP_SERVER_CORS_ORIGIN: ${{ vars.GCP_SERVER_CORS_ORIGIN || secrets.GCP_SERVER_CORS_ORIGIN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -174,7 +171,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          API_BASE_URL="${GCP_API_BASE_URL:-${{ steps.server_url.outputs.url }}/api}"
+          API_BASE_URL="${{ steps.server_url.outputs.url }}/api"
 
           substitutions=(
             "_REGION=${GCP_REGION}"
@@ -207,7 +204,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          CORS_ORIGIN="${GCP_SERVER_CORS_ORIGIN:-${GCP_APP_PUBLIC_URL:-${{ steps.app_url.outputs.url }}}}"
+          CORS_ORIGIN="${{ steps.app_url.outputs.url }}"
 
           gcloud run services update "${GCP_SERVER_SERVICE}" \
             --project "${GCP_PROJECT_ID}" \
