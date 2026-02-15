@@ -34,11 +34,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate GCP auth configuration
+        env:
+          WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER || vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          DEPLOYER_SA: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT || vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          test -n "${WIF_PROVIDER}" || { echo "Missing GCP_WORKLOAD_IDENTITY_PROVIDER (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${DEPLOYER_SA}" || { echo "Missing GCP_DEPLOYER_SERVICE_ACCOUNT (set it in GitHub Secrets or Variables)"; exit 1; }
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER || vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT || vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
