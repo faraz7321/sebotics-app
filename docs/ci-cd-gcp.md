@@ -20,14 +20,15 @@ This repository uses:
 ## Required Google Secret Manager secrets
 
 The server Cloud Run service expects:
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `REFRESH_TOKEN_SECRET`
-- `AUTOXING_APP_ID`
-- `AUTOXING_APP_SECRET`
-- `AUTOXING_APP_CODE`
+- `SEBOTICS_AX_DATABASE_URL`
+- `SEBOTICS_AX_JWT_SECRET`
+- `SEBOTICS_AX_REFRESH_TOKEN_SECRET`
+- `SEBOTICS_AX_AUTOXING_APP_ID`
+- `SEBOTICS_AX_AUTOXING_APP_SECRET`
+- `SEBOTICS_AX_AUTOXING_APP_CODE`
 
-These are wired by default in `cloudbuild.server.yaml` substitution `_SECRETS`.
+These are mapped to runtime env vars (`DATABASE_URL`, `JWT_SECRET`, etc.) in
+`cloudbuild.server.yaml` substitution `_SECRETS`.
 
 ## GitHub repository secrets
 
@@ -63,5 +64,3 @@ Set these in `Settings > Secrets and variables > Actions > Variables`.
 - Server runtime SA has:
   - `roles/secretmanager.secretAccessor`
   - `roles/cloudsql.client` (if Cloud SQL is used)
-
-
