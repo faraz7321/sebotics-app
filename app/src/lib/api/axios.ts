@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/runtime-config";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000/api",
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

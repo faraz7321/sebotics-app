@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "@/lib/runtime-config";
+
 /* FRONTEND ROUTES */
 
 export const ROUTES = {
@@ -9,8 +11,6 @@ export const ROUTES = {
     HOME: "/home",
   }
 } as const;
-
-export const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export const API_ENDPOINTS = {
   AUTH: {
