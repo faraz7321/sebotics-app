@@ -34,9 +34,63 @@ npm run prisma:migrate -- --name init
 npm run dev
 ```
 
+## Local setup with Docker
+```bash
+cd server
+cp .env.example .env
+docker compose up --build
+```
+
+By default, `docker compose` uses the bundled `postgres` service and injects
+`DATABASE_URL` automatically for the API container.
+
+Use `DATABASE_URL_CONTAINER` in `server/.env` only when you explicitly want the
+container to connect to an external database.
+
 To create an **admin** user in the initial version:
 1. Register normally (client)
 2. Update the user role in Postgres to `ADMIN`
+
+## Google Cloud Run deployment
+
+Build and deploy with Cloud Build (from repo root):
+
+```bash
+gcloud builds submit . \
+  --config cloudbuild.server.yaml \
+  --substitutions=_REGION=us-central1,_AR_REPO=sebotics,_SERVER_SERVICE=sebotics-ax-server
+```
+
+Manual build/push option:
+
+```bash
+docker build -f server/Dockerfile \
+  -t REGION-docker.pkg.dev/PROJECT_ID/REPO/sebotics-ax-server:latest \
+  server
+
+docker push REGION-docker.pkg.dev/PROJECT_ID/REPO/sebotics-ax-server:latest
+```
+
+Deploy to Cloud Run:
+
+```bash
+gcloud run deploy sebotics-ax-server \
+  --image REGION-docker.pkg.dev/PROJECT_ID/REPO/sebotics-ax-server:latest \
+  --region REGION \
+  --platform managed \
+  --set-env-vars NODE_ENV=production,ENABLE_SWAGGER=false,AUTOXING_BASE_URL=https://apiglobal.autoxing.com,AUTOXING_TIMESTAMP_UNIT=ms \
+  --set-secrets JWT_SECRET=projects/PROJECT_NUMBER/secrets/JWT_SECRET:latest,REFRESH_TOKEN_SECRET=projects/PROJECT_NUMBER/secrets/REFRESH_TOKEN_SECRET:latest,AUTOXING_APP_ID=projects/PROJECT_NUMBER/secrets/AUTOXING_APP_ID:latest,AUTOXING_APP_SECRET=projects/PROJECT_NUMBER/secrets/AUTOXING_APP_SECRET:latest,AUTOXING_APP_CODE=projects/PROJECT_NUMBER/secrets/AUTOXING_APP_CODE:latest,DATABASE_URL=projects/PROJECT_NUMBER/secrets/DATABASE_URL:latest
+```
+
+Notes:
+- Cloud Run injects `PORT`; do not hardcode it in production settings.
+- Prefer Secret Manager for `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, and Autoxing credentials.
+- For Cloud SQL, use a Cloud SQL connection strategy instead of `host.docker.internal`.
+- For automated CI/CD from GitHub Actions, see `docs/ci-cd-gcp.md`.
+
+Health endpoints for Cloud Run probes:
+- `GET /api/health/live`
+- `GET /api/health/ready`
 
 ## Autoxing Authentication (CSP API)
 Sebotics authenticates with Autoxing using the CSP API authentication flow (end users never do). This is **service-to-service auth** that is separate from end-user auth. The server creates an MD5 signature from `appId + timestamp + appSecret`, sends it to `/auth/v1.1/token`, and caches the returned access token until it expires.

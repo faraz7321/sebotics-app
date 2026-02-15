@@ -6,6 +6,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     
@@ -19,30 +20,38 @@ async function bootstrap() {
     throw new Error('PORT must be a number');
   }
 
-  const config = new DocumentBuilder()
-    .setTitle('Sebotics API')
-    .setDescription('The Sebotics API description')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .build();
+  const enableSwagger =
+    process.env.ENABLE_SWAGGER === 'true' ||
+    (process.env.NODE_ENV !== 'production' && process.env.ENABLE_SWAGGER !== 'false');
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  if (enableSwagger) {
+    const config = new DocumentBuilder()
+      .setTitle('Sebotics API')
+      .setDescription('The Sebotics API description')
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'Enter JWT token',
+          in: 'header',
+        },
+        'JWT-auth',
+      )
+      .build();
+
+    const documentFactory = () => SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, documentFactory);
+  }
 
   await app.listen(port);
 
   console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger UI available at: http://localhost:${port}/api`);
+  if (enableSwagger) {
+    console.log(`Swagger UI available at: http://localhost:${port}/api`);
+  }
 }
 
 bootstrap();

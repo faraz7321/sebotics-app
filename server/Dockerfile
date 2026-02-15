@@ -1,32 +1,30 @@
-# Base image
-FROM node:22-bullseye-slim
+FROM node:22-bullseye-slim AS base
 
-# Create app directory
 WORKDIR /server
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
-
-# Install app dependencies
-RUN npm install
-
-# Bundle app source
-COPY . .
-
-# ensure OpenSSL is available for Prisma native engines
 RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# generate prisma client for the container runtime
+FROM base AS build
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
 RUN npx prisma generate
-
-# Copy the .env file
-COPY .env ./
-
-# Creates a "dist" folder with the production build
 RUN npm run build
+RUN npm prune --omit=dev
 
-# Expose the port on which the app will run
-EXPOSE 3001
+FROM base AS runtime
 
-# Start the server using the production build
-CMD ["npm", "run", "start"]
+COPY --chown=node:node --from=build /server/package*.json ./
+COPY --chown=node:node --from=build /server/node_modules ./node_modules
+COPY --chown=node:node --from=build /server/prisma ./prisma
+COPY --chown=node:node --from=build /server/dist ./dist
+
+ENV NODE_ENV=production
+ARG PORT=8080
+ENV PORT=${PORT}
+EXPOSE ${PORT}
+USER node
+
+CMD ["node", "dist/main.js"]
