@@ -1,0 +1,132 @@
+name: CD
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: sebotics-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Google Cloud Run
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'sebotics' }}
+      GCP_REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
+      GCP_ARTIFACT_REPO: ${{ vars.GCP_ARTIFACT_REPO || 'sebotics' }}
+      GCP_SERVER_SERVICE: ${{ vars.GCP_SERVER_SERVICE || 'sebotics-ax-server' }}
+      GCP_APP_SERVICE: ${{ vars.GCP_APP_SERVICE || 'sebotics-ax-app' }}
+      GCP_SERVER_RUNTIME_SA: ${{ vars.GCP_SERVER_RUNTIME_SA || 'sebotics-ax-server-sa@sebotics.iam.gserviceaccount.com' }}
+      GCP_APP_RUNTIME_SA: ${{ vars.GCP_APP_RUNTIME_SA || 'sebotics-ax-app-sa@sebotics.iam.gserviceaccount.com' }}
+      GCP_CLOUDSQL_CONNECTION: ${{ vars.GCP_CLOUDSQL_CONNECTION }}
+      GCP_API_BASE_URL: ${{ vars.GCP_API_BASE_URL || 'https://ax-server.sebotics.com/api' }}
+      GCP_APP_PUBLIC_URL: ${{ vars.GCP_APP_PUBLIC_URL || 'https://ax-app.sebotics.com' }}
+      GCP_SERVER_CORS_ORIGIN: ${{ vars.GCP_SERVER_CORS_ORIGIN || 'https://ax-app.sebotics.com' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Deploy server image and service
+        run: |
+          set -euo pipefail
+
+          substitutions=(
+            "_REGION=${GCP_REGION}"
+            "_AR_REPO=${GCP_ARTIFACT_REPO}"
+            "_SERVER_SERVICE=${GCP_SERVER_SERVICE}"
+          )
+
+          if [ -n "${GCP_SERVER_RUNTIME_SA}" ]; then
+            substitutions+=("_SERVICE_ACCOUNT=${GCP_SERVER_RUNTIME_SA}")
+          fi
+
+          if [ -n "${GCP_CLOUDSQL_CONNECTION}" ]; then
+            substitutions+=("_CLOUDSQL_CONNECTION=${GCP_CLOUDSQL_CONNECTION}")
+          fi
+
+          gcloud builds submit . \
+            --project "${GCP_PROJECT_ID}" \
+            --config cloudbuild.server.yaml \
+            --substitutions "$(IFS=,; echo "${substitutions[*]}")"
+
+      - name: Read server URL
+        id: server_url
+        run: |
+          set -euo pipefail
+          SERVER_URL="$(gcloud run services describe "${GCP_SERVER_SERVICE}" \
+            --project "${GCP_PROJECT_ID}" \
+            --region "${GCP_REGION}" \
+            --format='value(status.url)')"
+
+          echo "url=${SERVER_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy app image and service
+        run: |
+          set -euo pipefail
+
+          API_BASE_URL="${GCP_API_BASE_URL:-${{ steps.server_url.outputs.url }}/api}"
+
+          substitutions=(
+            "_REGION=${GCP_REGION}"
+            "_AR_REPO=${GCP_ARTIFACT_REPO}"
+            "_APP_SERVICE=${GCP_APP_SERVICE}"
+            "_ENV_VARS=VITE_PUBLIC_API_URL=${API_BASE_URL}"
+          )
+
+          if [ -n "${GCP_APP_RUNTIME_SA}" ]; then
+            substitutions+=("_SERVICE_ACCOUNT=${GCP_APP_RUNTIME_SA}")
+          fi
+
+          gcloud builds submit . \
+            --project "${GCP_PROJECT_ID}" \
+            --config cloudbuild.app.yaml \
+            --substitutions "$(IFS=,; echo "${substitutions[*]}")"
+
+      - name: Read app URL
+        id: app_url
+        run: |
+          set -euo pipefail
+          APP_URL="$(gcloud run services describe "${GCP_APP_SERVICE}" \
+            --project "${GCP_PROJECT_ID}" \
+            --region "${GCP_REGION}" \
+            --format='value(status.url)')"
+
+          echo "url=${APP_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Update server CORS origin
+        run: |
+          set -euo pipefail
+
+          CORS_ORIGIN="${GCP_SERVER_CORS_ORIGIN:-${GCP_APP_PUBLIC_URL:-${{ steps.app_url.outputs.url }}}}"
+
+          gcloud run services update "${GCP_SERVER_SERVICE}" \
+            --project "${GCP_PROJECT_ID}" \
+            --region "${GCP_REGION}" \
+            --update-env-vars "CORS_ORIGIN=${CORS_ORIGIN}"
+
+      - name: Deployment summary
+        run: |
+          {
+            echo "### Deployment completed"
+            echo "- Server: ${{ steps.server_url.outputs.url }}"
+            echo "- App: ${{ steps.app_url.outputs.url }}"
+          } >> "$GITHUB_STEP_SUMMARY"

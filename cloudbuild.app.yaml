@@ -1,0 +1,66 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-f",
+        "app/Dockerfile",
+        "-t",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA",
+        "app",
+      ]
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "push",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA",
+      ]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        EXTRA_ARGS="--execution-environment=gen2 --cpu=${_CPU} --memory=${_MEMORY} --concurrency=${_CONCURRENCY} --timeout=${_TIMEOUT} --min-instances=${_MIN_INSTANCES} --max-instances=${_MAX_INSTANCES} --ingress=${_INGRESS}"
+
+        if [ "${_ALLOW_UNAUTHENTICATED}" = "true" ]; then
+          EXTRA_ARGS="$EXTRA_ARGS --allow-unauthenticated"
+        fi
+
+        if [ -n "${_SERVICE_ACCOUNT}" ]; then
+          EXTRA_ARGS="$EXTRA_ARGS --service-account=${_SERVICE_ACCOUNT}"
+        fi
+
+        if [ -n "${_ENV_VARS}" ]; then
+          EXTRA_ARGS="$EXTRA_ARGS --set-env-vars=${_ENV_VARS}"
+        fi
+
+        gcloud run deploy "${_APP_SERVICE}" \
+          --image "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA" \
+          --region "${_REGION}" \
+          --platform managed \
+          --port 8080 \
+          $EXTRA_ARGS
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: europe-west1
+  _AR_REPO: sebotics
+  _APP_IMAGE: sebotics-ax-app
+  _APP_SERVICE: sebotics-ax-app
+  _ALLOW_UNAUTHENTICATED: "true"
+  _CPU: "1"
+  _MEMORY: "256Mi"
+  _CONCURRENCY: "80"
+  _TIMEOUT: "120s"
+  _MIN_INSTANCES: "0"
+  _MAX_INSTANCES: "20"
+  _INGRESS: "all"
+  _SERVICE_ACCOUNT: "sebotics-ax-app-sa@sebotics.iam.gserviceaccount.com"
+  _ENV_VARS: "VITE_PUBLIC_API_URL=https://ax-server.sebotics.com/api"
