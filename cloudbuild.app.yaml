@@ -57,7 +57,7 @@ substitutions:
   _APP_SERVICE: sebotics-ax-app
   _ALLOW_UNAUTHENTICATED: "true"
   _CPU: "1"
-  _MEMORY: "256Mi"
+  _MEMORY: "512Mi"
   _CONCURRENCY: "80"
   _TIMEOUT: "120s"
   _MIN_INSTANCES: "0"
