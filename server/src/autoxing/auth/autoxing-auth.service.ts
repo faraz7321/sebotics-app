@@ -6,7 +6,7 @@ import {
   AutoxingTokenResponse,
 } from '../types/autoxing-api.types';
 
-const TOKEN_REFRESH_BUFFER_MS = 30_000;
+const TOKEN_REFRESH_BUFFER_MS = 60000;
 
 @Injectable()
 export class AutoxingAuthService {
@@ -18,7 +18,7 @@ export class AutoxingAuthService {
 
   async getAccessToken(forceRefresh = false): Promise<AutoxingAccessToken> {
     if (!forceRefresh && this.cachedToken) {
-      if (Date.now() < this.cachedToken.expiresAt - TOKEN_REFRESH_BUFFER_MS) {
+      if (Date.now() < (this.cachedToken.expiresAt - TOKEN_REFRESH_BUFFER_MS)) {
         return this.cachedToken;
       }
     }
@@ -66,7 +66,7 @@ export class AutoxingAuthService {
       throw new Error('Failed to authenticate with Autoxing');
     }
 
-    const expiresAt = Date.now() + payload.data.expireTime * 1000;
+    const expiresAt = Date.now() + payload.data.expireTime;
     this.cachedToken = {
       token: payload.data.token,
       key: payload.data.key,
