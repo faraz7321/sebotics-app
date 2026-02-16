@@ -6,7 +6,7 @@ steps:
         "-f",
         "app/Dockerfile",
         "-t",
-        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:${_IMAGE_TAG}",
         "app",
       ]
 
@@ -14,7 +14,7 @@ steps:
     args:
       [
         "push",
-        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:${_IMAGE_TAG}",
       ]
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
@@ -37,14 +37,14 @@ steps:
         fi
 
         gcloud run deploy "${_APP_SERVICE}" \
-          --image "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA" \
+          --image "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:${_IMAGE_TAG}" \
           --region "${_REGION}" \
           --platform managed \
           --port 8080 \
           $$EXTRA_ARGS
 
 images:
-  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:$SHORT_SHA"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_APP_IMAGE}:${_IMAGE_TAG}"
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -52,6 +52,7 @@ options:
 substitutions:
   _REGION: europe-west1
   _AR_REPO: sebotics
+  _IMAGE_TAG: latest
   _APP_IMAGE: sebotics-ax-app
   _APP_SERVICE: sebotics-ax-app
   _ALLOW_UNAUTHENTICATED: "true"

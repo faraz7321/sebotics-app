@@ -32,6 +32,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Normalize GCP inputs
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+
+          keys = [
+              "GCP_PROJECT_ID",
+              "GCP_REGION",
+              "GCP_ARTIFACT_REPO",
+              "GCP_SERVER_SERVICE",
+              "GCP_APP_SERVICE",
+              "GCP_SERVER_RUNTIME_SA",
+              "GCP_APP_RUNTIME_SA",
+              "GCP_CLOUDSQL_CONNECTION",
+              "GCP_DATABASE_URL_SECRET",
+          ]
+
+          env_file = os.environ["GITHUB_ENV"]
+          with open(env_file, "a", encoding="utf-8") as f:
+              for key in keys:
+                  value = os.getenv(key, "")
+                  value = value.replace("\r", "").replace("\n", "").strip()
+                  f.write(f"{key}={value}\n")
+          PY
+
       - name: Validate GCP auth configuration
         env:
           WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER || vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -141,6 +167,7 @@ jobs:
             "_REGION=${GCP_REGION}"
             "_AR_REPO=${GCP_ARTIFACT_REPO}"
             "_SERVER_SERVICE=${GCP_SERVER_SERVICE}"
+            "_IMAGE_TAG=${GITHUB_SHA}"
           )
 
           if [ -n "${GCP_SERVER_RUNTIME_SA}" ]; then
@@ -177,6 +204,7 @@ jobs:
             "_REGION=${GCP_REGION}"
             "_AR_REPO=${GCP_ARTIFACT_REPO}"
             "_APP_SERVICE=${GCP_APP_SERVICE}"
+            "_IMAGE_TAG=${GITHUB_SHA}"
             "_ENV_VARS=VITE_PUBLIC_API_URL=${API_BASE_URL}"
           )
 
