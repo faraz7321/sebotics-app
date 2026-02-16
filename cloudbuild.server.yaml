@@ -25,31 +25,31 @@ steps:
         EXTRA_ARGS="--execution-environment=gen2 --cpu=${_CPU} --memory=${_MEMORY} --concurrency=${_CONCURRENCY} --timeout=${_TIMEOUT} --min-instances=${_MIN_INSTANCES} --max-instances=${_MAX_INSTANCES} --ingress=${_INGRESS}"
 
         if [ "${_ALLOW_UNAUTHENTICATED}" = "true" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS --allow-unauthenticated"
+          EXTRA_ARGS="$$EXTRA_ARGS --allow-unauthenticated"
         fi
 
         if [ -n "${_SERVICE_ACCOUNT}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS --service-account=${_SERVICE_ACCOUNT}"
+          EXTRA_ARGS="$$EXTRA_ARGS --service-account=${_SERVICE_ACCOUNT}"
         fi
 
         if [ -n "${_VPC_CONNECTOR}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS --vpc-connector=${_VPC_CONNECTOR}"
+          EXTRA_ARGS="$$EXTRA_ARGS --vpc-connector=${_VPC_CONNECTOR}"
         fi
 
         if [ -n "${_VPC_EGRESS}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS --vpc-egress=${_VPC_EGRESS}"
+          EXTRA_ARGS="$$EXTRA_ARGS --vpc-egress=${_VPC_EGRESS}"
         fi
 
         if [ -n "${_CLOUDSQL_CONNECTION}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS --add-cloudsql-instances=${_CLOUDSQL_CONNECTION}"
+          EXTRA_ARGS="$$EXTRA_ARGS --add-cloudsql-instances=${_CLOUDSQL_CONNECTION}"
         fi
 
         if [ -n "${_ENV_VARS}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS --set-env-vars=${_ENV_VARS}"
+          EXTRA_ARGS="$$EXTRA_ARGS --set-env-vars=${_ENV_VARS}"
         fi
 
         if [ -n "${_SECRETS}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS --set-secrets=${_SECRETS}"
+          EXTRA_ARGS="$$EXTRA_ARGS --set-secrets=${_SECRETS}"
         fi
 
         gcloud run deploy "${_SERVER_SERVICE}" \
@@ -57,7 +57,7 @@ steps:
           --region "${_REGION}" \
           --platform managed \
           --port 8080 \
-          $EXTRA_ARGS
+          $$EXTRA_ARGS
 
 images:
   - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVER_IMAGE}:$SHORT_SHA"
