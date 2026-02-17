@@ -6,6 +6,17 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UsersService {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
+  listAll() {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        role: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   findById(id: string) {
     return this.prisma.user.findUnique({ where: { id } });
   }

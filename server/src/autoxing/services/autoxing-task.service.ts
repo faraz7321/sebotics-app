@@ -16,50 +16,46 @@ export class AutoxingTaskService {
   ) {}
 
   createTaskV3(body: AutoxingTaskCreateV3Dto) {
-    return this.autoxingApiService.post('/task/v3/create', { body });
+    return this.autoxingApiService.createTaskV3(body);
   }
 
   createTaskV1(body: AutoxingTaskCreateV1Dto) {
-    return this.autoxingApiService.post('/task/v1.1', { body });
+    return this.autoxingApiService.createTaskV1(body);
   }
 
   getTaskList(body: AutoxingTaskListRequestDto) {
-    return this.autoxingApiService.post('/task/v1.1/list', { body });
+    return this.autoxingApiService.getTaskList(body);
   }
 
   getTaskV3(taskId: string, query: AutoxingTaskDetailQueryDto) {
-    return this.autoxingApiService.get(`/task/v3/${taskId}`, {
-      query: {
-        needDetail: query.needDetail,
-      },
-    });
+    return this.autoxingApiService.getTaskV3(taskId, query);
   }
 
   getTask(taskId: string) {
-    return this.autoxingApiService.get(`/task/v1.1/${taskId}`);
+    return this.autoxingApiService.getTask(taskId);
   }
 
   updateTask(taskId: string, body: AutoxingTaskUpdateRequestDto) {
-    return this.autoxingApiService.post(`/task/v1.1/${taskId}`, { body });
+    return this.autoxingApiService.updateTask(taskId, body);
   }
 
   deleteTask(taskId: string) {
-    return this.autoxingApiService.delete(`/task/v1.1/${taskId}`);
+    return this.autoxingApiService.deleteTask(taskId);
   }
 
   executeTask(taskId: string) {
-    return this.autoxingApiService.post(`/task/v1.1/${taskId}/execute`);
+    return this.autoxingApiService.executeTask(taskId);
   }
 
   cancelTaskV3(taskId: string) {
-    return this.autoxingApiService.post(`/task/v3/${taskId}/cancel`);
+    return this.autoxingApiService.cancelTaskV3(taskId);
   }
 
   cancelTaskV1(taskId: string) {
-    return this.autoxingApiService.post(`/task/v1.1/${taskId}/cancel`);
+    return this.autoxingApiService.cancelTaskV1(taskId);
   }
 
   getTaskStateV2(taskId: string) {
-    return this.autoxingApiService.get(`/task/v2.0/${taskId}/state`);
+    return this.autoxingApiService.getTaskStateV2(taskId);
   }
 }

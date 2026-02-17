@@ -11,18 +11,22 @@ Auth chain: **End user ↔ Sebotics ↔ Autoxing**
 
 ## Data model (initial)
 - **User**: `username`, `passwordHash`, `role` (`ADMIN` or `CLIENT`)
-- **Robot**: `serialNumber`, `assignedUserId`, `assignedAt`
-- **Rule**: **One robot can only be assigned to one account** (robot serial is unique)
+- **Business**: external Autoxing business/building identifier
+- **BusinessUserMapping**: many-to-many user/business authorization mapping
+- **Rule**: robot access is resolved at runtime from live Autoxing payload + `BusinessUserMapping`
 
 ## API (initial)
 - `POST /api/auth/register` → create client account
 - `POST /api/auth/login` → obtain JWT
+- `GET /api/users` → admin list of all users
 - `GET /api/users/me` → current user profile
-- `GET /api/robots/my` → list robots assigned to the signed-in client
-- `POST /api/robots/register` → admin registers a robot by serial
-- `POST /api/robots/assign` → admin assigns a robot to a user
-- `POST /api/robots/unassign` → admin removes an assignment
-- `GET /api/robots` → admin list of all robots + assignments
+- `POST /api/autoxing/robots/list` → live robot list filtered by `BusinessUserMapping`
+- `GET /api/autoxing/robots/:robotId/state` → live robot state (authorized businesses only)
+- `GET /api/autoxing/robots/:robotId/state-v2` → live robot state v2 (authorized businesses only)
+
+## Robot data separation
+- `/api/autoxing/robots/*` always fetches LIVE robot data from Autoxing at request time.
+- Access to LIVE robot/business data is filtered at runtime via `BusinessUserMapping`.
 
 ## Local setup
 ```bash
@@ -113,10 +117,10 @@ All Autoxing-specific code is under `src/autoxing`:
 - `src/autoxing/services` → API client and domain services (robot/map/task/business)
 - `src/autoxing/controllers` → Sebotics API controllers that proxy to Autoxing
 
-Current Autoxing proxy routes (admin-only):
-- `POST /api/autoxing/robots/list`
-- `GET /api/autoxing/robots/:robotId/state`
-- `GET /api/autoxing/robots/:robotId/state-v2`
+Current Autoxing proxy routes:
+- `POST /api/autoxing/robots/list` (filtered for CLIENT, full list for ADMIN)
+- `GET /api/autoxing/robots/:robotId/state` (enforces business access for CLIENT)
+- `GET /api/autoxing/robots/:robotId/state-v2` (enforces business access for CLIENT)
 - `POST /api/autoxing/maps/pois/list`
 - `PUT /api/autoxing/maps/pois/:areaId`
 - `DELETE /api/autoxing/maps/pois/:poiId`
@@ -135,8 +139,10 @@ Current Autoxing proxy routes (admin-only):
 - `POST /api/autoxing/tasks/v3/:taskId/cancel`
 - `POST /api/autoxing/tasks/:taskId/cancel`
 - `GET /api/autoxing/tasks/v2/:taskId/state`
-- `POST /api/autoxing/buildings/list`
-- `POST /api/autoxing/businesses/list`
+- `POST /api/autoxing/buildings/list` (filtered for CLIENT, full list for ADMIN)
+- `POST /api/autoxing/businesses/list` (filtered for CLIENT, full list for ADMIN)
+- `POST /api/autoxing/businesses/assign` (ADMIN only)
+- `POST /api/autoxing/businesses/unassign` (ADMIN only)
 
 ## Autoxing documentation
 

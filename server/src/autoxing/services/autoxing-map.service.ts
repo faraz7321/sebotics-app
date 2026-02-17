@@ -14,30 +14,30 @@ export class AutoxingMapService {
   ) {}
 
   getPoiList(body: AutoxingPoiListRequestDto) {
-    return this.autoxingApiService.post('/map/v1.1/poi/list', { body });
+    return this.autoxingApiService.getPoiList(body);
   }
 
   createPoi(areaId: string, body: AutoxingPoiCreateRequestDto) {
-    return this.autoxingApiService.put(`/map/v1.1/poi/${areaId}`, { body });
+    return this.autoxingApiService.createPoi(areaId, body);
   }
 
   deletePoi(poiId: string) {
-    return this.autoxingApiService.delete(`/map/v1.1/poi/${poiId}`);
+    return this.autoxingApiService.deletePoi(poiId);
   }
 
   getPoiDetail(poiId: string) {
-    return this.autoxingApiService.get(`/map/v1.1/poi/${poiId}`);
+    return this.autoxingApiService.getPoiDetail(poiId);
   }
 
   getAreaList(body: AutoxingAreaListRequestDto) {
-    return this.autoxingApiService.post('/map/v1.1/area/list', { body });
+    return this.autoxingApiService.getAreaList(body);
   }
 
   getAreaBaseMap(areaId: string) {
-    return this.autoxingApiService.getBinary(`/map/v1.1/area/${areaId}/base-map`);
+    return this.autoxingApiService.getAreaBaseMap(areaId);
   }
 
   getRobotDeployInfo(robotId: string) {
-    return this.autoxingApiService.get(`/map/v1.1/robot/${robotId}/deploy`);
+    return this.autoxingApiService.getRobotDeployInfo(robotId);
   }
 }

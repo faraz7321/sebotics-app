@@ -2,14 +2,15 @@ import { Body, Controller, Get, Inject, Param, Post, UseGuards } from '@nestjs/c
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiForbiddenResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { CurrentUser } from '../../auth/current-user.decorator';
+import { JwtUser } from '../../auth/auth.types';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-import { Roles } from '../../auth/roles.decorator';
 import { RolesGuard } from '../../auth/roles.guard';
 import { AutoxingResponseDto } from '../dto/response.dto';
 import { AutoxingRobotListRequestDto } from '../dto/robot.dto';
@@ -18,7 +19,6 @@ import { AutoxingRobotService } from '../services/autoxing-robot.service';
 @ApiTags('Autoxing - Robot')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
 @Controller('autoxing/robots')
 export class AutoxingRobotController {
   constructor(
@@ -27,26 +27,37 @@ export class AutoxingRobotController {
   ) {}
 
   @Post('list')
-  @ApiOperation({ summary: 'Proxy Autoxing robot list endpoint' })
+  @ApiOperation({ summary: 'Get LIVE Autoxing robot list filtered by current user business assignments' })
   @ApiBody({ type: AutoxingRobotListRequestDto })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  list(@Body() body: AutoxingRobotListRequestDto) {
-    return this.autoxingRobotService.getRobotList(body);
+  list(
+    @CurrentUser() user: JwtUser,
+    @Body() body: AutoxingRobotListRequestDto,
+  ) {
+    return this.autoxingRobotService.getLiveRobotList(body, user);
   }
 
   @Get(':robotId/state')
-  @ApiOperation({ summary: 'Proxy Autoxing robot state v1.1 endpoint' })
+  @ApiOperation({ summary: 'Get LIVE Autoxing robot state v1.1 for an authorized robot' })
   @ApiParam({ name: 'robotId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  getStateV1(@Param('robotId') robotId: string) {
-    return this.autoxingRobotService.getRobotStateV1(robotId);
+  @ApiForbiddenResponse({ description: 'Forbidden - Robot not assigned to user businesses' })
+  getStateV1(
+    @CurrentUser() user: JwtUser,
+    @Param('robotId') robotId: string,
+  ) {
+    return this.autoxingRobotService.getLiveRobotStateV1(robotId, user);
   }
 
   @Get(':robotId/state-v2')
-  @ApiOperation({ summary: 'Proxy Autoxing robot state v2.0 endpoint' })
+  @ApiOperation({ summary: 'Get LIVE Autoxing robot state v2.0 for an authorized robot' })
   @ApiParam({ name: 'robotId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  getStateV2(@Param('robotId') robotId: string) {
-    return this.autoxingRobotService.getRobotStateV2(robotId);
+  @ApiForbiddenResponse({ description: 'Forbidden - Robot not assigned to user businesses' })
+  getStateV2(
+    @CurrentUser() user: JwtUser,
+    @Param('robotId') robotId: string,
+  ) {
+    return this.autoxingRobotService.getLiveRobotStateV2(robotId, user);
   }
 }
