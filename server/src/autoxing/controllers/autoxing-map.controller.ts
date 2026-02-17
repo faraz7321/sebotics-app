@@ -7,9 +7,9 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { JwtUser } from '../../auth/auth.types';
+import { CurrentUser } from '../../auth/current-user.decorator';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-import { Roles } from '../../auth/roles.decorator';
 import { RolesGuard } from '../../auth/roles.guard';
 import {
   AutoxingAreaListRequestDto,
@@ -22,7 +22,6 @@ import { AutoxingMapService } from '../services/autoxing-map.service';
 @ApiTags('Autoxing - Map')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
 @Controller('autoxing/maps')
 export class AutoxingMapController {
   constructor(
@@ -34,8 +33,8 @@ export class AutoxingMapController {
   @ApiOperation({ summary: 'Proxy Autoxing POI list endpoint' })
   @ApiBody({ type: AutoxingPoiListRequestDto })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  listPois(@Body() body: AutoxingPoiListRequestDto) {
-    return this.autoxingMapService.getPoiList(body);
+  listPois(@CurrentUser() user: JwtUser, @Body() body: AutoxingPoiListRequestDto) {
+    return this.autoxingMapService.getPoiList(user, body);
   }
 
   @Put('pois/:areaId')
@@ -67,8 +66,8 @@ export class AutoxingMapController {
   @ApiOperation({ summary: 'Proxy Autoxing area list endpoint' })
   @ApiBody({ type: AutoxingAreaListRequestDto })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  listAreas(@Body() body: AutoxingAreaListRequestDto) {
-    return this.autoxingMapService.getAreaList(body);
+  listAreas(@CurrentUser() user: JwtUser, @Body() body: AutoxingAreaListRequestDto) {
+    return this.autoxingMapService.getAreaList(user, body);
   }
 
   @Get('areas/:areaId/base-map')

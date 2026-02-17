@@ -18,7 +18,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { JwtUser } from '../../auth/auth.types';
+import { CurrentUser } from '../../auth/current-user.decorator';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { Roles } from '../../auth/roles.decorator';
 import { RolesGuard } from '../../auth/roles.guard';
@@ -35,7 +36,6 @@ import { AutoxingTaskService } from '../services/autoxing-task.service';
 @ApiTags('Autoxing - Task')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
 @Controller('autoxing/tasks')
 export class AutoxingTaskController {
   constructor(
@@ -47,8 +47,8 @@ export class AutoxingTaskController {
   @ApiOperation({ summary: 'Proxy Autoxing create task v3 endpoint' })
   @ApiBody({ type: AutoxingTaskCreateV3Dto })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  createTaskV3(@Body() body: AutoxingTaskCreateV3Dto) {
-    return this.autoxingTaskService.createTaskV3(body);
+  createTaskV3(@CurrentUser() user: JwtUser, @Body() body: AutoxingTaskCreateV3Dto) {
+    return this.autoxingTaskService.createTaskV3(user, body);
   }
 
   @Post()

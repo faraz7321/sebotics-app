@@ -1,4 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
+import { JwtUser } from '../../auth/auth.types';
 import {
   AutoxingTaskCreateV1Dto,
   AutoxingTaskCreateV3Dto,
@@ -7,15 +9,24 @@ import {
   AutoxingTaskUpdateRequestDto,
 } from '../dto/task.dto';
 import { AutoxingApiService } from './autoxing-api.service';
+import { AutoxingBusinessService } from './autoxing-business.service';
 
 @Injectable()
 export class AutoxingTaskService {
   constructor(
     @Inject(AutoxingApiService)
     private readonly autoxingApiService: AutoxingApiService,
+    @Inject(AutoxingBusinessService)
+    private readonly autoxingBusinessService: AutoxingBusinessService,
   ) {}
 
-  createTaskV3(body: AutoxingTaskCreateV3Dto) {
+  async createTaskV3(user: JwtUser, body: AutoxingTaskCreateV3Dto) {
+    if (body.businessId && user.role !== Role.ADMIN) {
+      const authorizedBusinessIds = await this.autoxingBusinessService.getAuthorizedBusinessIds(user.userId);
+      if (!authorizedBusinessIds.has(body.businessId)) {
+        throw new ForbiddenException('You do not have access to this business');
+      }
+    }
     return this.autoxingApiService.createTaskV3(body);
   }
 
