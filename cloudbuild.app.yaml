@@ -32,8 +32,19 @@ steps:
           EXTRA_ARGS="$$EXTRA_ARGS --service-account=${_SERVICE_ACCOUNT}"
         fi
 
-        if [ -n "${_ENV_VARS}" ]; then
-          EXTRA_ARGS="$$EXTRA_ARGS --set-env-vars=${_ENV_VARS}"
+        if [ -n "${_APP_API_BASE_URL}" ] || [ -n "${_APP_API_PROXY_TARGET}" ]; then
+          ENV_VARS=""
+          if [ -n "${_APP_API_BASE_URL}" ]; then
+            ENV_VARS="VITE_PUBLIC_API_URL=${_APP_API_BASE_URL}"
+          fi
+          if [ -n "${_APP_API_PROXY_TARGET}" ]; then
+            if [ -n "$$ENV_VARS" ]; then
+              ENV_VARS="$$ENV_VARS,API_PROXY_TARGET=${_APP_API_PROXY_TARGET}"
+            else
+              ENV_VARS="API_PROXY_TARGET=${_APP_API_PROXY_TARGET}"
+            fi
+          fi
+          EXTRA_ARGS="$$EXTRA_ARGS --set-env-vars=$$ENV_VARS"
         fi
 
         gcloud run deploy "${_APP_SERVICE}" \
@@ -64,4 +75,5 @@ substitutions:
   _MAX_INSTANCES: "20"
   _INGRESS: "all"
   _SERVICE_ACCOUNT: "sebotics-ax-app-sa@sebotics.iam.gserviceaccount.com"
-  _ENV_VARS: "VITE_PUBLIC_API_URL=https://ax-server.sebotics.com/api"
+  _APP_API_BASE_URL: ""
+  _APP_API_PROXY_TARGET: ""

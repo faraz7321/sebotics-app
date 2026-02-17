@@ -24,6 +24,7 @@ jobs:
       GCP_ARTIFACT_REPO: ${{ vars.GCP_ARTIFACT_REPO || secrets.GCP_ARTIFACT_REPO }}
       GCP_SERVER_SERVICE: ${{ vars.GCP_SERVER_SERVICE || secrets.GCP_SERVER_SERVICE }}
       GCP_APP_SERVICE: ${{ vars.GCP_APP_SERVICE || secrets.GCP_APP_SERVICE }}
+      GCP_APP_PUBLIC_URL: ${{ vars.GCP_APP_PUBLIC_URL || secrets.GCP_APP_PUBLIC_URL }}
       GCP_SERVER_RUNTIME_SA: ${{ vars.GCP_SERVER_RUNTIME_SA || secrets.GCP_SERVER_RUNTIME_SA }}
       GCP_APP_RUNTIME_SA: ${{ vars.GCP_APP_RUNTIME_SA || secrets.GCP_APP_RUNTIME_SA }}
       GCP_CLOUDSQL_CONNECTION: ${{ vars.GCP_CLOUDSQL_CONNECTION || secrets.GCP_CLOUDSQL_CONNECTION }}
@@ -44,6 +45,7 @@ jobs:
               "GCP_ARTIFACT_REPO",
               "GCP_SERVER_SERVICE",
               "GCP_APP_SERVICE",
+              "GCP_APP_PUBLIC_URL",
               "GCP_SERVER_RUNTIME_SA",
               "GCP_APP_RUNTIME_SA",
               "GCP_CLOUDSQL_CONNECTION",
@@ -71,6 +73,7 @@ jobs:
           test -n "${GCP_ARTIFACT_REPO}" || { echo "Missing GCP_ARTIFACT_REPO (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_SERVER_SERVICE}" || { echo "Missing GCP_SERVER_SERVICE (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_APP_SERVICE}" || { echo "Missing GCP_APP_SERVICE (set it in GitHub Secrets or Variables)"; exit 1; }
+          test -n "${GCP_APP_PUBLIC_URL}" || { echo "Missing GCP_APP_PUBLIC_URL (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_CLOUDSQL_CONNECTION}" || { echo "Missing GCP_CLOUDSQL_CONNECTION (set it in GitHub Secrets or Variables)"; exit 1; }
           test -n "${GCP_DATABASE_URL_SECRET}" || { echo "Missing GCP_DATABASE_URL_SECRET (set it in GitHub Secrets or Variables)"; exit 1; }
 
@@ -198,14 +201,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          API_BASE_URL="${{ steps.server_url.outputs.url }}/api"
+          API_PROXY_TARGET="${{ steps.server_url.outputs.url }}"
 
           substitutions=(
             "_REGION=${GCP_REGION}"
             "_AR_REPO=${GCP_ARTIFACT_REPO}"
             "_APP_SERVICE=${GCP_APP_SERVICE}"
             "_IMAGE_TAG=${GITHUB_SHA}"
-            "_ENV_VARS=VITE_PUBLIC_API_URL=${API_BASE_URL}"
+            "_APP_API_BASE_URL=/api"
+            "_APP_API_PROXY_TARGET=${API_PROXY_TARGET}"
           )
 
           if [ -n "${GCP_APP_RUNTIME_SA}" ]; then
@@ -217,22 +221,11 @@ jobs:
             --config cloudbuild.app.yaml \
             --substitutions "$(IFS=,; echo "${substitutions[*]}")"
 
-      - name: Read app URL
-        id: app_url
-        run: |
-          set -euo pipefail
-          APP_URL="$(gcloud run services describe "${GCP_APP_SERVICE}" \
-            --project "${GCP_PROJECT_ID}" \
-            --region "${GCP_REGION}" \
-            --format='value(status.url)')"
-
-          echo "url=${APP_URL}" >> "$GITHUB_OUTPUT"
-
       - name: Update server CORS origin
         run: |
           set -euo pipefail
 
-          CORS_ORIGIN="${{ steps.app_url.outputs.url }}"
+          CORS_ORIGIN="${GCP_APP_PUBLIC_URL}"
 
           gcloud run services update "${GCP_SERVER_SERVICE}" \
             --project "${GCP_PROJECT_ID}" \
@@ -243,6 +236,5 @@ jobs:
         run: |
           {
             echo "### Deployment completed"
-            echo "- Server: ${{ steps.server_url.outputs.url }}"
-            echo "- App: ${{ steps.app_url.outputs.url }}"
+            echo "- App: ${GCP_APP_PUBLIC_URL}"
           } >> "$GITHUB_STEP_SUMMARY"

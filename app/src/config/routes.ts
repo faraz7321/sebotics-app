@@ -1,5 +1,3 @@
-import { API_BASE_URL } from "@/lib/runtime-config";
-
 /* FRONTEND ROUTES */
 
 export const ROUTES = {
@@ -14,7 +12,7 @@ export const ROUTES = {
 
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: `${API_BASE_URL}/auth/login`,
-    REGISTER: `${API_BASE_URL}/auth/register`,
+    LOGIN: "/auth/login",
+    REGISTER: "/auth/register",
   },
 } as const;
