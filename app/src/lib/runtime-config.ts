@@ -17,7 +17,12 @@ function readRuntimeConfig(): RuntimeConfig {
 
 const runtimeConfig = readRuntimeConfig();
 
-export const API_BASE_URL =
-  normalizeUrl(runtimeConfig.API_BASE_URL) ??
+const apiBaseUrl =
   normalizeUrl(import.meta.env.VITE_PUBLIC_API_URL) ??
-  "http://localhost:8080/api";
+  normalizeUrl(runtimeConfig.API_BASE_URL);
+
+if (!apiBaseUrl) {
+  throw new Error("VITE_PUBLIC_API_URL (or runtime API_BASE_URL) is required");
+}
+
+export const API_BASE_URL = apiBaseUrl;
