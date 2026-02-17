@@ -51,7 +51,7 @@ export class AutoxingBusinessService {
   async getBusinessList(user: JwtUser) {
     const response = await this.autoxingApiService.getBusinessList();
     if (user.role === Role.ADMIN) {
-      return response;
+      return this.enrichBusinessesWithUserIds(response);
     }
 
     const authorizedBusinessIds = await this.getAuthorizedBusinessIds(user.userId);
@@ -199,5 +199,39 @@ export class AutoxingBusinessService {
 
   private deepClone<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
+  }
+
+  private async enrichBusinessesWithUserIds(
+    envelope: AutoxingEnvelope<AutoxingBusinessListData>,
+  ): Promise<AutoxingEnvelope<AutoxingBusinessListData>> {
+    if (!envelope.data) {
+      return envelope;
+    }
+
+    const allMappings = await this.prisma.businessUserMapping.findMany({
+      select: { businessId: true, userId: true },
+    });
+
+    const userIdsByBusinessId = new Map<string, string[]>();
+    for (const mapping of allMappings) {
+      const existing = userIdsByBusinessId.get(mapping.businessId) ?? [];
+      existing.push(mapping.userId);
+      userIdsByBusinessId.set(mapping.businessId, existing);
+    }
+
+    const clonedData = this.deepClone(envelope.data);
+    const items = getAutoxingItems(clonedData);
+
+    for (const item of items) {
+      const businessId = this.extractBusinessId(item);
+      if (businessId) {
+        item.userIds = userIdsByBusinessId.get(businessId) ?? [];
+      }
+    }
+
+    return {
+      ...envelope,
+      data: clonedData,
+    };
   }
 }
