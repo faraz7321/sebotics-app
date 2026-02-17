@@ -1,0 +1,2 @@
+-- No-op migration.
+-- Business.id/businessId are already TEXT and Robot table should remain removed.

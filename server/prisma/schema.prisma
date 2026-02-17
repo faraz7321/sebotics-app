@@ -14,23 +14,23 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  username     String   @unique
-  passwordHash String
-  role         Role     @default(CLIENT)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               String                @id @default(uuid()) @db.Uuid
+  username         String                @unique
+  passwordHash     String
+  role             Role                  @default(CLIENT)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
   businessMappings BusinessUserMapping[]
 }
 
 model Business {
-  id             String   @id @default(uuid()) @db.Uuid
-  userMappings    BusinessUserMapping[]
+  id           String @id
+  userMappings BusinessUserMapping[]
 }
 
 model BusinessUserMapping {
   id             String   @id @default(uuid()) @db.Uuid
-  businessId     String   @db.Uuid
+  businessId     String
   userId         String   @db.Uuid
   business       Business @relation(fields: [businessId], references: [id])
   user           User     @relation(fields: [userId], references: [id])
