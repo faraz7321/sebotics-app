@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { ROUTES } from './config/routes';
-import { ProtectedRoute, PublicRoute } from './components/auth/AuthGuards';
+import { AdminRoute, ProtectedRoute, PublicRoute } from './components/auth/AuthGuards';
 
 import { FileQuestion } from 'lucide-react';
+import { Loader } from './components/ui/loader';
 import { Button } from './components/ui/button';
 
 import SignIn from './pages/auth/SignIn';
@@ -10,8 +11,17 @@ import SignUp from './pages/auth/SignUp';
 
 import RootLayout from './RootLayout';
 import DashBoard from './pages/dashboard/Dashboard';
+import Businesses from './pages/businesses/Businesses';
+import { useAppSelector } from './store';
 
 function App() {
+  const isAuthLoading = useAppSelector((state) => state.auth.loading);
+
+  if (isAuthLoading) {
+    return (
+      <Loader variant="fullscreen" />
+    );
+  }
 
   return (
     <BrowserRouter>
@@ -28,6 +38,9 @@ function App() {
           <Route element={<RootLayout />}>
             <Route index element={<Navigate to={ROUTES.DASHBOARD.HOME} replace />} />
             <Route path={ROUTES.DASHBOARD.HOME} element={<DashBoard />} />
+            <Route element={<AdminRoute />}>
+              <Route path={ROUTES.BUSINESSES.PAGE} element={<Businesses />} />
+            </Route>
           </Route>
         </Route>
 

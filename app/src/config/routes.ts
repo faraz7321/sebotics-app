@@ -7,6 +7,9 @@ export const ROUTES = {
   },
   DASHBOARD: {
     HOME: "/home",
+  },
+  BUSINESSES: {
+    PAGE: "/businesses",
   }
 } as const;
 
@@ -14,10 +17,14 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
+    REFRESH: "/auth/refresh",
   },
   USER: {
     LIST: "/users",
     ME: "/users/me",
+  },
+  ROBOT: {
+    LIST: "/autoxing/robots/list",
   },
   BUSINESS: {
     LIST: "/autoxing/businesses/list",

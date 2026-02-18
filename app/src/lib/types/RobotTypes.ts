@@ -1,12 +1,28 @@
 export type Robot = {
-  id: string;
-  name: string;
-  location: string;
+  robotId: string;
+  businessId: string;
+  areaId: string;
+  isTask: boolean;
+  isManualMode: boolean;
+  isCharging: boolean;
+  isRemoteMode: boolean;
   battery: number;
-  status: "idle" | "serving" | "charging";
+  mac: string;
+  yaw: number;
+  isError: boolean;
+  activeStatus: number;
+  isOnLine: boolean;
+  name: string;
+  x: number;
+  y: number;
+  isEmergencyStop: boolean;
+  model: string;
+  errors: string[];
 };
 
-export interface RobotFormData {
-  serial_number: string;
-  name: string;
+export interface RobotState {
+  error: string | null;
+  loading: boolean;
+
+  robots: Robot[];
 };

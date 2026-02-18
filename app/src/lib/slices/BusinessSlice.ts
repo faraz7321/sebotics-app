@@ -3,14 +3,7 @@ import { API_ENDPOINTS } from '@/config/routes';
 
 import api from '../api/axios';
 import type { BusinessState } from '../types/BusinessTypes';
-
-const getErrorMessage = (err: unknown, fallback: string): string => {
-  if (err instanceof Error && err.message) {
-    return err.message;
-  }
-
-  return fallback;
-};
+import { getErrorMessage } from './sliceHelpers';
 
 export const listBusinesses = createAsyncThunk(
   API_ENDPOINTS.BUSINESS.LIST,
@@ -63,13 +56,19 @@ const initialState: BusinessState = {
   loading: false,
   error: null,
 
+  selectedbusinessId: null,
+
   businesses: []
 };
 
 const businessSlice = createSlice({
   name: 'business',
   initialState,
-  reducers: {},
+  reducers: {
+    setSelectedBusinessId(state, action) {
+      state.selectedbusinessId = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // List
@@ -125,4 +124,5 @@ const businessSlice = createSlice({
   },
 });
 
+export const { setSelectedBusinessId } = businessSlice.actions;
 export default businessSlice.reducer;

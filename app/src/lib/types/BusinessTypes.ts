@@ -13,5 +13,7 @@ export interface BusinessState {
   loading: boolean;
   error: string | null;
 
+  selectedbusinessId: string | null;
+
   businesses: Business[];
 }

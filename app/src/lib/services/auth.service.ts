@@ -1,7 +1,8 @@
 import { API_ENDPOINTS } from "@/config/routes";
+import { API_BASE_URL } from "../runtime-config";
 import type { AuthResult, AuthUser, LoginCreds, RegisterCreds } from "../types/AuthTypes";
-import api from "@/lib/api/axios";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 type AuthApiResponse = {
   accessToken: string;
@@ -15,11 +16,13 @@ type ServiceError = Error & { code?: string };
 class AuthService {
   async login(credentials: LoginCreds): Promise<AuthResult> {
     try {
-      const response = await api.post<AuthApiResponse>(API_ENDPOINTS.AUTH.LOGIN, {
+      const response = await axios.post<AuthApiResponse>(
+        `${API_BASE_URL}${API_ENDPOINTS.AUTH.LOGIN}`, {
         username: credentials.username,
         password: credentials.password,
       },
         {
+          withCredentials: true,
           validateStatus: () => true,
           responseType: "json",
         }
@@ -40,8 +43,8 @@ class AuthService {
 
   async register(credentials: RegisterCreds): Promise<AuthResult> {
     try {
-      const response = await api.post<AuthApiResponse>(
-        API_ENDPOINTS.AUTH.REGISTER, {
+      const response = await axios.post<AuthApiResponse>(
+        `${API_BASE_URL}${API_ENDPOINTS.AUTH.REGISTER}`, {
         firstName: credentials.firstName,
         lastName: credentials.lastName,
         email: credentials.email,
@@ -49,6 +52,7 @@ class AuthService {
         password: credentials.password,
       },
         {
+          withCredentials: true,
           validateStatus: () => true,
           responseType: "json",
         }
@@ -64,6 +68,36 @@ class AuthService {
       };
     } catch (err: unknown) {
       throw this.buildServiceError(err, "Registration failed");
+    }
+  }
+
+  async refreshToken(): Promise<string> {
+    try {
+      const response = await axios.post<AuthApiResponse>(
+        `${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH}`,
+        {},
+        {
+          withCredentials: true,
+          validateStatus: (status) => status === 200 || status === 201,
+        }
+      );
+
+      return response.data.accessToken;
+    } catch (err: unknown) {
+      throw this.buildServiceError(err, "Session expired. Please login again.");
+    }
+  }
+
+  isTokenExpired(token: string | null): boolean {
+    if (!token) return true;
+
+    try {
+      const decoded = jwtDecode<{ exp: number }>(token);
+      const currentTime = Date.now() / 1000;
+
+      return decoded.exp < currentTime + 180;
+    } catch {
+      return true;
     }
   }
 

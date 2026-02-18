@@ -4,12 +4,14 @@ import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux
 import authReducer from './lib/slices/AuthSlice';
 import businessReducer from './lib/slices/BusinessSlice';
 import userReducer from './lib/slices/UserSlice';
+import robotReducer from './lib/slices/RobotSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     business: businessReducer,
     user: userReducer,
+    robot: robotReducer,
   },
 })
 

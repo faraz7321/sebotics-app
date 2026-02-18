@@ -2,14 +2,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/tool
 import { authService } from '../services/auth.service';
 import { API_ENDPOINTS } from '@/config/routes';
 import { type AuthResult, type AuthState, type LoginCreds, type RegisterCreds } from '../types/AuthTypes';
-
-const getErrorMessage = (err: unknown, fallback: string): string => {
-  if (err instanceof Error && err.message) {
-    return err.message;
-  }
-
-  return fallback;
-};
+import { getErrorMessage } from './sliceHelpers';
 
 export const registerUser = createAsyncThunk<AuthResult, RegisterCreds, { rejectValue: string }>(
   API_ENDPOINTS.AUTH.REGISTER,
@@ -29,6 +22,17 @@ export const loginUser = createAsyncThunk<AuthResult, LoginCreds, { rejectValue:
       return await authService.login(credentials);
     } catch (err: unknown) {
       return thunkAPI.rejectWithValue(getErrorMessage(err, 'Login failed'));
+    }
+  }
+);
+
+export const refreshToken = createAsyncThunk(
+  API_ENDPOINTS.AUTH.REFRESH,
+  async (_, thunkAPI) => {
+    try {
+      return await authService.refreshToken();
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue(getErrorMessage(err, 'Token refresh failed'));
     }
   }
 );
@@ -94,6 +98,26 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      // Refresh
+      .addCase(refreshToken.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(refreshToken.fulfilled, (state, action: PayloadAction<string>) => {
+        const accessToken = action.payload;
+
+        state.accessToken = accessToken;
+
+        localStorage.setItem('accessToken', accessToken);
+
+        state.loading = false;
+      })
+      .addCase(refreshToken.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        state.accessToken = '';
+        state.user = null;
       })
   },
 });
