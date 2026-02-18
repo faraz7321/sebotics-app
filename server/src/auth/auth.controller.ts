@@ -39,9 +39,15 @@ export class AuthController {
     description: 'User successfully registered',
     type: AuthResponseDto,
   })
-  @ApiBadRequestResponse({ description: 'Username already in use' })
+  @ApiBadRequestResponse({ description: 'Username or email already in use' })
   async register(@Body() body: RegisterDto, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.register(body.username, body.password);
+    const result = await this.authService.register({
+      firstName: body.firstName,
+      lastName: body.lastName,
+      email: body.email,
+      username: body.username,
+      password: body.password,
+    });
     return this.setRefreshCookieAndStrip(res, result);
   }
 

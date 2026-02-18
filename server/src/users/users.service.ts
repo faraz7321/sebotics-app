@@ -10,6 +10,9 @@ export class UsersService {
     return this.prisma.user.findMany({
       select: {
         id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
         username: true,
         role: true,
       },
@@ -25,11 +28,24 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { username } });
   }
 
-  createClient(username: string, passwordHash: string) {
+  findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  createClient(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+    passwordHash: string;
+  }) {
     return this.prisma.user.create({
       data: {
-        username,
-        passwordHash,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        username: data.username,
+        passwordHash: data.passwordHash,
         role: Role.CLIENT,
       },
     });

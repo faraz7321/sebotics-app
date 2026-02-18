@@ -54,6 +54,9 @@ export class UsersController {
 
     return {
       id: record.id,
+      firstName: record.firstName,
+      lastName: record.lastName,
+      email: record.email,
       username: record.username,
       role: record.role,
     };

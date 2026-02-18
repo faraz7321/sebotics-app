@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../services/auth.service';
 import { API_ENDPOINTS } from '@/config/routes';
-import { type AuthCreds, type AuthResult, type AuthState } from '../types/AuthTypes';
+import { type AuthResult, type AuthState, type LoginCreds, type RegisterCreds } from '../types/AuthTypes';
 
 const getErrorMessage = (err: unknown, fallback: string): string => {
   if (err instanceof Error && err.message) {
@@ -11,9 +11,9 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
   return fallback;
 };
 
-export const registerUser = createAsyncThunk<AuthResult, AuthCreds, { rejectValue: string }>(
+export const registerUser = createAsyncThunk<AuthResult, RegisterCreds, { rejectValue: string }>(
   API_ENDPOINTS.AUTH.REGISTER,
-  async (credentials: AuthCreds, thunkAPI) => {
+  async (credentials: RegisterCreds, thunkAPI) => {
     try {
       return await authService.register(credentials);
     } catch (err: unknown) {
@@ -22,9 +22,9 @@ export const registerUser = createAsyncThunk<AuthResult, AuthCreds, { rejectValu
   }
 );
 
-export const loginUser = createAsyncThunk<AuthResult, AuthCreds, { rejectValue: string }>(
+export const loginUser = createAsyncThunk<AuthResult, LoginCreds, { rejectValue: string }>(
   API_ENDPOINTS.AUTH.LOGIN,
-  async (credentials: AuthCreds, thunkAPI) => {
+  async (credentials: LoginCreds, thunkAPI) => {
     try {
       return await authService.login(credentials);
     } catch (err: unknown) {

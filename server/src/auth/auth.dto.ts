@@ -1,43 +1,80 @@
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
   @ApiProperty({
-    description: 'Username for the new account',
+    description: 'First name',
     type: String,
-    minLength: 3,
-    maxLength: 50,
-    example: 'john_doe',
+    maxLength: 10,
+    example: 'John',
   })
   @IsString()
-  @MinLength(3)
-  @MaxLength(50)
+  @MinLength(1)
+  @MaxLength(10)
+  firstName!: string;
+
+  @ApiProperty({
+    description: 'Last name',
+    type: String,
+    maxLength: 10,
+    example: 'Doe',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(10)
+  lastName!: string;
+
+  @ApiProperty({
+    description: 'Email address',
+    type: String,
+    format: 'email',
+    maxLength: 254,
+    example: 'john@example.com',
+  })
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+
+  @ApiProperty({
+    description: 'Username for the new account',
+    type: String,
+    minLength: 1,
+    maxLength: 8,
+    pattern: '^[A-Za-z0-9]+$',
+    example: 'john123',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(8)
+  @Matches(/^[A-Za-z0-9]+$/, {
+    message: 'username must contain only letters and numbers',
+  })
   username!: string;
 
   @ApiProperty({
     description: 'Password for the new account',
     type: String,
-    minLength: 6,
+    minLength: 8,
     maxLength: 72,
     example: 'SecurePass123!',
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   @MaxLength(72)
   password!: string;
 }
 
 export class LoginDto {
   @ApiProperty({
-    description: 'Username for login',
+    description: 'Username or email for login',
     type: String,
-    minLength: 3,
-    maxLength: 50,
-    example: 'john_doe',
+    minLength: 1,
+    maxLength: 254,
+    example: 'john123',
   })
   @IsString()
-  @MinLength(3)
-  @MaxLength(50)
+  @MinLength(1)
+  @MaxLength(254)
   username!: string;
 
   @ApiProperty({
@@ -63,9 +100,30 @@ export class UserResponseDto {
   id!: string;
 
   @ApiProperty({
+    description: 'First name',
+    type: String,
+    example: 'John',
+  })
+  firstName!: string;
+
+  @ApiProperty({
+    description: 'Last name',
+    type: String,
+    example: 'Doe',
+  })
+  lastName!: string;
+
+  @ApiProperty({
+    description: 'Email',
+    type: String,
+    example: 'john@example.com',
+  })
+  email!: string;
+
+  @ApiProperty({
     description: 'Username',
     type: String,
-    example: 'john_doe',
+    example: 'john123',
   })
   username!: string;
 

@@ -10,6 +10,27 @@ export class UserProfileResponseDto {
   id!: string;
 
   @ApiProperty({
+    description: 'First name',
+    type: String,
+    example: 'John',
+  })
+  firstName!: string;
+
+  @ApiProperty({
+    description: 'Last name',
+    type: String,
+    example: 'Doe',
+  })
+  lastName!: string;
+
+  @ApiProperty({
+    description: 'Email',
+    type: String,
+    example: 'john@example.com',
+  })
+  email!: string;
+
+  @ApiProperty({
     description: 'Username',
     type: String,
     example: 'john_doe',

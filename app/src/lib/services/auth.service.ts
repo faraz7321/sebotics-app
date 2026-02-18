@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from "@/config/routes";
-import type { AuthCreds, AuthResult, AuthUser } from "../types/AuthTypes";
+import type { AuthResult, AuthUser, LoginCreds, RegisterCreds } from "../types/AuthTypes";
 import api from "@/lib/api/axios";
 import axios from "axios";
 
@@ -13,7 +13,7 @@ type AuthApiResponse = {
 type ServiceError = Error & { code?: string };
 
 class AuthService {
-  async login(credentials: AuthCreds): Promise<AuthResult> {
+  async login(credentials: LoginCreds): Promise<AuthResult> {
     try {
       const response = await api.post<AuthApiResponse>(API_ENDPOINTS.AUTH.LOGIN, {
         username: credentials.username,
@@ -38,10 +38,13 @@ class AuthService {
     }
   }
 
-  async register(credentials: AuthCreds): Promise<AuthResult> {
+  async register(credentials: RegisterCreds): Promise<AuthResult> {
     try {
       const response = await api.post<AuthApiResponse>(
         API_ENDPOINTS.AUTH.REGISTER, {
+        firstName: credentials.firstName,
+        lastName: credentials.lastName,
+        email: credentials.email,
         username: credentials.username,
         password: credentials.password,
       },

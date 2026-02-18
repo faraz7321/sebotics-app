@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  User, Lock, Eye,
+  User, Lock, Eye, Mail,
   EyeOff, ArrowRight, AlertCircle,
 } from "lucide-react";
 
@@ -19,11 +19,17 @@ export default function SignUp() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
     username: "",
     password: "",
   });
 
   const [formErrors, setFormErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
     username: "",
     password: "",
   });
@@ -45,22 +51,47 @@ export default function SignUp() {
 
   const validate = () => {
     const errors = {
+      firstName: "",
+      lastName: "",
+      email: "",
       username: "",
       password: "",
     };
 
+    if (!formData.firstName.trim()) {
+      errors.firstName = "First name is required";
+    } else if (formData.firstName.trim().length > 10) {
+      errors.firstName = "First name must be at most 10 characters";
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = "Last name is required";
+    } else if (formData.lastName.trim().length > 10) {
+      errors.lastName = "Last name must be at most 10 characters";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(formData.email.trim())) {
+      errors.email = "Enter a valid email";
+    }
+
     if (!formData.username) {
-      errors.username = "username is required";
+      errors.username = "Username is required";
+    } else if (formData.username.length > 8) {
+      errors.username = "Username must be at most 8 characters";
+    } else if (!/^[A-Za-z0-9]+$/.test(formData.username)) {
+      errors.username = "Username must contain only letters and numbers";
     }
 
     if (!formData.password) {
       errors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      errors.password = "Password must be at least 8 characters";
     }
 
     setFormErrors(errors);
-    return !errors.username && !errors.password;
+    return !errors.firstName && !errors.lastName && !errors.email && !errors.username && !errors.password;
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -107,14 +138,63 @@ export default function SignUp() {
 
             {/* Username */}
             <div className="space-y-2">
-              <Label htmlFor="id" className="text-sm font-semibold ml-1">Username</Label>
+              <Label htmlFor="firstName" className="text-sm font-semibold ml-1">First Name</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <User size={18} />
+                </span>
+                <Input
+                  id="firstName"
+                  placeholder="John"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className={`pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 ${formErrors.firstName ? 'border-destructive' : ''}`}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName" className="text-sm font-semibold ml-1">Last Name</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <User size={18} />
+                </span>
+                <Input
+                  id="lastName"
+                  placeholder="Doe"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className={`pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 ${formErrors.lastName ? 'border-destructive' : ''}`}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-semibold ml-1">Email</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <Mail size={18} />
+                </span>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={`pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 ${formErrors.email ? 'border-destructive' : ''}`}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-semibold ml-1">Username</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   <User size={18} />
                 </span>
                 <Input
                   id="username"
-                  placeholder="john doe"
+                  placeholder="john123"
                   value={formData.username}
                   onChange={handleInputChange}
                   className={`pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 ${formErrors.username ? 'border-destructive' : ''}`}
