@@ -2,10 +2,14 @@ import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux';
 
 import authReducer from './lib/slices/AuthSlice';
+import businessReducer from './lib/slices/BusinessSlice';
+import userReducer from './lib/slices/UserSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    business: businessReducer,
+    user: userReducer,
   },
 })
 

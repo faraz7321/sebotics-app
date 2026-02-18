@@ -15,7 +15,12 @@ import {
 
 import { AddRobotModal } from "@/components/robots/AddRobotModal";
 import type { Robot } from "@/lib/types/RobotTypes";
-import type { Task } from "@/lib/types/TaskTypes";
+import { listBusinesses } from "@/lib/slices/BusinessSlice";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { useEffect, useState } from "react";
+import { listUsers } from "@/lib/slices/UserSlice";
+import type { Business } from "@/lib/types/BusinessTypes";
+import { ManageUsersModal } from "@/components/business/ManageUsersModal";
 
 
 const mockRobots: Robot[] = [
@@ -25,29 +30,29 @@ const mockRobots: Robot[] = [
   { id: "r4", name: "Juno 4", location: "Patio", battery: 91, status: "idle" },
 ];
 
-const mockTasks: Task[] = [
-  {
-    id: "t1",
-    title: "Deliver food to Table 5",
-    assignedRobot: "Juno 1",
-    status: "in-progress",
-  },
-  {
-    id: "t2",
-    title: "Refill water stations",
-    assignedRobot: "Juno 2",
-    status: "pending",
-  },
-  {
-    id: "t3",
-    title: "Clean hallway",
-    assignedRobot: "Juno 3",
-    status: "completed",
-  },
-];
-
-
 export default function Dashboard() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const getBusinsesses = async () => {
+      await dispatch(listBusinesses());
+    }
+
+    const getUsers = async () => {
+      await dispatch(listUsers());
+    }
+
+    getBusinsesses();
+    getUsers()
+  }, [dispatch]);
+
+  const businesses = useAppSelector((state) => state.business.businesses);
+  const users = useAppSelector((state) => state.user.users);
+
+  console.log(users);
+
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
+
   return (
     <div className="bg-slate-50 font-sans text-slate-900">
 
@@ -90,49 +95,77 @@ export default function Dashboard() {
 
         </div>
 
-        {/* RIGHT PANEL - TASKS */}
+        {/* RIGHT PANEL - BUSINESSES */}
         <div className="lg:col-span-8">
           <Card className="border border-slate-200 shadow-none rounded-xl h-[460px] flex flex-col">
             <CardHeader className="border-b border-slate-200 p-4">
               <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
                 <List className="h-4 w-4" />
-                Tasks
+                Businesses
               </CardTitle>
             </CardHeader>
 
             <CardContent className="p-6 flex-1 overflow-y-auto">
-              {mockTasks.length === 0 ? (
+              {businesses.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-slate-400 text-sm">
-                  No tasks assigned
+                  No businesses listed.
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {mockTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-medium">{task.title}</h3>
-                        <span
-                          className={`text-xs font-semibold px-2 py-1 rounded ${task.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : task.status === "in-progress"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-green-100 text-green-800"
-                            }`}
-                        >
-                          {task.status}
-                        </span>
+                  {businesses.map((business: Business) => {
+                    const isSelected = selectedBusiness?.id === business.id;
+
+                    return (
+                      <div
+                        key={business.id}
+                        onClick={() =>
+                          setSelectedBusiness(isSelected ? null : business)
+                        }
+                        className={`border rounded-lg transition-all duration-200 cursor-pointer
+                          ${isSelected
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-slate-200 hover:bg-slate-50"
+                          }`}
+                      >
+                        {/* COLLAPSED HEADER */}
+                        <div className="p-4 flex justify-between items-center">
+                          <h3 className="font-medium">{business.name}</h3>
+                          <span className="text-xs font-semibold px-2 py-1 rounded">
+                            {business.address}
+                          </span>
+                        </div>
+
+                        {/* EXPANDED DETAILS */}
+                        {isSelected && (
+                          <div className="px-4 pb-4 pt-2 border-t border-slate-200 space-y-3 text-sm">
+                            <div>
+                              <span className="text-slate-500">Business Name:</span>{" "}
+                              {business.name}
+                            </div>
+
+                            <div>
+                              <span className="text-slate-500">Users:</span>{" "}
+                              {business.userIds.length == 0
+                                ? "No users assigned"
+                                : users
+                                  .filter((u) => business.userIds.includes(u.id))
+                                  .map((u) => u.username)
+                                  .join(", ")}
+                            </div>
+
+                            <div className="flex gap-2 pt-2">
+                              <ManageUsersModal
+                                businessName={business.name}
+                                businessId={business.id}
+                                currentUserIds={business.userIds}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Assigned to: {task.assignedRobot}
-                      </p>
-                      {task.description && (
-                        <p className="text-xs text-slate-400 mt-1">{task.description}</p>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
+
                 </div>
               )}
             </CardContent>

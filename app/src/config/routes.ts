@@ -15,4 +15,13 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
   },
+  USER: {
+    LIST: "/users",
+    ME: "/users/me",
+  },
+  BUSINESS: {
+    LIST: "/autoxing/businesses/list",
+    ASSIGN: "/autoxing/businesses/assign",
+    UNASSIGN: "/autoxing/businesses/unassign",
+  },
 } as const;
