@@ -53,7 +53,7 @@ export default function SignIn() {
     };
 
     if (!formData.username) {
-      errors.username = "username is required";
+      errors.username = "Username or email is required";
     }
 
     if (!formData.password) {
@@ -117,8 +117,8 @@ export default function SignIn() {
 
             {/* User */}
             <div className="space-y-2">
-              <Label htmlFor="id" className="text-sm font-semibold ml-1">
-                Username
+              <Label htmlFor="username" className="text-sm font-semibold ml-1">
+                Username or Email
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -126,7 +126,7 @@ export default function SignIn() {
                 </span>
                 <Input
                   id="username"
-                  placeholder="john doe"
+                  placeholder="john123 or john@example.com"
                   value={formData.username}
                   onChange={handleInputChange}
                   className={`pl-10 h-11 rounded-xl bg-slate-50 border-slate-200 ${formErrors.username ? 'border-destructive' : ''}`}
