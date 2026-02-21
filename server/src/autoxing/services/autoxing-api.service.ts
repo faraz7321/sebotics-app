@@ -13,6 +13,7 @@ import {
   AutoxingEnvelope,
   AutoxingRobotListData,
   AutoxingRequestOptions,
+  AutoxingTaskListData,
 } from '../types/autoxing-api.types';
 import {
   AutoxingAreaListRequestDto,
@@ -140,8 +141,8 @@ export class AutoxingApiService {
     return this.post('/task/v1.1', { body });
   }
 
-  getTaskList(body: AutoxingTaskListRequestDto) {
-    return this.post('/task/v1.1/list', { body });
+  getTaskList(body: AutoxingTaskListRequestDto): Promise<AutoxingEnvelope<AutoxingTaskListData>> {
+    return this.post<AutoxingTaskListData>('/task/v1.1/list', { body });
   }
 
   getTaskV3(taskId: string, query: AutoxingTaskDetailQueryDto) {

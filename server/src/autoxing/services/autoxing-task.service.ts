@@ -8,6 +8,7 @@ import {
   AutoxingTaskListRequestDto,
   AutoxingTaskUpdateRequestDto,
 } from '../dto/task.dto';
+import { filterEnvelopeByIds, normalizeIdentifier } from '../helpers/autoxing.helpers';
 import { AutoxingApiService } from './autoxing-api.service';
 import { AutoxingBusinessService } from './autoxing-business.service';
 
@@ -34,8 +35,19 @@ export class AutoxingTaskService {
     return this.autoxingApiService.createTaskV1(body);
   }
 
-  getTaskList(body: AutoxingTaskListRequestDto) {
-    return this.autoxingApiService.getTaskList(body);
+  async getTaskList(user: JwtUser, body: AutoxingTaskListRequestDto) {
+    const response = await this.autoxingApiService.getTaskList(body);
+    
+    if (user.role === Role.ADMIN) {
+      return response;
+    }
+
+    const authorizedBusinessIds = await this.autoxingBusinessService.getAuthorizedBusinessIds(user.userId);
+    return filterEnvelopeByIds(
+      response,
+      authorizedBusinessIds,
+      (task) => normalizeIdentifier(task.businessId),
+    );
   }
 
   getTaskV3(taskId: string, query: AutoxingTaskDetailQueryDto) {

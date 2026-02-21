@@ -12,10 +12,9 @@ import {
   AutoxingBusinessListData,
   AutoxingBuildingItem,
   AutoxingEnvelope,
-  AutoxingListPayload,
   getAutoxingItems,
-  replaceAutoxingItems,
 } from '../types/autoxing-api.types';
+import { deepClone, filterEnvelopeByIds, normalizeIdentifier } from '../helpers/autoxing.helpers';
 import { AutoxingApiService } from './autoxing-api.service';
 
 @Injectable()
@@ -41,7 +40,7 @@ export class AutoxingBusinessService {
       authorizedBusinessIds,
     );
 
-    return this.filterEnvelopeByIds(
+    return filterEnvelopeByIds(
       buildingResponse,
       authorizedBuildingIds,
       (item) => this.extractBuildingId(item),
@@ -55,7 +54,7 @@ export class AutoxingBusinessService {
     }
 
     const authorizedBusinessIds = await this.getAuthorizedBusinessIds(user.userId);
-    return this.filterEnvelopeByIds(
+    return filterEnvelopeByIds(
       response,
       authorizedBusinessIds,
       (item) => this.extractBusinessId(item),
@@ -63,7 +62,7 @@ export class AutoxingBusinessService {
   }
 
   async assignBusinessToUser(userId: string, businessId: string) {
-    const normalizedBusinessId = this.normalizeIdentifier(businessId);
+    const normalizedBusinessId = normalizeIdentifier(businessId);
     if (!normalizedBusinessId) {
       throw new BadRequestException('businessId is required');
     }
@@ -98,7 +97,7 @@ export class AutoxingBusinessService {
   }
 
   async unassignBusinessFromUser(userId: string, businessId: string) {
-    const normalizedBusinessId = this.normalizeIdentifier(businessId);
+    const normalizedBusinessId = normalizeIdentifier(businessId);
     if (!normalizedBusinessId) {
       throw new BadRequestException('businessId is required');
     }
@@ -148,57 +147,14 @@ export class AutoxingBusinessService {
     return buildingIds;
   }
 
-  private filterEnvelopeByIds<
-    TItem extends Record<string, unknown>,
-    TData extends AutoxingListPayload<TItem>,
-  >(
-    envelope: AutoxingEnvelope<TData>,
-    allowedIds: Set<string>,
-    getItemId: (item: TItem) => string | null,
-  ): AutoxingEnvelope<TData> {
-    if (!envelope.data) {
-      return envelope;
-    }
-
-    const filteredItems = getAutoxingItems(envelope.data).filter((item) => {
-      const id = getItemId(item);
-      return id !== null && allowedIds.has(id);
-    });
-
-    const clonedData = this.deepClone(envelope.data);
-    replaceAutoxingItems(clonedData, filteredItems);
-
-    return {
-      ...envelope,
-      data: clonedData,
-    };
-  }
-
   private extractBusinessId(item: AutoxingBusinessItem) {
     const rawValue = item.id ?? item.businessId;
-    return this.normalizeIdentifier(rawValue);
+    return normalizeIdentifier(rawValue);
   }
 
   private extractBuildingId(item: AutoxingBusinessItem | AutoxingBuildingItem) {
     const rawValue = item.buildingId ?? item.id;
-    return this.normalizeIdentifier(rawValue);
-  }
-
-  private normalizeIdentifier(value: unknown) {
-    if (typeof value === 'string') {
-      const normalized = value.trim();
-      return normalized.length > 0 ? normalized : null;
-    }
-
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return String(value);
-    }
-
-    return null;
-  }
-
-  private deepClone<T>(value: T): T {
-    return JSON.parse(JSON.stringify(value)) as T;
+    return normalizeIdentifier(rawValue);
   }
 
   private async enrichBusinessesWithUserIds(
@@ -219,7 +175,7 @@ export class AutoxingBusinessService {
       userIdsByBusinessId.set(mapping.businessId, existing);
     }
 
-    const clonedData = this.deepClone(envelope.data);
+    const clonedData = deepClone(envelope.data);
     const items = getAutoxingItems(clonedData);
 
     for (const item of items) {

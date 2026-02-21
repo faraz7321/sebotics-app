@@ -101,6 +101,19 @@ export type AutoxingBusinessGroupItem = {
   busList?: AutoxingBusinessGroupBusItem[];
 };
 
+export type AutoxingTaskItem = {
+  taskId?: string;
+  businessId?: string;
+  buildingId?: string;
+  robotId?: string;
+  name?: string;
+  createTime?: number;
+  sourceType?: number;
+  busiType?: number;
+  isExcute?: boolean;
+  [key: string]: unknown;
+};
+
 export type AutoxingBusinessListData = AutoxingListPayload<AutoxingBusinessItem> & {
   groupCount?: number;
   groups?: AutoxingBusinessGroupItem[];
@@ -108,6 +121,7 @@ export type AutoxingBusinessListData = AutoxingListPayload<AutoxingBusinessItem>
 
 export type AutoxingBuildingListData = AutoxingListPayload<AutoxingBuildingItem>;
 export type AutoxingRobotListData = AutoxingListPayload<AutoxingRobotItem>;
+export type AutoxingTaskListData = AutoxingListPayload<AutoxingTaskItem>;
 
 export function getAutoxingItems<TItem>(
   payload?: AutoxingListPayload<TItem>,

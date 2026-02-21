@@ -63,8 +63,8 @@ export class AutoxingTaskController {
   @ApiOperation({ summary: 'Proxy Autoxing task list endpoint' })
   @ApiBody({ type: AutoxingTaskListRequestDto })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  listTasks(@Body() body: AutoxingTaskListRequestDto) {
-    return this.autoxingTaskService.getTaskList(body);
+  listTasks(@CurrentUser() user: JwtUser, @Body() body: AutoxingTaskListRequestDto) {
+    return this.autoxingTaskService.getTaskList(user, body);
   }
 
   @Get('v3/:taskId')
