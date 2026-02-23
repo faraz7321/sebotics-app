@@ -6,7 +6,7 @@ import type { BusinessState } from '../types/BusinessTypes';
 import { getErrorMessage } from './sliceHelpers';
 
 export const listBusinesses = createAsyncThunk(
-  API_ENDPOINTS.BUSINESS.LIST,
+  "business/list",
   async (_, thunkAPI) => {
     try {
       const response = await api.post(API_ENDPOINTS.BUSINESS.LIST);
@@ -19,7 +19,7 @@ export const listBusinesses = createAsyncThunk(
 );
 
 export const assignBusiness = createAsyncThunk(
-  API_ENDPOINTS.BUSINESS.ASSIGN,
+  "business/assign",
   async ({ businessId, userId }: { businessId: string; userId: string }, thunkAPI) => {
     try {
       const response = await api.post(API_ENDPOINTS.BUSINESS.ASSIGN, {
@@ -36,7 +36,7 @@ export const assignBusiness = createAsyncThunk(
 );
 
 export const unassignBusiness = createAsyncThunk(
-  API_ENDPOINTS.BUSINESS.UNASSIGN,
+  "business/unassign",
   async ({ businessId, userId }: { businessId: string; userId: string }, thunkAPI) => {
     try {
       const response = await api.post(API_ENDPOINTS.BUSINESS.UNASSIGN, {

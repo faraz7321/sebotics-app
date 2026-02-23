@@ -42,7 +42,7 @@ export default function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="gap-3 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-100"
+                className="gap-3 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 hover:cursor-pointer"
               >
                 <Store className="h-4 w-4 text-slate-500" />
                 <span className="font-medium">{selectedBusiness?.name || "Select Business"}</span>
@@ -68,7 +68,7 @@ export default function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full mt-2"
+                  className="w-full mt-2 hover:cursor-pointer"
                   onClick={() => navigate(ROUTES.BUSINESSES.PAGE)}
                 >
                   Manage Businesses

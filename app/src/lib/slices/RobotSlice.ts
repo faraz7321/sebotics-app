@@ -6,7 +6,7 @@ import { getErrorMessage } from './sliceHelpers';
 import type { RobotState } from '../types/RobotTypes';
 
 export const listRobots = createAsyncThunk(
-  API_ENDPOINTS.ROBOT.LIST,
+  "robot/list",
   async (_, thunkAPI) => {
     try {
       const response = await api.post(API_ENDPOINTS.ROBOT.LIST);

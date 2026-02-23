@@ -31,4 +31,15 @@ export const API_ENDPOINTS = {
     ASSIGN: "/autoxing/businesses/assign",
     UNASSIGN: "/autoxing/businesses/unassign",
   },
+  MAP: {
+    POINTS_OF_INTEREST: {
+      LIST: "/autoxing/maps/pois/list",
+    },
+  },
+  TASK: {
+    LIST: "/autoxing/tasks/list",
+    CREATE: "/autoxing/tasks",
+    EXECUTE: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/execute
+    CANCEL: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/cancel
+  },
 } as const;

@@ -1,16 +1,22 @@
 import BusinessDetailsPanel from "@/components/business/BusinessDetailsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader } from "@/components/ui/loader";
-import { listBusinesses } from "@/lib/slices/BusinessSlice";
-import { listRobots } from "@/lib/slices/RobotSlice";
+import { listBusinesses, setSelectedBusinessId } from "@/lib/slices/BusinessSlice";
 import { fetchUser, listUsers } from "@/lib/slices/UserSlice";
 import type { Business } from "@/lib/types/BusinessTypes";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { List } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function Businesses() {
   const dispatch = useAppDispatch();
+  const users = useAppSelector((state) => state.user.users);
+  const { loading, businesses, selectedbusinessId } = useAppSelector(
+    (state) => state.business
+  );
+  const selectedBusiness = businesses.find(
+    (b) => b.id === selectedbusinessId
+  ) || null;
 
   useEffect(() => {
     const getBusinsesses = async () => {
@@ -22,19 +28,9 @@ export default function Businesses() {
       await dispatch(fetchUser());
     }
 
-    const getRobots = async () => {
-      await dispatch(listRobots());
-    }
-
     getBusinsesses();
     getUsers()
-    getRobots();
   }, [dispatch]);
-
-  const { loading, businesses } = useAppSelector((state) => state.business);
-  const users = useAppSelector((state) => state.user.users);
-
-  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 
   return (
     <div className="pt-10 pl-50 grid grid-cols-12 gap-10">
@@ -58,13 +54,19 @@ export default function Businesses() {
                   </div>
                 ) : (
                   businesses.map((business: Business) => {
-                    const isSelected = selectedBusiness?.id === business.id;
+                    const isSelected = selectedbusinessId === business.id;
 
                     return (
                       <div
                         key={business.id}
                         className={`border-b cursor-pointer transition-all ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"}`}
-                        onClick={() => setSelectedBusiness(isSelected ? null : business)}
+                        onClick={() =>
+                          dispatch(
+                            setSelectedBusinessId(
+                              isSelected ? null : business.id
+                            )
+                          )
+                        }
                       >
                         <div className="p-4 flex justify-between items-center">
                           <div>

@@ -5,7 +5,7 @@ import { type AuthResult, type AuthState, type LoginCreds, type RegisterCreds } 
 import { getErrorMessage } from './sliceHelpers';
 
 export const registerUser = createAsyncThunk<AuthResult, RegisterCreds, { rejectValue: string }>(
-  API_ENDPOINTS.AUTH.REGISTER,
+  "auth/register",
   async (credentials: RegisterCreds, thunkAPI) => {
     try {
       return await authService.register(credentials);
@@ -16,7 +16,7 @@ export const registerUser = createAsyncThunk<AuthResult, RegisterCreds, { reject
 );
 
 export const loginUser = createAsyncThunk<AuthResult, LoginCreds, { rejectValue: string }>(
-  API_ENDPOINTS.AUTH.LOGIN,
+  "auth/login",
   async (credentials: LoginCreds, thunkAPI) => {
     try {
       return await authService.login(credentials);
@@ -27,7 +27,7 @@ export const loginUser = createAsyncThunk<AuthResult, LoginCreds, { rejectValue:
 );
 
 export const refreshToken = createAsyncThunk(
-  API_ENDPOINTS.AUTH.REFRESH,
+  "auth/refresh",
   async (_, thunkAPI) => {
     try {
       return await authService.refreshToken();

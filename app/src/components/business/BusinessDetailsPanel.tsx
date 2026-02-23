@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import type { Business } from "@/lib/types/BusinessTypes";
 import type { User } from "@/lib/types/UserTypes";
+import { useAppSelector } from "@/store";
+import { Loader } from "../ui/loader";
 
 interface BusinessDetailsPanelProps {
   business: Business | null;
@@ -13,6 +15,7 @@ export default function BusinessDetailsPanel({
   business,
   users,
 }: BusinessDetailsPanelProps) {
+  const loading = useAppSelector((state) => state.business.loading);
 
   const assignedUsers = users.filter((u) =>
     business?.userIds.includes(u.id)
@@ -27,62 +30,69 @@ export default function BusinessDetailsPanel({
       </CardHeader>
 
       <CardContent className="p-6 space-y-6 text-sm overflow-y-auto">
-
-        {business ? (
+        {!loading ? (
           <>
-            < div className="space-y-2">
-              <div>
-                <span className="text-slate-500">Business Name:</span>{" "}
-                {business.name}
-              </div>
+            {business ? (
+              <>
+                < div className="space-y-2">
+                  <div>
+                    <span className="text-slate-500">Business Name:</span>{" "}
+                    {business.name}
+                  </div>
 
-              <div>
-                <span className="text-slate-500">Address:</span>{" "}
-                {business.address}
-              </div>
+                  <div>
+                    <span className="text-slate-500">Address:</span>{" "}
+                    {business.address}
+                  </div>
 
-              <div>
-                <span className="text-slate-500">Users Count:</span>{" "}
-                {assignedUsers.length}
-              </div>
-            </div>
-
-            {/* USERS LIST */}
-            <div className="space-y-2">
-              <div className="text-slate-500 font-medium">
-                Assigned Users
-              </div>
-
-              {assignedUsers.length === 0 ? (
-                <div className="text-slate-400">
-                  No users assigned
+                  <div>
+                    <span className="text-slate-500">Users Count:</span>{" "}
+                    {assignedUsers.length}
+                  </div>
                 </div>
-              ) : (
+
+                {/* USERS LIST */}
                 <div className="space-y-2">
-                  {assignedUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className="border border-slate-200 rounded-md px-3 py-2"
-                    >
-                      {user.username}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  <div className="text-slate-500 font-medium">
+                    Assigned Users
+                  </div>
 
-            {/* ACTIONS */}
-            <div className="pt-2">
-              <ManageUsersModal
-                businessName={business.name}
-                businessId={business.id}
-                currentUserIds={business.userIds}
-              />
-            </div>
+                  {assignedUsers.length === 0 ? (
+                    <div className="text-slate-400">
+                      No users assigned
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {assignedUsers.map((user) => (
+                        <div
+                          key={user.id}
+                          className="border border-slate-200 rounded-md px-3 py-2"
+                        >
+                          {user.username}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ACTIONS */}
+                <div className="pt-2">
+                  <ManageUsersModal
+                    businessName={business.name}
+                    businessId={business.id}
+                    currentUserIds={business.userIds}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="h-[400px] rounded-xl flex items-center justify-center text-slate-400 text-sm">
+                Select a business to view details
+              </div>
+            )}
           </>
         ) : (
-          <div className="h-[400px] rounded-xl flex items-center justify-center text-slate-400 text-sm">
-            Select a business to view details
+          <div>
+            <Loader variant="container" />
           </div>
         )}
 

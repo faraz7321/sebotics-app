@@ -17,7 +17,11 @@ type Props = {
   currentUserIds: string[];
 };
 
-export function ManageUsersModal({ businessName, businessId, currentUserIds }: Props) {
+export function ManageUsersModal({ 
+  businessName, 
+  businessId, 
+  currentUserIds,
+}: Props) {
   const dispatch = useAppDispatch();
   const users = useAppSelector((state) => state.user.users);
 
@@ -66,6 +70,7 @@ export function ManageUsersModal({ businessName, businessId, currentUserIds }: P
 
                   <Button
                     size="sm"
+                    className="hover:cursor-pointer"
                     variant={isAssigned ? "destructive" : "outline"}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -81,7 +86,7 @@ export function ManageUsersModal({ businessName, businessId, currentUserIds }: P
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" className="hover:cursor-pointer" onClick={() => setOpen(false)}>
             Close
           </Button>
         </DialogFooter>

@@ -1,56 +1,44 @@
 import {
   AlertOctagon,
   Zap,
-  Bot,
-  List,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 import { listBusinesses } from "@/lib/slices/BusinessSlice";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useEffect, useState } from "react";
 import { fetchUser, listUsers } from "@/lib/slices/UserSlice";
 
-import type { Task } from "@/lib/types/TaskTypes";
-import { listRobots } from "@/lib/slices/RobotSlice";
-import type { Robot } from "@/lib/types/RobotTypes";
-import { ROLES } from "@/config/constants";
+import { CallRobotSheet } from "@/components/robot/CallRobotSheet";
+import { EmergencyStopSheet } from "@/components/robot/EmergencyStopSheet";
 
-const mockTasks: Task[] = [
-  {
-    id: "t1",
-    title: "Deliver food to Table 5",
-    assignedRobot: "Juno 1",
-    status: "in-progress",
-  },
-  {
-    id: "t2",
-    title: "Refill water stations",
-    assignedRobot: "Juno 2",
-    status: "pending",
-  },
-  {
-    id: "t3",
-    title: "Clean hallway",
-    assignedRobot: "Juno 3",
-    status: "completed",
-  },
-];
+import { listRobots } from "@/lib/slices/RobotSlice";
+import { ROLES } from "@/config/constants";
+import { listTasks } from "@/lib/slices/TaskSlice";
+import { listPointsOfInterest } from "@/lib/slices/mapSlice";
+import { RobotList } from "@/components/robot/RobotList";
+import { TaskList } from "@/components/task/TaskList";
+
+import {
+  handleCreateTask,
+  handleExecuteTask,
+  handleCancelTask,
+} from "@/lib/tasks/taskHandlers";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
 
   const user = useAppSelector((state) => state.user.user);
+  const robots = useAppSelector((state) => state.robot.robots);
+  const selectedBusinessId = useAppSelector((state) => state.business.selectedbusinessId);
+  const tasks = useAppSelector((state) => state.task.tasks);
+  const pois = useAppSelector((state) => state.map.pointsOfInterest);
+  const chargingDock = pois.find((poi) => poi.type === 9); // Assuming type 9 represents charging docks
+  const filteredrobots = robots.filter((r) => r.businessId === selectedBusinessId);
 
   useEffect(() => {
-    const getBusinsesses = async () => {
+    const getBusinesses = async () => {
       await dispatch(listBusinesses());
     }
 
@@ -65,17 +53,72 @@ export default function Dashboard() {
       await dispatch(listRobots());
     }
 
-    getBusinsesses();
-    getUsers()
+    getBusinesses();
+    getUsers();
     getRobots();
   }, [dispatch]);
 
-  const robots = useAppSelector((state) => state.robot.robots);
-  const selectedBusinessId = useAppSelector((state) => state.business.selectedbusinessId);
+  useEffect(() => {
+    if (!selectedBusinessId) return;
 
-  const filteredrobots = robots.filter((r) => r.businessId === selectedBusinessId);
+    const fetchTasks = async () => {
+      // time in miliseconds
+      const now = Date.now();
+      const twoHoursAgo = now - (2 * 60 * 60 * 1000);
 
-  const [selectedRobot, setSelectedRobot] = useState<Robot | null>(null);
+      await dispatch(listTasks({
+        businessId: selectedBusinessId,
+        startTime: Number(twoHoursAgo),
+        endTime: Number(now)
+      }));
+    }
+
+    const fetchPointsOfInterest = async () => {
+      await dispatch(listPointsOfInterest(selectedBusinessId));
+    }
+
+    fetchTasks();
+    fetchPointsOfInterest();
+  }, [selectedBusinessId, dispatch]);
+
+  const [callOpen, setCallOpen] = useState(false);
+  const [stopOpen, setStopOpen] = useState(false);
+
+  const getIdleRobot = () => {
+    const idleRobot = filteredrobots.find(
+      (robot) => robot.isOnLine && !robot.isTask && !robot.isCharging
+    );
+    return idleRobot?.robotId;
+  };
+
+  const getOnlineRobot = () => {
+    const onlineRobot = filteredrobots.find((robot) => robot.isOnLine);
+
+    return onlineRobot?.robotId;
+  };
+
+  const handleReturnToDock = (robotId: string) => {
+    if (!chargingDock) {
+      console.error("No charging dock found in points of interest");
+      return;
+    }
+
+    handleCreateTask(dispatch, selectedBusinessId!, chargingDock, robotId, true);
+  };
+
+  const handleEmergencyStop = (robotId: string) => {
+    const taskId = tasks.find((t) => t.robotId === robotId && t.isExcute)?.taskId;
+
+    console.log("Emergency stop:", robotId);
+    console.log("Active task for robot:", taskId ?? "None");
+
+    if (taskId) {
+      handleCancelTask(dispatch, selectedBusinessId!, taskId);
+    } else {
+      console.warn("No active task found for robot:", robotId);
+    }
+
+  };
 
   return (
     <div className="bg-slate-50 font-sans text-slate-900">
@@ -83,139 +126,27 @@ export default function Dashboard() {
       {/* MAIN CONTENT */}
       <div className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
 
-        {/* ROBOTS LIST WITH EXPANDABLE DETAILS */}
+        {/* LEFT PANEL - ROBOTS */}
         <div className="lg:col-span-4">
-          <Card className="border border-slate-200 shadow-none rounded-xl h-[460px] flex flex-col">
-            <CardHeader className="border-b border-slate-200 p-4">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
-                <Bot className="h-4 w-4" />
-                Robots
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="p-0 flex-1 overflow-y-auto">
-              <div className="divide-y divide-slate-200">
-                {filteredrobots.length === 0 ? (
-                  <div className="p-4 text-slate-400 text-sm text-center">
-                    No robots available
-                  </div>
-                ) : (
-                  filteredrobots.map((robot) => {
-                    const isSelected = selectedRobot?.robotId === robot.robotId;
-
-                    return (
-                      <div
-                        key={robot.robotId}
-                        className={`border-b cursor-pointer transition-all ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
-                          }`}
-                        onClick={() =>
-                          setSelectedRobot(isSelected ? null : robot)
-                        }
-                      >
-                        {/* COLLAPSED HEADER */}
-                        <div className="p-4 flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-sm">{robot.name || robot.robotId}</p>
-                            <p className="text-xs text-slate-500">{robot.isOnLine ? "Online" : "Offline"}</p>
-                          </div>
-                          <span className="text-xs text-slate-400">{robot.battery}%</span>
-                        </div>
-
-                        {/* EXPANDED DETAILS */}
-                        {isSelected && (
-                          <div className="px-4 pb-4 pt-2 border-t border-slate-200 space-y-2 text-sm">
-                            <div>
-                              <span className="text-slate-500">Model:</span> {robot.model}
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Status:</span>{" "}
-                              {robot.isTask
-                                ? "Working"
-                                : robot.isCharging
-                                  ? "Charging"
-                                  : robot.isOnLine
-                                    ? "Idle"
-                                    : "Offline"}
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Manual Mode:</span> {robot.isManualMode ? "Yes" : "No"}
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Remote Mode:</span> {robot.isRemoteMode ? "Yes" : "No"}
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Emergency Stop:</span> {robot.isEmergencyStop ? "Yes" : "No"}
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Coordinates:</span> ({robot.x}, {robot.y}) | Yaw: {robot.yaw}°
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Area:</span> {robot.areaId || "Unassigned"}
-                            </div>
-                            {robot.errors.length > 0 && (
-                              <div className="text-red-500">
-                                Errors: {robot.errors.join(", ")}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <RobotList
+            robots={filteredrobots}
+            onReturnToDock={handleReturnToDock}
+          />
         </div>
 
 
         {/* RIGHT PANEL - TASKS */}
         <div className="lg:col-span-8">
-          <Card className="border border-slate-200 shadow-none rounded-xl h-[460px] flex flex-col">
-            <CardHeader className="border-b border-slate-200 p-4">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
-                <List className="h-4 w-4" />
-                Tasks
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="p-6 flex-1 overflow-y-auto">
-              {mockTasks.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-slate-400 text-sm">
-                  No tasks assigned
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {mockTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-medium">{task.title}</h3>
-                        <span
-                          className={`text-xs font-semibold px-2 py-1 rounded ${task.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : task.status === "in-progress"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-green-100 text-green-800"
-                            }`}
-                        >
-                          {task.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Assigned to: {task.assignedRobot}
-                      </p>
-                      {task.description && (
-                        <p className="text-xs text-slate-400 mt-1">{task.description}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TaskList
+            tasks={tasks}
+            selectedBusinessId={selectedBusinessId}
+            onExecuteTask={(taskId) =>
+              handleExecuteTask(dispatch, selectedBusinessId!, taskId)
+            }
+            onCancelTask={(taskId) =>
+              handleCancelTask(dispatch, selectedBusinessId!, taskId)
+            }
+          />
         </div>
       </div>
 
@@ -224,14 +155,20 @@ export default function Dashboard() {
       <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-4">
         <div className="border-slate-200 bg-white">
           <div className="max-w-7xl mx-auto grid grid-col md:flex-row gap-4">
-            <Button className="flex-1 h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2">
+            <Button
+              disabled={!selectedBusinessId}
+              onClick={() => setCallOpen(true)}
+              className="flex-1 h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed"
+            >
               <Zap className="h-5 w-5" />
               Call Robot
             </Button>
 
             <Button
               variant="outline"
-              className="flex-1 h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-medium gap-2"
+              disabled={!selectedBusinessId}
+              onClick={() => setStopOpen(true)}
+              className="flex-1 h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-medium gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed"
             >
               <AlertOctagon className="h-5 w-5 text-red-500" />
               Stop
@@ -239,6 +176,22 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      { /* SHEETS / MODALS */}
+      <CallRobotSheet
+        open={callOpen}
+        onOpenChange={setCallOpen}
+        onCall={(poi) =>
+          handleCreateTask(dispatch, selectedBusinessId!, poi, getIdleRobot() || getOnlineRobot() || "", false)
+        }
+      />
+
+      <EmergencyStopSheet
+        open={stopOpen}
+        onOpenChange={setStopOpen}
+        robots={filteredrobots}
+        onStop={(robotId) => handleEmergencyStop(robotId)}
+      />
 
     </div>
   );

@@ -5,6 +5,8 @@ import authReducer from './lib/slices/AuthSlice';
 import businessReducer from './lib/slices/BusinessSlice';
 import userReducer from './lib/slices/UserSlice';
 import robotReducer from './lib/slices/RobotSlice';
+import mapReducer from './lib/slices/mapSlice';
+import taskReducer from './lib/slices/TaskSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +14,8 @@ export const store = configureStore({
     business: businessReducer,
     user: userReducer,
     robot: robotReducer,
+    map: mapReducer,
+    task: taskReducer,
   },
 })
 

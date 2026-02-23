@@ -6,7 +6,7 @@ import type { UserState } from '../types/UserTypes';
 import { getErrorMessage } from './sliceHelpers';
 
 export const listUsers = createAsyncThunk(
-  API_ENDPOINTS.USER.LIST,
+  "users/list",
   async (_, thunkAPI) => {
     try {
       const response = await api.get(API_ENDPOINTS.USER.LIST);
@@ -19,7 +19,7 @@ export const listUsers = createAsyncThunk(
 );
 
 export const fetchUser = createAsyncThunk(
-  API_ENDPOINTS.USER.ME,
+  "users/me",
   async (_, thunkAPI) => {
     try {
       const response = await api.get(API_ENDPOINTS.USER.ME);
