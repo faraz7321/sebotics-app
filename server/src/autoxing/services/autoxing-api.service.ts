@@ -8,9 +8,11 @@ import {
 import { AutoxingAuthService } from '../auth/autoxing-auth.service';
 import {
   AutoxingAccessToken,
+  AutoxingAreaListData,
   AutoxingBuildingListData,
   AutoxingBusinessListData,
   AutoxingEnvelope,
+  AutoxingPoiListData,
   AutoxingRobotListData,
   AutoxingRequestOptions,
   AutoxingTaskListData,
@@ -105,8 +107,8 @@ export class AutoxingApiService {
     return this.get(`/robot/v2.0/${robotId}/state`);
   }
 
-  getPoiList(body: AutoxingPoiListRequestDto) {
-    return this.post('/map/v1.1/poi/list', { body });
+  getPoiList(body: AutoxingPoiListRequestDto): Promise<AutoxingEnvelope<AutoxingPoiListData>> {
+    return this.post<AutoxingPoiListData>('/map/v1.1/poi/list', { body });
   }
 
   createPoi(areaId: string, body: AutoxingPoiCreateRequestDto) {
@@ -121,8 +123,8 @@ export class AutoxingApiService {
     return this.get(`/map/v1.1/poi/${poiId}`);
   }
 
-  getAreaList(body: AutoxingAreaListRequestDto) {
-    return this.post('/map/v1.1/area/list', { body });
+  getAreaList(body: AutoxingAreaListRequestDto): Promise<AutoxingEnvelope<AutoxingAreaListData>> {
+    return this.post<AutoxingAreaListData>('/map/v1.1/area/list', { body });
   }
 
   getAreaBaseMap(areaId: string) {

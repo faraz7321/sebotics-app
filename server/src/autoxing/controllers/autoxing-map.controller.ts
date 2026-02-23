@@ -50,16 +50,16 @@ export class AutoxingMapController {
   @ApiOperation({ summary: 'Proxy Autoxing delete POI endpoint' })
   @ApiParam({ name: 'poiId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  deletePoi(@Param('poiId') poiId: string) {
-    return this.autoxingMapService.deletePoi(poiId);
+  deletePoi(@CurrentUser() user: JwtUser, @Param('poiId') poiId: string) {
+    return this.autoxingMapService.deletePoi(user, poiId);
   }
 
   @Get('pois/:poiId')
   @ApiOperation({ summary: 'Proxy Autoxing POI detail endpoint' })
   @ApiParam({ name: 'poiId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  getPoi(@Param('poiId') poiId: string) {
-    return this.autoxingMapService.getPoiDetail(poiId);
+  getPoi(@CurrentUser() user: JwtUser, @Param('poiId') poiId: string) {
+    return this.autoxingMapService.getPoiDetail(user, poiId);
   }
 
   @Post('areas/list')
@@ -85,7 +85,7 @@ export class AutoxingMapController {
   @ApiOperation({ summary: 'Proxy Autoxing robot deployment endpoint' })
   @ApiParam({ name: 'robotId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  getRobotDeploy(@Param('robotId') robotId: string) {
-    return this.autoxingMapService.getRobotDeployInfo(robotId);
+  getRobotDeploy(@CurrentUser() user: JwtUser, @Param('robotId') robotId: string) {
+    return this.autoxingMapService.getRobotDeployInfo(user, robotId);
   }
 }

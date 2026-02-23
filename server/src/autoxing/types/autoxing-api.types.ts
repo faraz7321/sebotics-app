@@ -114,6 +114,37 @@ export type AutoxingTaskItem = {
   [key: string]: unknown;
 };
 
+export type AutoxingPoiItem = {
+  id?: string;
+  areaId?: string;
+  buildingId?: string;
+  businessId?: string;
+  coordinate?: number[];
+  floor?: number;
+  floorName?: string;
+  name?: string;
+  oldFeatureId?: string;
+  properties?: Record<string, unknown>;
+  type?: number;
+  version?: string;
+  yaw?: number;
+  [key: string]: unknown;
+};
+
+export type AutoxingAreaItem = {
+  id?: string;
+  buildingId?: string;
+  businessId?: string;
+  createTime?: number;
+  floor?: number;
+  floorName?: string;
+  name?: string;
+  updateTime?: number;
+  updater?: string;
+  version?: string;
+  [key: string]: unknown;
+};
+
 export type AutoxingBusinessListData = AutoxingListPayload<AutoxingBusinessItem> & {
   groupCount?: number;
   groups?: AutoxingBusinessGroupItem[];
@@ -122,6 +153,8 @@ export type AutoxingBusinessListData = AutoxingListPayload<AutoxingBusinessItem>
 export type AutoxingBuildingListData = AutoxingListPayload<AutoxingBuildingItem>;
 export type AutoxingRobotListData = AutoxingListPayload<AutoxingRobotItem>;
 export type AutoxingTaskListData = AutoxingListPayload<AutoxingTaskItem>;
+export type AutoxingPoiListData = AutoxingListPayload<AutoxingPoiItem>;
+export type AutoxingAreaListData = AutoxingListPayload<AutoxingAreaItem>;
 
 export function getAutoxingItems<TItem>(
   payload?: AutoxingListPayload<TItem>,
