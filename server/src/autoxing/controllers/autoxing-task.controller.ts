@@ -73,18 +73,19 @@ export class AutoxingTaskController {
   @ApiQuery({ name: 'needDetail', required: false, type: Boolean })
   @ApiOkResponse({ type: AutoxingResponseDto })
   getTaskV3(
+    @CurrentUser() user: JwtUser,
     @Param('taskId') taskId: string,
     @Query() query: AutoxingTaskDetailQueryDto,
   ) {
-    return this.autoxingTaskService.getTaskV3(taskId, query);
+    return this.autoxingTaskService.getTaskV3(user, taskId, query);
   }
 
   @Get(':taskId')
   @ApiOperation({ summary: 'Proxy Autoxing task detail v1.1 endpoint' })
   @ApiParam({ name: 'taskId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  getTask(@Param('taskId') taskId: string) {
-    return this.autoxingTaskService.getTask(taskId);
+  getTask(@CurrentUser() user: JwtUser, @Param('taskId') taskId: string) {
+    return this.autoxingTaskService.getTask(user, taskId);
   }
 
   @Post(':taskId')
@@ -93,49 +94,50 @@ export class AutoxingTaskController {
   @ApiBody({ type: AutoxingTaskUpdateRequestDto })
   @ApiOkResponse({ type: AutoxingResponseDto })
   updateTask(
+    @CurrentUser() user: JwtUser,
     @Param('taskId') taskId: string,
     @Body() body: AutoxingTaskUpdateRequestDto,
   ) {
-    return this.autoxingTaskService.updateTask(taskId, body);
+    return this.autoxingTaskService.updateTask(user, taskId, body);
   }
 
   @Delete(':taskId')
   @ApiOperation({ summary: 'Proxy Autoxing delete task endpoint' })
   @ApiParam({ name: 'taskId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  deleteTask(@Param('taskId') taskId: string) {
-    return this.autoxingTaskService.deleteTask(taskId);
+  deleteTask(@CurrentUser() user: JwtUser, @Param('taskId') taskId: string) {
+    return this.autoxingTaskService.deleteTask(user, taskId);
   }
 
   @Post(':taskId/execute')
   @ApiOperation({ summary: 'Proxy Autoxing execute task endpoint' })
   @ApiParam({ name: 'taskId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  executeTask(@Param('taskId') taskId: string) {
-    return this.autoxingTaskService.executeTask(taskId);
+  executeTask(@CurrentUser() user: JwtUser, @Param('taskId') taskId: string) {
+    return this.autoxingTaskService.executeTask(user, taskId);
   }
 
   @Post('v3/:taskId/cancel')
   @ApiOperation({ summary: 'Proxy Autoxing cancel task v3 endpoint' })
   @ApiParam({ name: 'taskId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  cancelTaskV3(@Param('taskId') taskId: string) {
-    return this.autoxingTaskService.cancelTaskV3(taskId);
+  cancelTaskV3(@CurrentUser() user: JwtUser, @Param('taskId') taskId: string) {
+    return this.autoxingTaskService.cancelTaskV3(user, taskId);
   }
 
   @Post(':taskId/cancel')
   @ApiOperation({ summary: 'Proxy Autoxing cancel task v1.1 endpoint' })
   @ApiParam({ name: 'taskId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  cancelTaskV1(@Param('taskId') taskId: string) {
-    return this.autoxingTaskService.cancelTaskV1(taskId);
+  cancelTaskV1(@CurrentUser() user: JwtUser, @Param('taskId') taskId: string) {
+    return this.autoxingTaskService.cancelTaskV1(user, taskId);
   }
 
   @Get('v2/:taskId/state')
   @ApiOperation({ summary: 'Proxy Autoxing task state v2 endpoint' })
   @ApiParam({ name: 'taskId', type: String })
   @ApiOkResponse({ type: AutoxingResponseDto })
-  getTaskStateV2(@Param('taskId') taskId: string) {
-    return this.autoxingTaskService.getTaskStateV2(taskId);
+  getTaskStateV2(@CurrentUser() user: JwtUser, @Param('taskId') taskId: string) {
+    return this.autoxingTaskService.getTaskStateV2(user, taskId);
   }
 }

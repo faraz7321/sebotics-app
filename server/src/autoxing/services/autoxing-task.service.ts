@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtUser } from '../../auth/auth.types';
 import {
@@ -50,35 +50,75 @@ export class AutoxingTaskService {
     );
   }
 
-  getTaskV3(taskId: string, query: AutoxingTaskDetailQueryDto) {
-    return this.autoxingApiService.getTaskV3(taskId, query);
+  async getTaskV3(user: JwtUser, taskId: string, query: AutoxingTaskDetailQueryDto) {
+    const response = await this.autoxingApiService.getTaskV3(taskId, query);
+    await this.assertTaskAccess(user, response.data);
+    return response;
   }
 
-  getTask(taskId: string) {
-    return this.autoxingApiService.getTask(taskId);
+  async getTask(user: JwtUser, taskId: string) {
+    const response = await this.autoxingApiService.getTask(taskId);
+    await this.assertTaskAccess(user, response.data);
+    return response;
   }
 
-  updateTask(taskId: string, body: AutoxingTaskUpdateRequestDto) {
+  async updateTask(user: JwtUser, taskId: string, body: AutoxingTaskUpdateRequestDto) {
+    await this.assertTaskAccessById(user, taskId);
     return this.autoxingApiService.updateTask(taskId, body);
   }
 
-  deleteTask(taskId: string) {
+  async deleteTask(user: JwtUser, taskId: string) {
+    await this.assertTaskAccessById(user, taskId);
     return this.autoxingApiService.deleteTask(taskId);
   }
 
-  executeTask(taskId: string) {
+  async executeTask(user: JwtUser, taskId: string) {
+    await this.assertTaskAccessById(user, taskId);
     return this.autoxingApiService.executeTask(taskId);
   }
 
-  cancelTaskV3(taskId: string) {
+  async cancelTaskV3(user: JwtUser, taskId: string) {
+    await this.assertTaskAccessById(user, taskId);
     return this.autoxingApiService.cancelTaskV3(taskId);
   }
 
-  cancelTaskV1(taskId: string) {
+  async cancelTaskV1(user: JwtUser, taskId: string) {
+    await this.assertTaskAccessById(user, taskId);
     return this.autoxingApiService.cancelTaskV1(taskId);
   }
 
-  getTaskStateV2(taskId: string) {
-    return this.autoxingApiService.getTaskStateV2(taskId);
+  async getTaskStateV2(user: JwtUser, taskId: string) {
+    const response = await this.autoxingApiService.getTaskStateV2(taskId);
+    await this.assertTaskAccess(user, response.data);
+    return response;
+  }
+
+  private async assertTaskAccessById(user: JwtUser, taskId: string) {
+    if (user.role === Role.ADMIN) {
+      return;
+    }
+
+    const response = await this.autoxingApiService.getTask(taskId);
+    await this.assertTaskAccess(user, response.data);
+  }
+
+  private async assertTaskAccess(user: JwtUser, taskData: unknown) {
+    if (user.role === Role.ADMIN) {
+      return;
+    }
+
+    if (!taskData || typeof taskData !== 'object') {
+      throw new NotFoundException('Task not found');
+    }
+
+    const businessId = normalizeIdentifier((taskData as { businessId?: unknown }).businessId);
+    if (!businessId) {
+      throw new ForbiddenException('Task does not have a valid business ID');
+    }
+
+    const authorizedBusinessIds = await this.autoxingBusinessService.getAuthorizedBusinessIds(user.userId);
+    if (!authorizedBusinessIds.has(businessId)) {
+      throw new ForbiddenException('You do not have access to this task');
+    }
   }
 }
