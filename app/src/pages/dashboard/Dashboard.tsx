@@ -25,6 +25,8 @@ import {
   handleExecuteTask,
   handleCancelTask,
 } from "@/lib/tasks/taskHandlers";
+import { PoiType } from "@/lib/types/MapTypes";
+import type { Robot } from "@/lib/types/RobotTypes";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
@@ -34,7 +36,6 @@ export default function Dashboard() {
   const selectedBusinessId = useAppSelector((state) => state.business.selectedbusinessId);
   const tasks = useAppSelector((state) => state.task.tasks);
   const pois = useAppSelector((state) => state.map.pointsOfInterest);
-  const chargingDock = pois.find((poi) => poi.type === 9); // Assuming type 9 represents charging docks
   const filteredrobots = robots.filter((r) => r.businessId === selectedBusinessId);
 
   useEffect(() => {
@@ -84,6 +85,34 @@ export default function Dashboard() {
   const [callOpen, setCallOpen] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
 
+  const getPoisByRobotArea = (robot: Robot, poiType: PoiType) => {
+    return pois.filter((poi) => {
+      if (robot.areaId !== poi.areaId) {
+        return false;
+      }
+      if (poiType !== undefined && poi.type !== poiType) {
+        return false;
+      }
+      return true;
+    });
+  };
+
+  const getChargingDock = (robot: Robot) => {
+    if (!robot) {
+      console.warn("Robot not found");
+      return null;
+    }
+    
+    const dock = getPoisByRobotArea(robot, PoiType.ChargingPile)[0];
+    console.log(dock);
+
+    if (!dock) {
+      console.warn("No charging dock found in the same area as the robot");
+      return null;
+    }
+    return dock;
+  }
+
   const getIdleRobot = () => {
     const idleRobot = filteredrobots.find(
       (robot) => robot.isOnLine && !robot.isTask && !robot.isCharging
@@ -97,13 +126,14 @@ export default function Dashboard() {
     return onlineRobot?.robotId;
   };
 
-  const handleReturnToDock = (robotId: string) => {
+  const handleReturnToDock = (robot: Robot) => {
+    const chargingDock = getChargingDock(robot);
     if (!chargingDock) {
-      console.error("No charging dock found in points of interest");
+      console.error("No charging dock found for the robot's area");
       return;
     }
 
-    handleCreateTask(dispatch, selectedBusinessId!, chargingDock, robotId, true);
+    handleCreateTask(dispatch, selectedBusinessId!, chargingDock, robot.robotId, true);
   };
 
   const handleEmergencyStop = (robotId: string) => {
@@ -130,7 +160,7 @@ export default function Dashboard() {
         <div className="lg:col-span-4">
           <RobotList
             robots={filteredrobots}
-            onReturnToDock={handleReturnToDock}
+            onReturnToDock={(robot) => handleReturnToDock(robot)}
           />
         </div>
 
@@ -182,7 +212,7 @@ export default function Dashboard() {
         open={callOpen}
         onOpenChange={setCallOpen}
         onCall={(poi) =>
-          handleCreateTask(dispatch, selectedBusinessId!, poi, getIdleRobot() || getOnlineRobot() || "", false)
+          handleCreateTask(dispatch, selectedBusinessId!, poi, getIdleRobot() || getOnlineRobot() || "", true)
         }
       />
 

@@ -15,7 +15,7 @@ import { useState } from "react";
 
 interface RobotListProps {
   robots: Robot[];
-  onReturnToDock: (robotId: string) => void;
+  onReturnToDock: (robot: Robot) => void;
 }
 
 export function RobotList({ robots, onReturnToDock }: RobotListProps) {
@@ -46,7 +46,8 @@ export function RobotList({ robots, onReturnToDock }: RobotListProps) {
                   className={`border-b cursor-pointer transition-all ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
                     }`}
                   onClick={() =>
-                    setSelectedRobot(isSelected ? null : robot)
+                    {setSelectedRobot(isSelected ? null : robot)
+                    console.log("Selected robot:", isSelected ? "None" : robot)}
                   }
                 >
                   {/* COLLAPSED HEADER */}

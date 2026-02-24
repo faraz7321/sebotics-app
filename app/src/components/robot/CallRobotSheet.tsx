@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { PointOfInterest } from "@/lib/types/MapTypes";
 import { useAppSelector } from "@/store";
+import { Loader } from "../ui/loader";
 
 type CallRobotProps = {
   open: boolean;
@@ -16,6 +17,7 @@ type CallRobotProps = {
 };
 
 export function CallRobotSheet({ open, onOpenChange, onCall }: CallRobotProps) {
+  const robots = useAppSelector((state) => state.robot.robots);
   const { loading, pointsOfInterest } = useAppSelector((state) => state.map);
 
   return (
@@ -40,7 +42,10 @@ export function CallRobotSheet({ open, onOpenChange, onCall }: CallRobotProps) {
         <div className="p-4 space-y-3 max-h-[50vh] overflow-y-auto">
           {!loading ? <>
             {pointsOfInterest && pointsOfInterest.length > 0 ? (
-              pointsOfInterest.map((poi) => (
+              pointsOfInterest.filter((poi) => {
+                // Filter out POIs that are not on the same area as the robots
+                return robots.some((robot) => robot.areaId === poi.areaId);
+              }).map((poi) => (
                 <Button
                   key={poi.id}
                   variant="outline"
@@ -50,7 +55,7 @@ export function CallRobotSheet({ open, onOpenChange, onCall }: CallRobotProps) {
                     onOpenChange(false);
                   }}
                 >
-                  <span>{poi.name ? poi.name : "Unnamed"}</span>
+                  <span>Type: {poi.type} {poi.name ? poi.name : "Unnamed"}</span>
                 </Button>
               ))
             ) : (
@@ -59,8 +64,8 @@ export function CallRobotSheet({ open, onOpenChange, onCall }: CallRobotProps) {
               </div>
             )} 
           </> : (
-            <div className="text-center text-sm text-slate-400">
-              Loading destinations...
+            <div>
+              <Loader variant="container" />
             </div>
           )}
         </div>

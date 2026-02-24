@@ -1,6 +1,6 @@
 import { listTasks, createTask, executeTask, cancelTask } from "@/lib/slices/TaskSlice";
 import { TaskType, RunType, RouteMode, type CreateTaskRequest } from "@/lib/types/TaskTypes";
-import type { PointOfInterest } from "@/lib/types/MapTypes";
+import { PoiType, type PointOfInterest } from "@/lib/types/MapTypes";
 import type { AppDispatch } from "@/store";
 
 export async function refreshTasks(dispatch: AppDispatch, businessId: string) {
@@ -30,19 +30,45 @@ export async function handleCreateTask(
   businessId: string,
   poi: PointOfInterest,
   robotId?: string,
-  execute: boolean = false
+  execute: boolean = false,
 ) {
   if (!robotId) {
     console.warn("No robot available");
     return;
   }
 
+  let routeMode: RouteMode;
+  let taskType: TaskType;
+  let runType: RunType;
+  
+  if (poi.type === PoiType.ChargingPile) { 
+    routeMode = RouteMode.ShortestDistanceRouting;
+    taskType = TaskType.ReturnToChargingStation;
+    runType = RunType.ChargingStation;
+  } else if (poi.type === PoiType.TableNumber) {
+    routeMode = RouteMode.ShortestDistanceRouting;
+    taskType = TaskType.Delivery;
+    runType = RunType.DirectDelivery;
+  } else if (poi.type === PoiType.StandbyPoint) {
+    routeMode = RouteMode.ShortestDistanceRouting;
+    taskType = TaskType.Restaurant;
+    runType = RunType.Return;
+  }
+   else if (poi.type === PoiType.ShelfPoint) {
+    routeMode = RouteMode.ShortestDistanceRouting;
+    taskType = TaskType.Factory;
+    runType = RunType.Lifting;
+  } else {
+    console.warn("Unsupported POI type for task creation");
+    return;
+  }
+
   const task: CreateTaskRequest = {
     name: `Task to ${poi.name || poi.id}`,
     robotId: robotId,
-    routeMode: RouteMode.SequentialRouting,
-    taskType: TaskType.Restaurant,
-    runType: RunType.DirectDelivery,
+    routeMode: routeMode,
+    taskType:   taskType,
+    runType: runType,
     taskPts: [{ areaId: poi.areaId || "", poiId: poi.id }]
   };
 
