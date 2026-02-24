@@ -25,7 +25,11 @@ type ClientCommand = {
   robotId?: string;
 };
 
+type SubscriptionKind = 'robot.state' | 'task.state';
+
 type UpstreamSubscription = {
+  kind: SubscriptionKind;
+  robotId: string;
   socket: WebSocket;
   heartbeatTimer?: ReturnType<typeof setInterval>;
 };
@@ -191,13 +195,33 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    if (command.action === 'subscribe.robot.oversee') {
-      await this.subscribeRobotOversee(client, state, command.robotId);
+    if (command.action === 'subscribe.robot.state') {
+      await this.subscribeOversee(client, state, {
+        robotId: command.robotId,
+        kind: 'robot.state',
+        upstreamPathPrefix: 'robot-control/oversee',
+        eventName: 'robot.state',
+      });
       return;
     }
 
-    if (command.action === 'unsubscribe.robot.oversee') {
-      this.unsubscribeRobotOversee(client, state, command.robotId);
+    if (command.action === 'unsubscribe.robot.state') {
+      this.unsubscribeOversee(client, state, command.robotId, 'robot.state');
+      return;
+    }
+
+    if (command.action === 'subscribe.task.state') {
+      await this.subscribeOversee(client, state, {
+        robotId: command.robotId,
+        kind: 'task.state',
+        upstreamPathPrefix: 'task-control/oversee/robot',
+        eventName: 'task.state',
+      });
+      return;
+    }
+
+    if (command.action === 'unsubscribe.task.state') {
+      this.unsubscribeOversee(client, state, command.robotId, 'task.state');
       return;
     }
 
@@ -208,23 +232,32 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  private async subscribeRobotOversee(
+  private async subscribeOversee(
     client: WebSocket,
     state: ClientState,
-    robotId: string | undefined,
+    params: {
+      robotId: string | undefined;
+      kind: SubscriptionKind;
+      upstreamPathPrefix: string;
+      eventName: 'robot.state' | 'task.state';
+    },
   ): Promise<void> {
+    const { robotId, kind, upstreamPathPrefix, eventName } = params;
     const normalizedRobotId = robotId?.trim();
     if (!normalizedRobotId) {
       this.sendToClient(client, {
         event: 'subscribe.rejected',
+        stream: kind,
         reason: 'robotId is required',
       });
       return;
     }
 
-    if (state.subscriptions.has(normalizedRobotId)) {
+    const subscriptionKey = this.getSubscriptionKey(kind, normalizedRobotId);
+    if (state.subscriptions.has(subscriptionKey)) {
       this.sendToClient(client, {
         event: 'subscribe.ignored',
+        stream: kind,
         robotId: normalizedRobotId,
         reason: 'Already subscribed',
       });
@@ -235,15 +268,20 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
       await this.autoxingRobotService.assertRobotAccess(normalizedRobotId, state.user);
       const accessToken = await this.autoxingAuthService.getAccessToken();
       const upstreamUrl =
-        `${this.autoxingWsBaseUrl}/robot-control/oversee/${encodeURIComponent(normalizedRobotId)}`;
+        `${this.autoxingWsBaseUrl}/${upstreamPathPrefix}/${encodeURIComponent(normalizedRobotId)}`;
 
       // Autoxing expects token key as websocket subprotocol during handshake.
       const upstream = new WebSocket(upstreamUrl, accessToken.key);
 
-      state.subscriptions.set(normalizedRobotId, { socket: upstream });
+      state.subscriptions.set(subscriptionKey, {
+        kind,
+        robotId: normalizedRobotId,
+        socket: upstream,
+      });
 
       this.sendToClient(client, {
         event: 'subscribe.requested',
+        stream: kind,
         robotId: normalizedRobotId,
       });
 
@@ -256,13 +294,14 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
           upstream.send(JSON.stringify({ reqType: 'onHeartBeat' }));
         }, 5_000);
 
-        const subscription = state.subscriptions.get(normalizedRobotId);
+        const subscription = state.subscriptions.get(subscriptionKey);
         if (subscription && subscription.socket === upstream) {
           subscription.heartbeatTimer = heartbeatTimer;
         }
 
         this.sendToClient(client, {
           event: 'subscribe.ready',
+          stream: kind,
           robotId: normalizedRobotId,
         });
       });
@@ -274,7 +313,8 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
         }
 
         this.sendToClient(client, {
-          event: 'robot.oversee',
+          event: eventName,
+          stream: kind,
           robotId: normalizedRobotId,
           payload: decodedPayload,
           receivedAt: Date.now(),
@@ -282,16 +322,17 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
       });
 
       upstream.on('close', (code, reason) => {
-        const subscription = state.subscriptions.get(normalizedRobotId);
+        const subscription = state.subscriptions.get(subscriptionKey);
         if (subscription && subscription.socket === upstream) {
           if (subscription.heartbeatTimer) {
             clearInterval(subscription.heartbeatTimer);
           }
-          state.subscriptions.delete(normalizedRobotId);
+          state.subscriptions.delete(subscriptionKey);
         }
 
         this.sendToClient(client, {
           event: 'subscribe.closed',
+          stream: kind,
           robotId: normalizedRobotId,
           code,
           reason: reason.toString('utf8'),
@@ -303,12 +344,14 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
           JSON.stringify({
             event: 'autoxing.ws.upstream.error',
             connectionId: state.connectionId,
+            stream: kind,
             robotId: normalizedRobotId,
             message: error.message,
           }),
         );
         this.sendToClient(client, {
           event: 'subscribe.error',
+          stream: kind,
           robotId: normalizedRobotId,
           message: error.message,
         });
@@ -316,37 +359,42 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       this.sendToClient(client, {
         event: 'subscribe.rejected',
+        stream: kind,
         robotId: normalizedRobotId,
         reason: error instanceof Error ? error.message : 'Subscription failed',
       });
     }
   }
 
-  private unsubscribeRobotOversee(
+  private unsubscribeOversee(
     client: WebSocket,
     state: ClientState,
     robotId: string | undefined,
+    kind: SubscriptionKind,
   ): void {
     const normalizedRobotId = robotId?.trim();
     if (!normalizedRobotId) {
       this.sendToClient(client, {
         event: 'unsubscribe.rejected',
+        stream: kind,
         reason: 'robotId is required',
       });
       return;
     }
 
-    const subscription = state.subscriptions.get(normalizedRobotId);
+    const subscriptionKey = this.getSubscriptionKey(kind, normalizedRobotId);
+    const subscription = state.subscriptions.get(subscriptionKey);
     if (!subscription) {
       this.sendToClient(client, {
         event: 'unsubscribe.ignored',
+        stream: kind,
         robotId: normalizedRobotId,
         reason: 'No active subscription',
       });
       return;
     }
 
-    state.subscriptions.delete(normalizedRobotId);
+    state.subscriptions.delete(subscriptionKey);
     if (subscription.heartbeatTimer) {
       clearInterval(subscription.heartbeatTimer);
     }
@@ -354,6 +402,7 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
 
     this.sendToClient(client, {
       event: 'unsubscribe.done',
+      stream: kind,
       robotId: normalizedRobotId,
     });
   }
@@ -431,6 +480,10 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
     }
 
     client.send(JSON.stringify(payload));
+  }
+
+  private getSubscriptionKey(kind: SubscriptionKind, robotId: string): string {
+    return `${kind}:${robotId}`;
   }
 
   private isHeartbeatPayload(payload: unknown): boolean {

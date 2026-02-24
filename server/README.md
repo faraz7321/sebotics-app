@@ -114,14 +114,24 @@ Frontend does not connect to Autoxing directly. It connects to Sebotics WebSocke
 - Authentication: session cookie (`refreshToken`) is used by the server during WS upgrade; client never sends Autoxing token.
 - Client command to subscribe:
   ```json
-  {"action":"subscribe.robot.oversee","robotId":"<robotId>"}
+  {"action":"subscribe.robot.state","robotId":"<robotId>"}
+  ```
+- Client command to subscribe task-oversee:
+  ```json
+  {"action":"subscribe.task.state","robotId":"<robotId>"}
   ```
 - Client command to unsubscribe:
   ```json
-  {"action":"unsubscribe.robot.oversee","robotId":"<robotId>"}
+  {"action":"unsubscribe.robot.state","robotId":"<robotId>"}
+  ```
+- Client command to unsubscribe task-oversee:
+  ```json
+  {"action":"unsubscribe.task.state","robotId":"<robotId>"}
   ```
 - Upstream source (opened by server):
   `wss://serviceglobal.autoxing.com/robot-control/oversee/{robotId}`
+- Upstream task-oversee source (opened by server):
+  `wss://serviceglobal.autoxing.com/task-control/oversee/robot/{robotId}`
 - Upstream handshake auth:
   `Sec-WebSocket-Protocol` is set to Autoxing token `key`.
 - Upstream keepalive:
@@ -130,7 +140,19 @@ Frontend does not connect to Autoxing directly. It connects to Sebotics WebSocke
 Forwarded event to client:
 ```json
 {
-  "event": "robot.oversee",
+  "event": "robot.state",
+  "stream": "robot.state",
+  "robotId": "<robotId>",
+  "payload": { "...autoxing message..." },
+  "receivedAt": 0
+}
+```
+
+Forwarded task-oversee event to client:
+```json
+{
+  "event": "task.state",
+  "stream": "task.state",
   "robotId": "<robotId>",
   "payload": { "...autoxing message..." },
   "receivedAt": 0
