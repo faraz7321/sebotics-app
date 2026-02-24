@@ -98,7 +98,7 @@ export function RobotList({ robots, onReturnToDock }: RobotListProps) {
                       <Button
                         variant="outline"
                         className="w-full mt-2 border-green-500 text-green-600 hover:bg-green-100 hover:cursor-pointer"
-                        onClick={() => onReturnToDock(robot.robotId)}
+                        onClick={() => onReturnToDock(robot)}
                       >
                         Return to Dock
                       </Button>
