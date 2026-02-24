@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../services/auth.service';
-import { API_ENDPOINTS } from '@/config/routes';
 import { type AuthResult, type AuthState, type LoginCreds, type RegisterCreds } from '../types/AuthTypes';
 import { getErrorMessage } from './sliceHelpers';
 
@@ -26,7 +25,7 @@ export const loginUser = createAsyncThunk<AuthResult, LoginCreds, { rejectValue:
   }
 );
 
-export const refreshToken = createAsyncThunk(
+export const refreshToken = createAsyncThunk<string, void, { rejectValue: string }>(
   "auth/refresh",
   async (_, thunkAPI) => {
     try {

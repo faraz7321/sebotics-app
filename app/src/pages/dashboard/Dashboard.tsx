@@ -31,7 +31,6 @@ import type { Robot } from "@/lib/types/RobotTypes";
 export default function Dashboard() {
   const dispatch = useAppDispatch();
 
-  const user = useAppSelector((state) => state.user.user);
   const robots = useAppSelector((state) => state.robot.robots);
   const selectedBusinessId = useAppSelector((state) => state.business.selectedbusinessId);
   const tasks = useAppSelector((state) => state.task.tasks);
@@ -44,8 +43,8 @@ export default function Dashboard() {
     }
 
     const getUsers = async () => {
-      await dispatch(fetchUser());
-      if (user?.role == ROLES.ADMIN) {
+      const response = await dispatch(fetchUser());
+      if (fetchUser.fulfilled.match(response) && response.payload?.role === ROLES.ADMIN) {
         await dispatch(listUsers());
       }
     }

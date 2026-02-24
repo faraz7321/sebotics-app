@@ -12,7 +12,7 @@ const api = axios.create({
   },
 });
 
-let refreshingPromise: Promise<any> | null = null;
+let refreshingPromise: Promise<string> | null = null;
 
 api.interceptors.request.use(
   async (config) => {

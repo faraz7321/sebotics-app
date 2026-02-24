@@ -14,7 +14,7 @@ export async function refreshTasks(dispatch: AppDispatch, businessId: string) {
 }
 
 export async function performTaskAction(
-  action: () => Promise<any>,
+  action: () => Promise<unknown>,
   refresh: () => Promise<void>
 ) {
   try {

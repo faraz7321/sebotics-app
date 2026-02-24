@@ -60,6 +60,8 @@ export const RunMode = {
 
 export type RunMode = typeof RunMode[keyof typeof RunMode];
 
+type JsonObject = Record<string, unknown>;
+
 export type TaskPoint = {
   areaId: string;
   poiId?: string; // when poiId is provided, the system automatically populates x, y, yaw, type, and the name/id values from the ext field
@@ -68,8 +70,8 @@ export type TaskPoint = {
   yaw?: number;
   type?: number;
   stopRadius?: number;
-  ext?: Record<string, any>;
-  stepActs?: Record<string, any>[];
+  ext?: JsonObject;
+  stepActs?: JsonObject[];
 };
 
 export interface CreateTaskRequest {
@@ -84,9 +86,9 @@ export interface CreateTaskRequest {
   ignorePublicSite?: boolean;
   speed?: number;
   detourRadius?: number;
-  curPt?: Record<string, any>; // Represents {}
+  curPt?: JsonObject; // Represents {}
   taskPts: TaskPoint[];
-  backPt?: Record<string, any>; // Represents {}
+  backPt?: JsonObject; // Represents {}
   returnDest?: number;
   returnTime?: number;
 };
