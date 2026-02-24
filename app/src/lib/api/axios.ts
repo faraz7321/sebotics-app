@@ -29,9 +29,8 @@ api.interceptors.request.use(
           refreshingPromise = store.dispatch(refreshToken()).unwrap();
         }
 
-        const result = await refreshingPromise;
-
-        accessToken = result.accessToken;
+        const refreshedAccessToken = await refreshingPromise;
+        accessToken = refreshedAccessToken;
       } catch (err) {
         refreshingPromise = null;
         return Promise.reject(err);
