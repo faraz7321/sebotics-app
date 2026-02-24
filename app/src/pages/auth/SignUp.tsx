@@ -72,7 +72,7 @@ export default function SignUp() {
 
     if (!formData.email.trim()) {
       errors.email = "Email is required";
-    } else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(formData.email.trim())) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       errors.email = "Enter a valid email";
     }
 
