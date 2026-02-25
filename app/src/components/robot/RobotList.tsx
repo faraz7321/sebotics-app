@@ -15,10 +15,11 @@ import { useState } from "react";
 
 interface RobotListProps {
   robots: Robot[];
+  onCallRobot: (robot: Robot) => void;
   onReturnToDock: (robot: Robot) => void;
 }
 
-export function RobotList({ robots, onReturnToDock }: RobotListProps) {
+export function RobotList({ robots, onCallRobot, onReturnToDock }: RobotListProps) {
   const [selectedRobot, setSelectedRobot] = useState<Robot | null>(null);
 
   return (
@@ -45,10 +46,7 @@ export function RobotList({ robots, onReturnToDock }: RobotListProps) {
                   key={robot.robotId}
                   className={`border-b cursor-pointer transition-all ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
                     }`}
-                  onClick={() =>
-                    {setSelectedRobot(isSelected ? null : robot)
-                    console.log("Selected robot:", isSelected ? "None" : robot)}
-                  }
+                  onClick={() => setSelectedRobot(isSelected ? null : robot)}
                 >
                   {/* COLLAPSED HEADER */}
                   <div className="p-4 flex justify-between items-center">
@@ -95,6 +93,15 @@ export function RobotList({ robots, onReturnToDock }: RobotListProps) {
                           Errors: {robot.errors.join(", ")}
                         </div>
                       )}
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2 border-green-500 text-green-600 hover:bg-green-100 hover:cursor-pointer"
+                        onClick={() => {
+                          onCallRobot(robot);
+                        }}
+                      >
+                        Call Robot
+                      </Button>
                       <Button
                         variant="outline"
                         className="w-full mt-2 border-green-500 text-green-600 hover:bg-green-100 hover:cursor-pointer"

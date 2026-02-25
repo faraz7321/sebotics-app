@@ -1,6 +1,5 @@
 import BusinessDetailsPanel from "@/components/business/BusinessDetailsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader } from "@/components/ui/loader";
 import { listBusinesses, setSelectedBusinessId } from "@/lib/slices/BusinessSlice";
 import { fetchUser, listUsers } from "@/lib/slices/UserSlice";
 import type { Business } from "@/lib/types/BusinessTypes";
@@ -11,7 +10,7 @@ import { useEffect } from "react";
 export default function Businesses() {
   const dispatch = useAppDispatch();
   const users = useAppSelector((state) => state.user.users);
-  const { loading, businesses, selectedbusinessId } = useAppSelector(
+  const { businesses, selectedbusinessId } = useAppSelector(
     (state) => state.business
   );
   const selectedBusiness = businesses.find(
@@ -46,7 +45,6 @@ export default function Businesses() {
           </CardHeader>
 
           <CardContent className="p-0 flex-1 overflow-y-auto relative">
-            {!loading ? (
               <div className="divide-y divide-slate-200">
                 {businesses.length === 0 ? (
                   <div className="p-4 text-slate-400 text-sm text-center">
@@ -80,11 +78,7 @@ export default function Businesses() {
                   })
                 )}
               </div>
-            ) : (
-              <div>
-                <Loader variant="container" />
-              </div>
-            )}
+
           </CardContent>
         </Card>
       </div>

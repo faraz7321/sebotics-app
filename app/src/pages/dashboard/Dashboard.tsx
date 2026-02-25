@@ -83,6 +83,7 @@ export default function Dashboard() {
 
   const [callOpen, setCallOpen] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
+  const [selectedRobotForCall, setSelectedRobotForCall] = useState<Robot | null>(null);
 
   const getPoisByRobotArea = (robot: Robot, poiType: PoiType) => {
     return pois.filter((poi) => {
@@ -159,6 +160,10 @@ export default function Dashboard() {
         <div className="lg:col-span-4">
           <RobotList
             robots={filteredrobots}
+            onCallRobot={(robot) => {
+              setSelectedRobotForCall(robot);
+              setCallOpen(true);
+            }}
             onReturnToDock={(robot) => handleReturnToDock(robot)}
           />
         </div>
@@ -186,7 +191,10 @@ export default function Dashboard() {
           <div className="max-w-7xl mx-auto grid grid-col md:flex-row gap-4">
             <Button
               disabled={!selectedBusinessId}
-              onClick={() => setCallOpen(true)}
+              onClick={() => {
+                setSelectedRobotForCall(null);
+                setCallOpen(true);
+              }}
               className="flex-1 h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed"
             >
               <Zap className="h-5 w-5" />
@@ -210,9 +218,10 @@ export default function Dashboard() {
       <CallRobotSheet
         open={callOpen}
         onOpenChange={setCallOpen}
-        onCall={(poi) =>
-          handleCreateTask(dispatch, selectedBusinessId!, poi, getIdleRobot() || getOnlineRobot() || "", true)
-        }
+        selectedRobot={selectedRobotForCall}
+        onCall={(poi) => {
+          handleCreateTask(dispatch, selectedBusinessId!, poi, selectedRobotForCall?.robotId || getIdleRobot() || getOnlineRobot() || "", true);
+        }}
       />
 
       <EmergencyStopSheet

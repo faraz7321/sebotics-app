@@ -7,6 +7,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import type { PointOfInterest } from "@/lib/types/MapTypes";
+import type { Robot } from "@/lib/types/RobotTypes";
 import { useAppSelector } from "@/store";
 import { Loader } from "../ui/loader";
 
@@ -14,11 +15,23 @@ type CallRobotProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCall: (poi: PointOfInterest) => void;
+  selectedRobot?: Robot | null;
 };
 
-export function CallRobotSheet({ open, onOpenChange, onCall }: CallRobotProps) {
+export function CallRobotSheet({ open, onOpenChange, onCall, selectedRobot }: CallRobotProps) {
   const robots = useAppSelector((state) => state.robot.robots);
   const { loading, pointsOfInterest } = useAppSelector((state) => state.map);
+
+  // Filter POIs based on whether a specific robot is selected
+  const filteredPois = pointsOfInterest.filter((poi) => {
+    if (selectedRobot) {
+      // If a specific robot is selected, only show POIs in that robot's area
+      return poi.areaId === selectedRobot.areaId;
+    } else {
+      // Otherwise, show POIs that match any robot's area
+      return robots.some((robot) => robot.areaId === poi.areaId);
+    }
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -35,17 +48,14 @@ export function CallRobotSheet({ open, onOpenChange, onCall }: CallRobotProps) {
       >
         <DialogHeader className="p-4 border-b">
           <DialogTitle className="text-center">
-            Call Robot
+            {selectedRobot ? `Call Robot ${selectedRobot.robotId}` : "Call Robot"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="p-4 space-y-3 max-h-[50vh] overflow-y-auto">
           {!loading ? <>
-            {pointsOfInterest && pointsOfInterest.length > 0 ? (
-              pointsOfInterest.filter((poi) => {
-                // Filter out POIs that are not on the same area as the robots
-                return robots.some((robot) => robot.areaId === poi.areaId);
-              }).map((poi) => (
+            {filteredPois && filteredPois.length > 0 ? (
+              filteredPois.map((poi) => (
                 <Button
                   key={poi.id}
                   variant="outline"
