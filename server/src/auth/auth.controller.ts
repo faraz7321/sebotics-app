@@ -1,9 +1,12 @@
-import { Body, Controller, Post, Res, Inject, Req, UnauthorizedException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiBody } from '@nestjs/swagger';
+import { Body, Controller, Post, Res, Inject, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, AuthResponseDto } from './auth.dto';
+import { LoginDto, RegisterDto, AuthResponseDto, ForgotPasswordDto, ForgotPasswordResponseDto, ResetPasswordDto, ChangePasswordDto } from './auth.dto';
 import { Response } from 'express';
 import { Request } from 'express';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { CurrentUser } from './current-user.decorator';
+import { JwtUser } from './auth.types';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -76,6 +79,43 @@ export class AuthController {
 
     const token = await this.authService.refresh(refreshToken);
     return token;
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Change password for the authenticated user' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiOkResponse({ description: 'Password changed successfully' })
+  @ApiBadRequestResponse({ description: 'Current password is incorrect' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  async changePassword(
+    @CurrentUser() user: JwtUser,
+    @Body() body: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(user.userId, body.currentPassword, body.newPassword);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request a password reset OTP via email' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiOkResponse({ description: 'OTP sent if email exists', type: ForgotPasswordResponseDto })
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password using OTP and reset token' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiOkResponse({ description: 'Password reset successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid OTP, reset token, or expired request' })
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(
+      body.email,
+      body.otp,
+      body.resetToken,
+      body.newPassword,
+    );
   }
 }
 

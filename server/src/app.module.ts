@@ -5,6 +5,7 @@ import { AutoxingModule } from './autoxing/autoxing.module';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { MailerModule } from './mailer/mailer.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AuthModule,
     HealthModule,
     UsersModule,
+    MailerModule,
   ],
 })
 export class AppModule {}
