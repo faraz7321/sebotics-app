@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useAppDispatch } from "@/store";
 import { loginUser } from "@/lib/slices/AuthSlice";
 import { ROUTES } from "@/config/routes";
+import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 export default function SignIn() {
   const dispatch = useAppDispatch();
@@ -82,6 +83,9 @@ export default function SignIn() {
     try {
       const res = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(res)) {
+        robotStateSocket.connect();
+        taskStateSocket.connect();
+
         navigate(ROUTES.DASHBOARD.HOME);
       } else {
         setError(res.payload as string || "Login failed");

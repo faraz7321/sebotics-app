@@ -1,5 +1,5 @@
-import { listTasks, createTask, executeTask, cancelTask } from "@/lib/slices/TaskSlice";
-import { TaskType, RunType, RouteMode, type CreateTaskRequest } from "@/lib/types/TaskTypes";
+import { listTasks, createTask, executeTask, cancelTask, createTaskv3 } from "@/lib/slices/TaskSlice";
+import { TaskType, RunType, RouteMode, type CreateTaskRequest, DispatchType } from "@/lib/types/TaskTypes";
 import { PoiType, type PointOfInterest } from "@/lib/types/MapTypes";
 import type { AppDispatch } from "@/store";
 
@@ -26,68 +26,92 @@ export async function performTaskAction(
 }
 
 export async function handleCreateTask(
-  dispatch: AppDispatch,
-  businessId: string,
-  poi: PointOfInterest,
-  robotId?: string,
-  execute: boolean = false,
+  { dispatch, businessId, poi, robotId, execute = false, isV3 = true }:
+    {
+      dispatch: AppDispatch,
+      businessId: string,
+      poi: PointOfInterest,
+      robotId?: string,
+      execute: boolean,
+      isV3: boolean
+    }
 ) {
   if (!robotId) {
     console.warn("No robot available");
     return;
   }
 
-  let routeMode: RouteMode;
-  let taskType: TaskType;
-  let runType: RunType;
-  
-  if (poi.type === PoiType.ChargingPile) { 
-    routeMode = RouteMode.ShortestDistanceRouting;
-    taskType = TaskType.ReturnToChargingStation;
-    runType = RunType.ChargingStation;
-  } else if (poi.type === PoiType.TableNumber) {
-    routeMode = RouteMode.ShortestDistanceRouting;
-    taskType = TaskType.Delivery;
-    runType = RunType.DirectDelivery;
-  } else if (poi.type === PoiType.StandbyPoint) {
-    routeMode = RouteMode.ShortestDistanceRouting;
-    taskType = TaskType.Restaurant;
-    runType = RunType.Return;
-  }
-   else if (poi.type === PoiType.ShelfPoint) {
-    routeMode = RouteMode.ShortestDistanceRouting;
-    taskType = TaskType.Factory;
-    runType = RunType.Lifting;
-  } else {
+  const config = getTaskConfigByPoi(poi.type as PoiType);
+  if (!config) {
     console.warn("Unsupported POI type for task creation");
     return;
   }
 
   const task: CreateTaskRequest = {
-    name: `Task to ${poi.name || poi.id}`,
-    robotId: robotId,
-    routeMode: routeMode,
-    taskType:   taskType,
-    runType: runType,
-    taskPts: [{ areaId: poi.areaId || "", poiId: poi.id }]
+    name: `Go to ${poi.name || poi.id}`,
+    robotId,
+    businessId,
+    ...config,
+    taskPts: [
+      {
+        areaId: poi.areaId || "",
+        poiId: poi.id,
+        ...(isV3 && {
+          ext: { name: poi.name || "", id: poi.id }
+        })
+      }
+    ],
+    ...(isV3 && { dispatchType: DispatchType.Queue })
   };
 
-  const response = await dispatch(createTask(task));
+  const actionCreator = isV3 ? createTaskv3 : createTask;
+  const response = await dispatch(actionCreator(task));
 
-  if (createTask.fulfilled.match(response)) {
+  if (actionCreator.fulfilled.match(response)) {
     if (execute) {
       await dispatch(executeTask(response.payload.data.taskId));
     }
     await refreshTasks(dispatch, businessId);
   } else {
-    console.error("Failed to create task", response.payload);
+    console.error(`Failed to create task ${isV3 ? 'v3' : 'v1'}`, response.payload);
   }
 }
 
-export async function handleExecuteTask(dispatch: AppDispatch, businessId: string, taskId: string) {
+export async function handleExecuteTask(
+  { dispatch, businessId, taskId }:
+    { dispatch: AppDispatch, businessId: string, taskId: string }) {
   await performTaskAction(() => dispatch(executeTask(taskId)), () => refreshTasks(dispatch, businessId));
 }
 
-export async function handleCancelTask(dispatch: AppDispatch, businessId: string, taskId: string) {
+export async function handleCancelTask(
+  { dispatch, businessId, taskId }:
+    { dispatch: AppDispatch, businessId: string, taskId: string }) {
   await performTaskAction(() => dispatch(cancelTask(taskId)), () => refreshTasks(dispatch, businessId));
+}
+
+function getTaskConfigByPoi(type: PoiType) {
+  const mapping: Record<string, { routeMode: RouteMode; taskType: TaskType; runType: RunType }> = {
+    [PoiType.ChargingPile]: {
+      routeMode: RouteMode.ShortestDistanceRouting,
+      taskType: TaskType.ReturnToChargingStation,
+      runType: RunType.ChargingStation,
+    },
+    [PoiType.TableNumber]: {
+      routeMode: RouteMode.ShortestDistanceRouting,
+      taskType: TaskType.Delivery,
+      runType: RunType.DirectDelivery,
+    },
+    [PoiType.StandbyPoint]: {
+      routeMode: RouteMode.ShortestDistanceRouting,
+      taskType: TaskType.Restaurant,
+      runType: RunType.Return,
+    },
+    [PoiType.ShelfPoint]: {
+      routeMode: RouteMode.ShortestDistanceRouting,
+      taskType: TaskType.Factory,
+      runType: RunType.Lifting,
+    },
+  };
+
+  return mapping[type] || null;
 }

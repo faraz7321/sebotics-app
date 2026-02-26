@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/card";
 
 import type { Robot } from "@/lib/types/RobotTypes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 interface RobotListProps {
   robots: Robot[];
@@ -21,6 +22,27 @@ interface RobotListProps {
 
 export function RobotList({ robots, onCallRobot, onReturnToDock }: RobotListProps) {
   const [selectedRobot, setSelectedRobot] = useState<Robot | null>(null);
+
+  useEffect(() => {
+    if (robots.length === 0) return;
+
+    // Connect socket if not already connected
+    if (!robotStateSocket.isConnected()) {
+      robotStateSocket.connect();
+    }
+
+    if (!taskStateSocket.isConnected()) {
+      taskStateSocket.connect();
+    }
+
+    // Subscribe to all robots in the list
+    robots.forEach((robot) => {
+      robotStateSocket.subscribe(robot.robotId);
+      taskStateSocket.subscribe(robot.robotId);
+    });
+    
+
+  }, [robots]);
 
   return (
     <Card className="border border-slate-200 shadow-none rounded-xl h-[460px] flex flex-col">

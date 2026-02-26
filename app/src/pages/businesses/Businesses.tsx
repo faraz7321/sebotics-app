@@ -10,11 +10,11 @@ import { useEffect } from "react";
 export default function Businesses() {
   const dispatch = useAppDispatch();
   const users = useAppSelector((state) => state.user.users);
-  const { businesses, selectedbusinessId } = useAppSelector(
+  const { businesses, selectedBusinessId } = useAppSelector(
     (state) => state.business
   );
   const selectedBusiness = businesses.find(
-    (b) => b.id === selectedbusinessId
+    (b) => b.id === selectedBusinessId
   ) || null;
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function Businesses() {
                   </div>
                 ) : (
                   businesses.map((business: Business) => {
-                    const isSelected = selectedbusinessId === business.id;
+                    const isSelected = selectedBusinessId === business.id;
 
                     return (
                       <div

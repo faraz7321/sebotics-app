@@ -9,6 +9,7 @@ import { setSelectedBusinessId } from "@/lib/slices/BusinessSlice";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/config/routes";
 import { ROLES } from "@/config/constants";
+import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 export default function Navbar() {
   const dispatch = useAppDispatch();
@@ -18,7 +19,7 @@ export default function Navbar() {
 
   const user = useAppSelector((state) => state.user.user);
   const businesses = useAppSelector((state) => state.business.businesses);
-  const selectedBusinessId = useAppSelector((state) => state.business.selectedbusinessId);
+  const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
 
   const selectedBusiness = businesses.find(b => b.id === selectedBusinessId);
 
@@ -86,7 +87,11 @@ export default function Navbar() {
           size="icon"
           variant="ghost"
           className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:cursor-pointer"
-          onClick={() => dispatch(logout())}
+          onClick={() => {
+            robotStateSocket.disconnect();
+            taskStateSocket.disconnect();
+            dispatch(logout());
+          }}
         >
           <LogOut className="h-5 w-5" />
         </Button>

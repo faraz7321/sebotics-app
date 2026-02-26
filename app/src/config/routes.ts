@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   TASK: {
     LIST: "/autoxing/tasks/list",
     CREATE: "/autoxing/tasks",
+    CREATE_V3: "/autoxing/tasks/v3",
     EXECUTE: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/execute
     CANCEL: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/cancel
   },

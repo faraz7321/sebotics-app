@@ -38,7 +38,7 @@ export const refreshToken = createAsyncThunk<string, void, { rejectValue: string
 
 const initialState: AuthState = {
   user: null,
-  accessToken: localStorage.getItem('accessToken') || '',
+  accessToken: '',
 
   loading: false,
   error: null,
@@ -54,7 +54,7 @@ const authSlice = createSlice({
     logout(state) {
       state.user = null;
       state.accessToken = '';
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('keepLoggedIn');
     },
   },
   extraReducers: (builder) => {
@@ -70,7 +70,7 @@ const authSlice = createSlice({
         state.user = user;
         state.accessToken = accessToken;
 
-        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('keepLoggedIn', "true");
 
         state.loading = false;
       })
@@ -90,7 +90,7 @@ const authSlice = createSlice({
         state.user = user;
         state.accessToken = accessToken;
 
-        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('keepLoggedIn', "true");
 
         state.loading = false;
       })
@@ -108,7 +108,7 @@ const authSlice = createSlice({
 
         state.accessToken = accessToken;
 
-        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('keepLoggedIn', "true");
 
         state.loading = false;
       })
@@ -117,6 +117,7 @@ const authSlice = createSlice({
         state.error = action.payload as string;
         state.accessToken = '';
         state.user = null;
+        localStorage.removeItem('keepLoggedIn');
       })
   },
 });

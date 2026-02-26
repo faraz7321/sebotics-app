@@ -32,7 +32,7 @@ export default function Dashboard() {
   const dispatch = useAppDispatch();
 
   const robots = useAppSelector((state) => state.robot.robots);
-  const selectedBusinessId = useAppSelector((state) => state.business.selectedbusinessId);
+  const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
   const tasks = useAppSelector((state) => state.task.tasks);
   const pois = useAppSelector((state) => state.map.pointsOfInterest);
   const filteredrobots = robots.filter((r) => r.businessId === selectedBusinessId);
@@ -102,7 +102,7 @@ export default function Dashboard() {
       console.warn("Robot not found");
       return null;
     }
-    
+
     const dock = getPoisByRobotArea(robot, PoiType.ChargingPile)[0];
     console.log(dock);
 
@@ -133,7 +133,14 @@ export default function Dashboard() {
       return;
     }
 
-    handleCreateTask(dispatch, selectedBusinessId!, chargingDock, robot.robotId, true);
+    handleCreateTask({
+      dispatch: dispatch,
+      businessId: selectedBusinessId!,
+      poi: chargingDock,
+      robotId: robot.robotId,
+      execute: true,
+      isV3: false
+    });
   };
 
   const handleEmergencyStop = (robotId: string) => {
@@ -143,7 +150,7 @@ export default function Dashboard() {
     console.log("Active task for robot:", taskId ?? "None");
 
     if (taskId) {
-      handleCancelTask(dispatch, selectedBusinessId!, taskId);
+      handleCancelTask({ dispatch: dispatch, businessId: selectedBusinessId!, taskId: taskId });
     } else {
       console.warn("No active task found for robot:", robotId);
     }
@@ -175,10 +182,10 @@ export default function Dashboard() {
             tasks={tasks}
             selectedBusinessId={selectedBusinessId}
             onExecuteTask={(taskId) =>
-              handleExecuteTask(dispatch, selectedBusinessId!, taskId)
+              handleExecuteTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
             }
             onCancelTask={(taskId) =>
-              handleCancelTask(dispatch, selectedBusinessId!, taskId)
+              handleCancelTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
             }
           />
         </div>
@@ -220,7 +227,14 @@ export default function Dashboard() {
         onOpenChange={setCallOpen}
         selectedRobot={selectedRobotForCall}
         onCall={(poi) => {
-          handleCreateTask(dispatch, selectedBusinessId!, poi, selectedRobotForCall?.robotId || getIdleRobot() || getOnlineRobot() || "", true);
+          handleCreateTask({
+            dispatch: dispatch,
+            businessId: selectedBusinessId!,
+            poi: poi,
+            robotId: selectedRobotForCall?.robotId || getIdleRobot() || getOnlineRobot() || "",
+            execute: true,
+            isV3: true
+          });
         }}
       />
 

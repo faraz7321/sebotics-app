@@ -3,6 +3,7 @@ import { API_BASE_URL } from "@/lib/runtime-config";
 import { authService } from "../services/auth.service";
 import { store } from "@/store";
 import { refreshToken } from "../slices/AuthSlice";
+import { robotStateSocket, taskStateSocket } from "../ws/stateSockets";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -21,12 +22,18 @@ api.interceptors.request.use(
     }
 
     const state = store.getState();
+    const keepLoggedIn = localStorage.getItem('keepLoggedIn') === "true";
     let accessToken = state.auth.accessToken;
 
-    if (accessToken && authService.isTokenExpired(accessToken)) {
+    if (keepLoggedIn && authService.isTokenExpired(accessToken)) {
       try {
         if (!refreshingPromise) {
-          refreshingPromise = store.dispatch(refreshToken()).unwrap();
+          refreshingPromise = store.dispatch(refreshToken()).unwrap().then((newToken) => {
+            robotStateSocket.connect();
+            taskStateSocket.connect();
+
+            return newToken;
+          });
         }
 
         const refreshedAccessToken = await refreshingPromise;

@@ -56,7 +56,7 @@ const initialState: BusinessState = {
   loading: false,
   error: null,
 
-  selectedbusinessId: null,
+  selectedBusinessId: null,
 
   businesses: []
 };
@@ -66,7 +66,7 @@ const businessSlice = createSlice({
   initialState,
   reducers: {
     setSelectedBusinessId(state, action) {
-      state.selectedbusinessId = action.payload;
+      state.selectedBusinessId = action.payload;
     },
   },
   extraReducers: (builder) => {
