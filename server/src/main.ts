@@ -23,6 +23,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: resolveLoggerLevels(),
   });
+  app.getHttpAdapter().getInstance().set('trust proxy', true);
   app.enableShutdownHooks();
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

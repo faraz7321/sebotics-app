@@ -1,5 +1,6 @@
 import { Body, Controller, Post, Res, Inject, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, AuthResponseDto, ForgotPasswordDto, ForgotPasswordResponseDto, ResetPasswordDto, ChangePasswordDto } from './auth.dto';
 import { Response } from 'express';
@@ -38,6 +39,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new user account' })
   @ApiBody({ type: RegisterDto })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiCreatedResponse({
     description: 'User successfully registered',
     type: AuthResponseDto,
@@ -57,6 +59,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Login to existing account' })
   @ApiBody({ type: LoginDto })
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOkResponse({
     description: 'Successfully logged in',
     type: AuthResponseDto,
@@ -69,6 +72,7 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token using refresh cookie' })
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiOkResponse({ description: 'New access token' })
   async refresh(@Req() req: Request) {
     const cookieHeader = String(req.headers.cookie || '');
@@ -86,6 +90,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Change password for the authenticated user' })
   @ApiBody({ type: ChangePasswordDto })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOkResponse({ description: 'Password changed successfully' })
   @ApiBadRequestResponse({ description: 'Current password is incorrect' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -99,6 +104,7 @@ export class AuthController {
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request a password reset OTP via email' })
   @ApiBody({ type: ForgotPasswordDto })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOkResponse({ description: 'OTP sent if email exists', type: ForgotPasswordResponseDto })
   async forgotPassword(@Body() body: ForgotPasswordDto) {
     return this.authService.forgotPassword(body.email);
@@ -107,6 +113,7 @@ export class AuthController {
   @Post('reset-password')
   @ApiOperation({ summary: 'Reset password using OTP and reset token' })
   @ApiBody({ type: ResetPasswordDto })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOkResponse({ description: 'Password reset successfully' })
   @ApiBadRequestResponse({ description: 'Invalid OTP, reset token, or expired request' })
   async resetPassword(@Body() body: ResetPasswordDto) {
