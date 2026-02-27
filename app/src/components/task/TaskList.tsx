@@ -72,7 +72,7 @@ export function TaskList({
   }
 
   return (
-    <Card className="border border-slate-200 shadow-none rounded-xl h-[460px] flex flex-col">
+    <Card className="border border-slate-200 shadow-none rounded-xl h-[50vh] min-h-[320px] lg:h-[460px] flex flex-col">
       <CardHeader className="border-b border-slate-200 p-4">
         <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
           <List className="h-4 w-4" />

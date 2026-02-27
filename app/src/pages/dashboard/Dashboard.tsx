@@ -161,7 +161,7 @@ export default function Dashboard() {
     <div className="h-full overflow-y-auto bg-slate-50 font-sans text-slate-900">
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 p-6 pb-28 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="flex-1 p-4 md:p-6 pb-32 md:pb-28 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
 
         {/* LEFT PANEL - ROBOTS */}
         <div className="lg:col-span-4">
@@ -195,14 +195,14 @@ export default function Dashboard() {
       {/* BOTTOM ACTION BAR */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-4">
         <div className="border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto grid grid-col md:flex-row gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <Button
               disabled={!selectedBusinessId}
               onClick={() => {
                 setSelectedRobotForCall(null);
                 setCallOpen(true);
               }}
-              className="flex-1 h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed"
+              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed"
             >
               <Zap className="h-5 w-5" />
               Call Robot
@@ -212,7 +212,7 @@ export default function Dashboard() {
               variant="outline"
               disabled={!selectedBusinessId}
               onClick={() => setStopOpen(true)}
-              className="flex-1 h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-medium gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed"
+              className="h-12 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-medium gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed"
             >
               <AlertOctagon className="h-5 w-5 text-red-500" />
               Stop

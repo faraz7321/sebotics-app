@@ -21,7 +21,7 @@ export default function BusinessDetailsPanel({
   );
 
   return (
-    <Card className="border border-slate-200 shadow-none rounded-xl h-[600px] flex flex-col">
+    <Card className="border border-slate-200 shadow-none rounded-xl h-[55vh] min-h-[360px] lg:h-[600px] flex flex-col">
       <CardHeader className="border-b border-slate-200 p-4">
         <CardTitle className="text-sm font-semibold uppercase tracking-wide text-slate-600">
           {business ? business.name : "Select a business to view details"}

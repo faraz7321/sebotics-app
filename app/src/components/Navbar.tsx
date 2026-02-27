@@ -30,12 +30,12 @@ export default function Navbar() {
   };
 
   return (
-    <header className="bg-white border-b border-slate-200 p-4 grid grid-cols-3 items-center">
+    <header className="bg-white border-b border-slate-200 px-3 py-2 md:p-4 grid grid-cols-[auto,1fr,auto] md:grid-cols-3 items-center gap-2 md:gap-4">
 
       {/* LEFT — Logo */}
-      <div className="flex items-center">
+      <div className="flex items-center min-w-0">
         <h1
-          className="text-xl font-bold text-slate-800 hover:cursor-pointer"
+          className="text-lg md:text-xl font-bold text-slate-800 hover:cursor-pointer truncate"
           onClick={() => navigate(ROUTES.DASHBOARD.HOME)}
         >
           Sebotics
@@ -43,17 +43,21 @@ export default function Navbar() {
       </div>
 
       {/* CENTER — Business dropdown */}
-      <div className="flex justify-center">
+      <div className="flex justify-center min-w-0">
         {!isManageBusinessesPage && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="gap-3 px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 hover:cursor-pointer"
+                className="h-9 md:h-10 w-full max-w-[180px] sm:max-w-[260px] md:max-w-[420px] gap-2 md:gap-3 px-2.5 sm:px-3 md:px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 hover:cursor-pointer justify-between"
               >
-                <Store className="h-4 w-4 text-slate-500" />
-                <span className="font-medium">{selectedBusiness?.name || "Select Business"}</span>
-                <ChevronDown className="h-4 w-4 opacity-50" />
+                <div className="flex items-center min-w-0 gap-2">
+                  <Store className="h-4 w-4 text-slate-500 shrink-0" />
+                  <span className="font-medium text-xs sm:text-sm md:text-base truncate">
+                    {selectedBusiness?.name || "Select Business"}
+                  </span>
+                </div>
+                <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
 
@@ -61,15 +65,21 @@ export default function Navbar() {
               align="center"
               className="w-64 bg-white border border-slate-200 rounded-lg shadow-sm"
             >
-              {businesses.map((b) => (
-                <DropdownMenuItem
-                  key={b.id}
-                  className="cursor-pointer"
-                  onClick={() => dispatch(setSelectedBusinessId(b.id))}
-                >
-                  {b.name}
-                </DropdownMenuItem>
-              ))}
+              <div className="max-h-64 overflow-y-auto">
+                {businesses.length === 0 ? (
+                  <div className="px-2 py-2 text-sm text-slate-500">No businesses found</div>
+                ) : (
+                  businesses.map((b) => (
+                    <DropdownMenuItem
+                      key={b.id}
+                      className="cursor-pointer"
+                      onClick={() => dispatch(setSelectedBusinessId(b.id))}
+                    >
+                      {b.name}
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </div>
 
               {user?.role === ROLES.ADMIN && (
                 <Button
@@ -88,11 +98,11 @@ export default function Navbar() {
 
       {/* LEFT- User Dropdown */}
       <div className="flex justify-end items-center gap-2">
-        <Separator orientation="vertical" className="h-8" />
+        <Separator orientation="vertical" className="h-8 hidden sm:block" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center gap-2 p-1 pr-2 rounded-xl hover:bg-emerald-50 border border-slate-100 cursor-pointer transition-all">
+            <div className="h-9 md:h-10 flex items-center gap-2 p-1 pr-2 rounded-xl hover:bg-emerald-50 border border-slate-100 cursor-pointer transition-all">
               <div className="h-8 w-8 rounded-full bg-emerald-600 flex items-center justify-center text-white">
                 <UserIcon className="h-4 w-4" />
               </div>
