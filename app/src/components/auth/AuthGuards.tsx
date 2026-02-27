@@ -8,8 +8,8 @@ import { Loader } from '../ui/loader';
 export function ProtectedRoute({ children }: { children?: React.ReactNode }) {
   const { accessToken } = useAppSelector((state) => state.auth);
   
-  // If NO token, redirect to Sign In
-  if (!accessToken) {
+  // If NO token AND keepSignedIn is false, redirect to Sign In
+  if (!accessToken && localStorage.getItem('keepLoggedIn') !== "true") {
     return <Navigate to={ROUTES.AUTH.SIGN_IN} replace />;
   }
 

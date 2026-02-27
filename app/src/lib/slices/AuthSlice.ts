@@ -2,6 +2,11 @@ import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/tool
 import { authService } from '../services/auth.service';
 import { type AuthResult, type AuthState, type LoginCreds, type RegisterCreds } from '../types/AuthTypes';
 import { getErrorMessage } from './sliceHelpers';
+import { API_ENDPOINTS } from '@/config/routes';
+
+import api from '@/lib/api/axios';
+import axios from 'axios';
+import { API_BASE_URL } from '../runtime-config';
 
 export const registerUser = createAsyncThunk<AuthResult, RegisterCreds, { rejectValue: string }>(
   "auth/register",
@@ -36,9 +41,48 @@ export const refreshToken = createAsyncThunk<string, void, { rejectValue: string
   }
 );
 
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }, thunkAPI) => {
+    try {
+      return await api.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, { currentPassword, newPassword }, {
+      });
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async (email: string, thunkAPI) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
+
+      return response.data;
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  "auth/resetPassword",
+  async ({ email, resetToken, otp, newPassword }: { email: string; resetToken: string; otp: string; newPassword: string }, thunkAPI) => {
+    try {
+      await axios.post(`${API_BASE_URL}/auth/reset-password`, { email, resetToken, otp, newPassword });
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+
 const initialState: AuthState = {
   user: null,
-  accessToken: localStorage.getItem('accessToken') || '',
+  accessToken: null,
+
+  resetToken: null,
 
   loading: false,
   error: null,
@@ -54,7 +98,7 @@ const authSlice = createSlice({
     logout(state) {
       state.user = null;
       state.accessToken = '';
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('keepLoggedIn');
     },
   },
   extraReducers: (builder) => {
@@ -70,7 +114,7 @@ const authSlice = createSlice({
         state.user = user;
         state.accessToken = accessToken;
 
-        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('keepLoggedIn', "true");
 
         state.loading = false;
       })
@@ -90,7 +134,7 @@ const authSlice = createSlice({
         state.user = user;
         state.accessToken = accessToken;
 
-        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('keepLoggedIn', "true");
 
         state.loading = false;
       })
@@ -98,6 +142,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
       // Refresh
       .addCase(refreshToken.pending, (state) => {
         state.loading = true;
@@ -108,7 +153,7 @@ const authSlice = createSlice({
 
         state.accessToken = accessToken;
 
-        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('keepLoggedIn', "true");
 
         state.loading = false;
       })
@@ -117,6 +162,50 @@ const authSlice = createSlice({
         state.error = action.payload as string;
         state.accessToken = '';
         state.user = null;
+        localStorage.removeItem('keepLoggedIn');
+      })
+
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Forgot Password
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.loading = false;
+
+        state.resetToken = action.payload.resetToken;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+
+        state.error = action.payload as string;
+      })
+
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.resetToken = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
   },
 });

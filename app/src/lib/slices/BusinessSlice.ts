@@ -54,9 +54,10 @@ export const unassignBusiness = createAsyncThunk(
 
 const initialState: BusinessState = {
   loading: false,
+  hasLoaded: false,
   error: null,
 
-  selectedbusinessId: null,
+  selectedBusinessId: null,
 
   businesses: []
 };
@@ -66,7 +67,7 @@ const businessSlice = createSlice({
   initialState,
   reducers: {
     setSelectedBusinessId(state, action) {
-      state.selectedbusinessId = action.payload;
+      state.selectedBusinessId = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -77,12 +78,17 @@ const businessSlice = createSlice({
       })
       .addCase(listBusinesses.fulfilled, (state, action) => {
         state.loading = false;
+        state.hasLoaded = true;
         state.error = null;
 
         state.businesses = action.payload.data.lists;
+        if (!state.selectedBusinessId && state.businesses.length > 0) {
+          state.selectedBusinessId = state.businesses[0].id;
+        }
       })
       .addCase(listBusinesses.rejected, (state, action) => {
         state.loading = false;
+        state.hasLoaded = true;
         state.error = action.payload as string;
       })
       // Assign

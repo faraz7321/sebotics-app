@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useAppDispatch } from "@/store";
 import { loginUser } from "@/lib/slices/AuthSlice";
 import { ROUTES } from "@/config/routes";
+import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 export default function SignIn() {
   const dispatch = useAppDispatch();
@@ -58,8 +59,8 @@ export default function SignIn() {
 
     if (!formData.password) {
       errors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      errors.password = "Password must be at least 8 characters";
     }
 
     setFormErrors(errors);
@@ -82,6 +83,9 @@ export default function SignIn() {
     try {
       const res = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(res)) {
+        robotStateSocket.connect();
+        taskStateSocket.connect();
+
         navigate(ROUTES.DASHBOARD.HOME);
       } else {
         setError(res.payload as string || "Login failed");
@@ -136,7 +140,17 @@ export default function SignIn() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-semibold ml-1">Password</Label>
+              <div className="flex justify-between items-center px-1">
+                <Label htmlFor="pass" className="text-sm font-semibold">Password</Label>
+                <Button
+                  variant="link"
+                  className="h-auto p-0 text-xs font-bold text-primary hover:cursor-pointer"
+                  type="button"
+                  onClick={() => navigate(ROUTES.AUTH.FORGOT_PASSWORD)}
+                >
+                  Forgot?
+                </Button>
+              </div>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><Lock size={18} /></span>
                 <Input

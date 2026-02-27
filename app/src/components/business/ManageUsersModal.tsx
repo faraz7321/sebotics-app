@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,16 +27,30 @@ export function ManageUsersModal({
 
   const [open, setOpen] = useState(false);
   const [assignedUsers, setAssignedUsers] = useState<string[]>(currentUserIds);
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAssignedUsers(currentUserIds);
+    setPendingUserId(null);
+  }, [businessId, currentUserIds]);
 
   const handleAssignToggle = async (userId: string) => {
+    setPendingUserId(userId);
+
     if (assignedUsers.includes(userId)) {
-      // unassign
-      await dispatch(unassignBusiness({ businessId, userId }));
-      setAssignedUsers((prev) => prev.filter((id) => id !== userId));
+      try {
+        await dispatch(unassignBusiness({ businessId, userId })).unwrap();
+        setAssignedUsers((prev) => prev.filter((id) => id !== userId));
+      } finally {
+        setPendingUserId(null);
+      }
     } else {
-      // assign
-      await dispatch(assignBusiness({ businessId, userId }));
-      setAssignedUsers((prev) => [...prev, userId]);
+      try {
+        await dispatch(assignBusiness({ businessId, userId })).unwrap();
+        setAssignedUsers((prev) => [...prev, userId]);
+      } finally {
+        setPendingUserId(null);
+      }
     }
   };
 
@@ -72,6 +86,7 @@ export function ManageUsersModal({
                     size="sm"
                     className="hover:cursor-pointer"
                     variant={isAssigned ? "destructive" : "outline"}
+                    disabled={pendingUserId === user.id}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleAssignToggle(user.id);

@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Health')
@@ -8,6 +9,7 @@ export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get('live')
+  @SkipThrottle()
   @ApiOperation({ summary: 'Liveness probe' })
   @ApiOkResponse({ description: 'Service process is alive' })
   live() {
@@ -19,6 +21,7 @@ export class HealthController {
   }
 
   @Get('ready')
+  @SkipThrottle()
   @ApiOperation({ summary: 'Readiness probe (includes database connectivity)' })
   @ApiOkResponse({ description: 'Service is ready to receive traffic' })
   async ready() {

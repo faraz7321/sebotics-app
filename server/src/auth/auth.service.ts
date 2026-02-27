@@ -2,8 +2,32 @@ import { BadRequestException, Injectable, UnauthorizedException, Inject } from '
 import { JwtService } from '@nestjs/jwt';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { Role } from '@prisma/client';
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mailer/mailer.service';
+
+interface PasswordResetEntry {
+  userId: string;
+  email: string;
+  otp: string;
+  expiresAt: Date;
+}
+
+const passwordResetStorage = new Map<string, PasswordResetEntry>();
+
+// Clean up expired tokens every 5 minutes
+setInterval(
+  () => {
+    const now = new Date();
+    for (const [token, data] of passwordResetStorage.entries()) {
+      if (data.expiresAt < now) {
+        passwordResetStorage.delete(token);
+      }
+    }
+  },
+  5 * 60 * 1000,
+);
 
 @Injectable()
 export class AuthService {
@@ -11,6 +35,7 @@ export class AuthService {
     @Inject(UsersService) private readonly usersService: UsersService,
     @Inject(JwtService) private readonly jwtService: JwtService,
     @Inject('REFRESH_TOKEN_OPTIONS') private readonly refreshOptions: any,
+    @Inject(MailService) private readonly mailService: MailService,
   ) {}
 
   async register(data: {
@@ -111,5 +136,90 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.usersService.updatePassword(userId, passwordHash);
+
+    return { message: 'Password changed successfully' };
+  }
+
+  async forgotPassword(email: string): Promise<{ resetToken: string; message: string }> {
+    const user = await this.usersService.findByEmail(email.trim().toLowerCase());
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Always return success to avoid user enumeration (with a random reset token)
+    if (!user) {
+      return { resetToken: resetToken, message: 'If this email exists, an OTP has been sent to it' };
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Store in memory (in production, use Redis or database)
+    passwordResetStorage.set(resetToken, {
+      userId: user.id,
+      email: user.email,
+      otp,
+      expiresAt,
+    });
+
+    await this.mailService.sendPasswordResetOTP({
+      userEmail: user.email,
+      userName: user.firstName,
+      otp,
+      expiresAt,
+    });
+
+    return { resetToken, message: 'If this email exists, an OTP has been sent to it' };
+  }
+
+  async resetPassword(
+    email: string,
+    otp: string,
+    resetToken: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const entry = passwordResetStorage.get(resetToken);
+
+    if (!entry) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    if (entry.email.toLowerCase() !== email.trim().toLowerCase()) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    if (entry.otp !== otp) {
+      throw new BadRequestException('Invalid OTP');
+    }
+
+    if (new Date() > entry.expiresAt) {
+      passwordResetStorage.delete(resetToken);
+      throw new BadRequestException('OTP has expired');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.usersService.updatePassword(entry.userId, passwordHash);
+
+    passwordResetStorage.delete(resetToken);
+
+    return { message: 'Password has been reset successfully' };
   }
 }

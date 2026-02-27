@@ -1,15 +1,35 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { LogLevel, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { GlobalExceptionFilter } from './logging/global-exception.filter';
+import { requestLoggingMiddleware } from './logging/request-logging.middleware';
+
+function resolveLoggerLevels(): LogLevel[] {
+  const allowedLevels: LogLevel[] = ['log', 'error', 'warn', 'debug', 'verbose'];
+  const configured = process.env.LOG_LEVELS?.split(',')
+    .map((level) => level.trim())
+    .filter((level): level is LogLevel => allowedLevels.includes(level as LogLevel));
+
+  if (configured && configured.length > 0) {
+    return configured;
+  }
+
+  return allowedLevels;
+}
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: resolveLoggerLevels(),
+  });
+  app.getHttpAdapter().getInstance().set('trust proxy', true);
   app.enableShutdownHooks();
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    
+  app.use(requestLoggingMiddleware);
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   app.enableCors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,

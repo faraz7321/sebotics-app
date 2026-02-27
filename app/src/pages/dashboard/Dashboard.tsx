@@ -32,7 +32,7 @@ export default function Dashboard() {
   const dispatch = useAppDispatch();
 
   const robots = useAppSelector((state) => state.robot.robots);
-  const selectedBusinessId = useAppSelector((state) => state.business.selectedbusinessId);
+  const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
   const tasks = useAppSelector((state) => state.task.tasks);
   const pois = useAppSelector((state) => state.map.pointsOfInterest);
   const filteredrobots = robots.filter((r) => r.businessId === selectedBusinessId);
@@ -83,6 +83,7 @@ export default function Dashboard() {
 
   const [callOpen, setCallOpen] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
+  const [selectedRobotForCall, setSelectedRobotForCall] = useState<Robot | null>(null);
 
   const getPoisByRobotArea = (robot: Robot, poiType: PoiType) => {
     return pois.filter((poi) => {
@@ -101,7 +102,7 @@ export default function Dashboard() {
       console.warn("Robot not found");
       return null;
     }
-    
+
     const dock = getPoisByRobotArea(robot, PoiType.ChargingPile)[0];
     console.log(dock);
 
@@ -132,7 +133,14 @@ export default function Dashboard() {
       return;
     }
 
-    handleCreateTask(dispatch, selectedBusinessId!, chargingDock, robot.robotId, true);
+    handleCreateTask({
+      dispatch: dispatch,
+      businessId: selectedBusinessId!,
+      poi: chargingDock,
+      robotId: robot.robotId,
+      execute: true,
+      isV3: false
+    });
   };
 
   const handleEmergencyStop = (robotId: string) => {
@@ -142,7 +150,7 @@ export default function Dashboard() {
     console.log("Active task for robot:", taskId ?? "None");
 
     if (taskId) {
-      handleCancelTask(dispatch, selectedBusinessId!, taskId);
+      handleCancelTask({ dispatch: dispatch, businessId: selectedBusinessId!, taskId: taskId });
     } else {
       console.warn("No active task found for robot:", robotId);
     }
@@ -150,15 +158,19 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="bg-slate-50 font-sans text-slate-900">
+    <div className="h-full overflow-y-auto bg-slate-50 font-sans text-slate-900">
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+      <div className="flex-1 p-4 md:p-6 pb-32 md:pb-28 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
 
         {/* LEFT PANEL - ROBOTS */}
         <div className="lg:col-span-4">
           <RobotList
             robots={filteredrobots}
+            onCallRobot={(robot) => {
+              setSelectedRobotForCall(robot);
+              setCallOpen(true);
+            }}
             onReturnToDock={(robot) => handleReturnToDock(robot)}
           />
         </div>
@@ -170,10 +182,10 @@ export default function Dashboard() {
             tasks={tasks}
             selectedBusinessId={selectedBusinessId}
             onExecuteTask={(taskId) =>
-              handleExecuteTask(dispatch, selectedBusinessId!, taskId)
+              handleExecuteTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
             }
             onCancelTask={(taskId) =>
-              handleCancelTask(dispatch, selectedBusinessId!, taskId)
+              handleCancelTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
             }
           />
         </div>
@@ -183,11 +195,14 @@ export default function Dashboard() {
       {/* BOTTOM ACTION BAR */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-4">
         <div className="border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto grid grid-col md:flex-row gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <Button
               disabled={!selectedBusinessId}
-              onClick={() => setCallOpen(true)}
-              className="flex-1 h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed"
+              onClick={() => {
+                setSelectedRobotForCall(null);
+                setCallOpen(true);
+              }}
+              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed"
             >
               <Zap className="h-5 w-5" />
               Call Robot
@@ -197,7 +212,7 @@ export default function Dashboard() {
               variant="outline"
               disabled={!selectedBusinessId}
               onClick={() => setStopOpen(true)}
-              className="flex-1 h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-medium gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed"
+              className="h-12 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-medium gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed"
             >
               <AlertOctagon className="h-5 w-5 text-red-500" />
               Stop
@@ -210,9 +225,17 @@ export default function Dashboard() {
       <CallRobotSheet
         open={callOpen}
         onOpenChange={setCallOpen}
-        onCall={(poi) =>
-          handleCreateTask(dispatch, selectedBusinessId!, poi, getIdleRobot() || getOnlineRobot() || "", true)
-        }
+        selectedRobot={selectedRobotForCall}
+        onCall={(poi) => {
+          handleCreateTask({
+            dispatch: dispatch,
+            businessId: selectedBusinessId!,
+            poi: poi,
+            robotId: selectedRobotForCall?.robotId || getIdleRobot() || getOnlineRobot() || "",
+            execute: true,
+            isV3: true
+          });
+        }}
       />
 
       <EmergencyStopSheet

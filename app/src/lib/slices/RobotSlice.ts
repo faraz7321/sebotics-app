@@ -28,7 +28,16 @@ const initialState: RobotState = {
 const robotSlice = createSlice({
   name: 'robot',
   initialState,
-  reducers: {},
+  reducers: {
+    updateRobot: (state, action) => {
+      const { robotId, patch } = action.payload;
+
+      const robot = state.robots.find(r => r.robotId === robotId);
+      if (!robot) return;
+
+      Object.assign(robot, patch);
+    }
+  },
   extraReducers: (builder) => {
     builder
       // List
@@ -48,4 +57,5 @@ const robotSlice = createSlice({
   },
 });
 
+export const { updateRobot } = robotSlice.actions;
 export default robotSlice.reducer;

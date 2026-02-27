@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from '@/config/routes';
 import api from '../api/axios';
 import { getErrorMessage } from './sliceHelpers';
 
-import type { CreateTaskRequest, TaskState } from '../types/TaskTypes';
+import type { CreateTaskRequest, Task, TaskState } from '../types/TaskTypes';
 
 export const listTasks = createAsyncThunk(
   API_ENDPOINTS.TASK.LIST,
@@ -30,6 +30,19 @@ export const createTask = createAsyncThunk(
   async (task: CreateTaskRequest, thunkAPI) => {
     try {
       const response = await api.post(API_ENDPOINTS.TASK.CREATE, task);
+
+      return response.data;
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue(getErrorMessage(err, 'Failed to create task'));
+    }
+  }
+);
+
+export const createTaskv3 = createAsyncThunk(
+  "task/createV3",
+  async (task: CreateTaskRequest, thunkAPI) => {
+    try {
+      const response = await api.post(API_ENDPOINTS.TASK.CREATE_V3, task);
 
       return response.data;
     } catch (err: unknown) {
@@ -77,7 +90,24 @@ const initialState: TaskState = {
 const TaskSlice = createSlice({
   name: 'task',
   initialState,
-  reducers: {},
+  reducers: {
+    updateTask: (state, action) => {
+      const { taskId, patch, actType } = action.payload;
+
+      const index = state.tasks.findIndex(t => t.taskId === taskId);
+      if (index === -1) return;
+
+      const existing = state.tasks[index];
+
+      state.tasks[index] = {
+        ...existing,
+        ...patch,
+
+        // only update actType if provided
+        actType: actType ?? existing.actType,
+      };
+    }
+  },
   extraReducers: (builder) => {
     builder
       // List
@@ -88,45 +118,83 @@ const TaskSlice = createSlice({
         state.loading = false;
         state.error = null;
 
-        state.tasks = action.payload.data.list;
+        const incoming = action.payload.data.list;
+
+        state.tasks = incoming.map((task: Task) => {
+          const existing = state.tasks.find(t => t.taskId === task.taskId);
+
+          return {
+            ...task,
+            actType: existing?.actType ?? task.actType,
+          };
+        });
       })
       .addCase(listTasks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Create
-      .addCase(createTask.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(createTask.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
+    // Create
+    .addCase(createTask.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(createTask.fulfilled, (state, action) => {
+      state.loading = false;
+      state.error = null;
 
-        console.log("Task created successfully:", action.payload.data);
+      console.log("Task created successfully:", action.payload.data);
 
-        // state.tasks.push(action.payload.data);
-      })
-      .addCase(createTask.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // Cancel
-      .addCase(cancelTask.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(cancelTask.fulfilled, (state, action) => {
-        state.loading = false;
-        state.error = null;
+      // state.tasks.push(action.payload.data);
+    })
+    .addCase(createTask.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
+    // Create V3
+    .addCase(createTaskv3.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(createTaskv3.fulfilled, (state, action) => {
+      state.loading = false;
+      state.error = null;
 
-        console.log("Task cancelled successfully:", action.payload.message);
-        // const cancelledTaskId = action.payload.data.taskId;
-        // state.tasks = state.tasks.filter(task => task.taskId !== cancelledTaskId);
-      })
-      .addCase(cancelTask.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      });
-  },
+      console.log("Task created successfully (V3):", action.payload.data);
+    })
+    .addCase(createTaskv3.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
+    // Execute
+    .addCase(executeTask.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(executeTask.fulfilled, (state, action) => {
+      state.loading = false;
+      state.error = null;
+
+      console.log("Task executed successfully:", action.payload.message);
+    })
+    .addCase(executeTask.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
+    // Cancel
+    .addCase(cancelTask.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(cancelTask.fulfilled, (state, action) => {
+      state.loading = false;
+      state.error = null;
+
+      console.log("Task cancelled successfully:", action.payload.message);
+      // const cancelledTaskId = action.payload.data.taskId;
+      // state.tasks = state.tasks.filter(task => task.taskId !== cancelledTaskId);
+    })
+    .addCase(cancelTask.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+},
 });
 
+export const { updateTask } = TaskSlice.actions;
 export default TaskSlice.reducer;

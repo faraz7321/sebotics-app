@@ -104,7 +104,60 @@ Required env vars (see `.env.example`):
 - `AUTOXING_APP_SECRET`
 - `AUTOXING_APP_CODE` (sent as the `Authorization` header)
 - `AUTOXING_BASE_URL` (defaults to `https://api.autoxing.com`)
+- `AUTOXING_WS_BASE_URL` (defaults to `wss://serviceglobal.autoxing.com`)
 - `AUTOXING_TIMESTAMP_UNIT` (`ms` default, set to `s` if your tenant expects seconds)
+
+## Autoxing WebSocket bridge (server-side tunnel)
+Frontend does not connect to Autoxing directly. It connects to Sebotics WebSocket and Sebotics opens/closes upstream Autoxing WebSocket connections on subscribe/unsubscribe.
+
+- Client endpoint: `ws://<server>/ws/autoxing` (or `wss://` in production)
+- Authentication: session cookie (`refreshToken`) is used by the server during WS upgrade; client never sends Autoxing token.
+- Client command to subscribe:
+  ```json
+  {"action":"subscribe.robot.state","robotId":"<robotId>"}
+  ```
+- Client command to subscribe task-oversee:
+  ```json
+  {"action":"subscribe.task.state","robotId":"<robotId>"}
+  ```
+- Client command to unsubscribe:
+  ```json
+  {"action":"unsubscribe.robot.state","robotId":"<robotId>"}
+  ```
+- Client command to unsubscribe task-oversee:
+  ```json
+  {"action":"unsubscribe.task.state","robotId":"<robotId>"}
+  ```
+- Upstream source (opened by server):
+  `wss://serviceglobal.autoxing.com/robot-control/oversee/{robotId}`
+- Upstream task-oversee source (opened by server):
+  `wss://serviceglobal.autoxing.com/task-control/oversee/robot/{robotId}`
+- Upstream handshake auth:
+  `Sec-WebSocket-Protocol` is set to Autoxing token `key`.
+- Upstream keepalive:
+  server sends `{"reqType":"onHeartBeat"}` every 5 seconds.
+
+Forwarded event to client:
+```json
+{
+  "event": "robot.state",
+  "stream": "robot.state",
+  "robotId": "<robotId>",
+  "payload": { "...autoxing message..." },
+  "receivedAt": 0
+}
+```
+
+Forwarded task-oversee event to client:
+```json
+{
+  "event": "task.state",
+  "stream": "task.state",
+  "robotId": "<robotId>",
+  "payload": { "...autoxing message..." },
+  "receivedAt": 0
+}
+```
 
 ## Auth separation (summary)
 - **End user → Sebotics:** normal user auth (`/api/auth/register`, `/api/auth/login`) with JWTs issued by Sebotics.

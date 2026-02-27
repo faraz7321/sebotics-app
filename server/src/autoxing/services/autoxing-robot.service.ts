@@ -59,6 +59,10 @@ export class AutoxingRobotService {
     return this.autoxingApiService.getRobotStateV2(robotId);
   }
 
+  async assertRobotAccess(robotId: string, user: JwtUser) {
+    await this.assertLiveRobotAccess(robotId, user);
+  }
+
   private async assertLiveRobotAccess(robotId: string, user: JwtUser) {
     if (user.role === Role.ADMIN) {
       return;

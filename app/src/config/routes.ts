@@ -4,13 +4,18 @@ export const ROUTES = {
   AUTH: {
     SIGN_IN: "/login",
     SIGN_UP: "/register",
+    FORGOT_PASSWORD: "/forgot-password",
+  },
+  USER: {
+    PROFILE: "/user/profile",
+    CHANGE_PASSWORD: "/user/change-password",
   },
   DASHBOARD: {
     HOME: "/home",
   },
   BUSINESSES: {
     PAGE: "/businesses",
-  }
+  },
 } as const;
 
 export const API_ENDPOINTS = {
@@ -18,6 +23,9 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
     REFRESH: "/auth/refresh",
+    CHANGE_PASSWORD: "/auth/change-password",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
   },
   USER: {
     LIST: "/users",
@@ -39,6 +47,7 @@ export const API_ENDPOINTS = {
   TASK: {
     LIST: "/autoxing/tasks/list",
     CREATE: "/autoxing/tasks",
+    CREATE_V3: "/autoxing/tasks/v3",
     EXECUTE: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/execute
     CANCEL: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/cancel
   },

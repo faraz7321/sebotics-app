@@ -11,18 +11,41 @@ import {
 } from "@/components/ui/card";
 
 import type { Robot } from "@/lib/types/RobotTypes";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 interface RobotListProps {
   robots: Robot[];
+  onCallRobot: (robot: Robot) => void;
   onReturnToDock: (robot: Robot) => void;
 }
 
-export function RobotList({ robots, onReturnToDock }: RobotListProps) {
+export function RobotList({ robots, onCallRobot, onReturnToDock }: RobotListProps) {
   const [selectedRobot, setSelectedRobot] = useState<Robot | null>(null);
 
+  useEffect(() => {
+    if (robots.length === 0) return;
+
+    // Connect socket if not already connected
+    if (!robotStateSocket.isConnected()) {
+      robotStateSocket.connect();
+    }
+
+    if (!taskStateSocket.isConnected()) {
+      taskStateSocket.connect();
+    }
+
+    // Subscribe to all robots in the list
+    robots.forEach((robot) => {
+      robotStateSocket.subscribe(robot.robotId);
+      taskStateSocket.subscribe(robot.robotId);
+    });
+    
+
+  }, [robots]);
+
   return (
-    <Card className="border border-slate-200 shadow-none rounded-xl h-[460px] flex flex-col">
+    <Card className="border border-slate-200 shadow-none rounded-xl h-[50vh] min-h-[320px] lg:h-[460px] flex flex-col">
       <CardHeader className="border-b border-slate-200 p-4">
         <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
           <Bot className="h-4 w-4" />
@@ -45,10 +68,7 @@ export function RobotList({ robots, onReturnToDock }: RobotListProps) {
                   key={robot.robotId}
                   className={`border-b cursor-pointer transition-all ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
                     }`}
-                  onClick={() =>
-                    {setSelectedRobot(isSelected ? null : robot)
-                    console.log("Selected robot:", isSelected ? "None" : robot)}
-                  }
+                  onClick={() => setSelectedRobot(isSelected ? null : robot)}
                 >
                   {/* COLLAPSED HEADER */}
                   <div className="p-4 flex justify-between items-center">
@@ -95,6 +115,15 @@ export function RobotList({ robots, onReturnToDock }: RobotListProps) {
                           Errors: {robot.errors.join(", ")}
                         </div>
                       )}
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2 border-green-500 text-green-600 hover:bg-green-100 hover:cursor-pointer"
+                        onClick={() => {
+                          onCallRobot(robot);
+                        }}
+                      >
+                        Call Robot
+                      </Button>
                       <Button
                         variant="outline"
                         className="w-full mt-2 border-green-500 text-green-600 hover:bg-green-100 hover:cursor-pointer"

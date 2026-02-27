@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -80,12 +80,12 @@ export class LoginDto {
   @ApiProperty({
     description: 'Password for login',
     type: String,
-    minLength: 6,
+    minLength: 8,
     maxLength: 72,
     example: 'SecurePass123!',
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   @MaxLength(72)
   password!: string;
 }
@@ -149,4 +149,99 @@ export class AuthResponseDto {
     type: () => UserResponseDto,
   })
   user!: UserResponseDto;
+}
+
+export class ChangePasswordDto {
+  @ApiProperty({
+    description: 'Current password',
+    type: String,
+    minLength: 8,
+    maxLength: 72,
+    example: 'OldSecurePass123!',
+  })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(72)
+  currentPassword!: string;
+
+  @ApiProperty({
+    description: 'New password',
+    type: String,
+    minLength: 8,
+    maxLength: 72,
+    example: 'NewSecurePass456!',
+  })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(72)
+  newPassword!: string;
+}
+
+export class ForgotPasswordDto {
+  @ApiProperty({
+    description: 'Registered email address',
+    type: String,
+    format: 'email',
+    example: 'john@example.com',
+  })
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({
+    description: 'Email address used to request the OTP',
+    type: String,
+    format: 'email',
+    example: 'john@example.com',
+  })
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+
+  @ApiProperty({
+    description: 'Reset token returned from the forgot-password response',
+    type: String,
+    example: 'a1b2c3d4e5f6...',
+  })
+  @IsString()
+  @IsNotEmpty()
+  resetToken!: string;
+
+  @ApiProperty({
+    description: 'One-time password sent to the email',
+    type: String,
+    example: '482910',
+  })
+  @IsString()
+  @IsNotEmpty()
+  otp!: string;
+
+  @ApiProperty({
+    description: 'New password to set',
+    type: String,
+    minLength: 8,
+    maxLength: 72,
+    example: 'NewSecurePass123!',
+  })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(72)
+  newPassword!: string;
+}
+
+export class ForgotPasswordResponseDto {
+  @ApiProperty({
+    description: 'Reset token to use when submitting the new password',
+    type: String,
+  })
+  resetToken!: string;
+
+  @ApiProperty({
+    description: 'Status message',
+    type: String,
+    example: 'OTP sent to your email address',
+  })
+  message!: string;
 }

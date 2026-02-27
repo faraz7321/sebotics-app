@@ -27,7 +27,9 @@ export type AuthResult = {
 
 export interface AuthState {
   user: AuthUser | null;
-  accessToken: string;
+  accessToken: string | null;
+
+  resetToken: string | null;
 
   loading: boolean;
   error: string | null;

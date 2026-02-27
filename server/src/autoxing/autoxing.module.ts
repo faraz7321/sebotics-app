@@ -11,6 +11,7 @@ import { AutoxingBusinessService } from './services/autoxing-business.service';
 import { AutoxingMapService } from './services/autoxing-map.service';
 import { AutoxingRobotService } from './services/autoxing-robot.service';
 import { AutoxingTaskService } from './services/autoxing-task.service';
+import { AutoxingWsBridgeService } from './ws/autoxing-ws-bridge.service';
 
 @Module({
   imports: [AutoxingAuthModule],
@@ -28,6 +29,7 @@ import { AutoxingTaskService } from './services/autoxing-task.service';
     AutoxingMapService,
     AutoxingTaskService,
     AutoxingBusinessService,
+    AutoxingWsBridgeService,
   ],
 })
 export class AutoxingModule {}

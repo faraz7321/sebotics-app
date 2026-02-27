@@ -11,9 +11,10 @@ export type Business = {
 
 export interface BusinessState {
   loading: boolean;
+  hasLoaded: boolean;
   error: string | null;
 
-  selectedbusinessId: string | null;
+  selectedBusinessId: string | null;
 
   businesses: Business[];
 }
