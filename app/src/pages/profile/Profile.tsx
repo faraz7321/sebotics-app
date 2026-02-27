@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  ArrowLeft,
   User,
   Mail,
   ShieldCheck,
@@ -31,9 +32,12 @@ import { changePassword } from "@/lib/slices/AuthSlice";
 import { Loader } from "@/components/ui/loader";
 import { listBusinesses } from "@/lib/slices/BusinessSlice";
 import type { Business } from "@/lib/types/BusinessTypes";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/config/routes";
 
 export default function Profile() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const user = useAppSelector((state) => state.user.user);
   const isUserLoading = useAppSelector((state) => state.user.loading);
   const businesses = useAppSelector((state) => state.business.businesses);
@@ -160,7 +164,15 @@ export default function Profile() {
       <div className="max-w-4xl mx-auto space-y-8 p-4 md:p-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+        <div className="space-y-3">
+          <Button
+            variant="outline"
+            className="hover:cursor-pointer"
+            onClick={() => navigate(ROUTES.DASHBOARD.HOME)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">User Profile</h1>
           <p className="text-slate-500 mt-1">Manage your account information and security settings.</p>
         </div>
