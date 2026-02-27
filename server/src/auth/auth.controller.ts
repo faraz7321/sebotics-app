@@ -9,6 +9,30 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import { JwtUser } from './auth.types';
 
+const REGISTER_THROTTLE = {
+  short: { limit: 2, ttl: 1000 },
+  medium: { limit: 6, ttl: 10000 },
+  long: { limit: 15, ttl: 60000 },
+};
+
+const LOGIN_THROTTLE = {
+  short: { limit: 4, ttl: 1000 },
+  medium: { limit: 12, ttl: 10000 },
+  long: { limit: 30, ttl: 60000 },
+};
+
+const REFRESH_THROTTLE = {
+  short: { limit: 8, ttl: 1000 },
+  medium: { limit: 30, ttl: 10000 },
+  long: { limit: 90, ttl: 60000 },
+};
+
+const PASSWORD_CHANGE_THROTTLE = {
+  short: { limit: 2, ttl: 1000 },
+  medium: { limit: 6, ttl: 10000 },
+  long: { limit: 20, ttl: 60000 },
+};
+
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -39,7 +63,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new user account' })
   @ApiBody({ type: RegisterDto })
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle(REGISTER_THROTTLE)
   @ApiCreatedResponse({
     description: 'User successfully registered',
     type: AuthResponseDto,
@@ -59,7 +83,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Login to existing account' })
   @ApiBody({ type: LoginDto })
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle(LOGIN_THROTTLE)
   @ApiOkResponse({
     description: 'Successfully logged in',
     type: AuthResponseDto,
@@ -72,7 +96,7 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token using refresh cookie' })
-  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Throttle(REFRESH_THROTTLE)
   @ApiOkResponse({ description: 'New access token' })
   async refresh(@Req() req: Request) {
     const cookieHeader = String(req.headers.cookie || '');
@@ -90,7 +114,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Change password for the authenticated user' })
   @ApiBody({ type: ChangePasswordDto })
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle(PASSWORD_CHANGE_THROTTLE)
   @ApiOkResponse({ description: 'Password changed successfully' })
   @ApiBadRequestResponse({ description: 'Current password is incorrect' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -104,7 +128,7 @@ export class AuthController {
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request a password reset OTP via email' })
   @ApiBody({ type: ForgotPasswordDto })
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle(PASSWORD_CHANGE_THROTTLE)
   @ApiOkResponse({ description: 'OTP sent if email exists', type: ForgotPasswordResponseDto })
   async forgotPassword(@Body() body: ForgotPasswordDto) {
     return this.authService.forgotPassword(body.email);
@@ -113,7 +137,7 @@ export class AuthController {
   @Post('reset-password')
   @ApiOperation({ summary: 'Reset password using OTP and reset token' })
   @ApiBody({ type: ResetPasswordDto })
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle(PASSWORD_CHANGE_THROTTLE)
   @ApiOkResponse({ description: 'Password reset successfully' })
   @ApiBadRequestResponse({ description: 'Invalid OTP, reset token, or expired request' })
   async resetPassword(@Body() body: ResetPasswordDto) {
