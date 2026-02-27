@@ -2,9 +2,70 @@ import { store } from "@/store";
 import { updateRobot } from "../slices/RobotSlice";
 import { StateSocket } from "./stateSocket";
 import { updateTask } from "../slices/TaskSlice";
+import type { Robot } from "../types/RobotTypes";
+import { type ActType } from "../types/TaskTypes";
 
-function mapRobotState(payload: any) {
+type UnknownRecord = Record<string, unknown>;
+
+type RobotWsError = {
+  message?: string;
+};
+
+type RobotWsTask = {
+  isFinish?: boolean;
+};
+
+type RobotWsState = {
+  battery?: number;
+  businessId?: string;
+  isCharging?: boolean;
+  isEmergencyStop?: boolean;
+  isManualMode?: boolean;
+  isRemoteMode?: boolean;
+  x?: number;
+  y?: number;
+  yaw?: number;
+  taskObj?: RobotWsTask | null;
+  errors?: RobotWsError[];
+};
+
+type RobotWsPayload = {
+  deviceId?: string;
+  state?: RobotWsState;
+};
+
+type TaskWsEntry = {
+  data?: {
+    taskId?: string;
+    isTaskCancel?: boolean;
+  };
+  actType?: number;
+};
+
+type TaskWsPayload = {
+  lists?: TaskWsEntry[];
+};
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function getEnvelopePayload<T>(data: unknown): T | null {
+  if (!isRecord(data)) return null;
+
+  const payload = isRecord(data.payload) ? data.payload : data;
+  return payload as T;
+}
+
+function mapRobotState(payload: RobotWsPayload): Partial<Robot> {
   const s = payload.state;
+  if (!s) {
+    return {};
+  }
+
+  const errors = Array.isArray(s.errors)
+    ? s.errors.map((e) => (typeof e?.message === "string" ? e.message : "")).filter(Boolean)
+    : [];
 
   return {
     battery: s.battery,
@@ -22,13 +83,14 @@ function mapRobotState(payload: any) {
     isOnLine: true,
 
     // convert errors
-    errors: (s.errors || []).map((e: any) => e.message),
-    isError: (s.errors || []).length > 0,
+    errors,
+    isError: errors.length > 0,
   };
 }
 
-function mapTaskSocket(payload: any) {
+function mapTaskSocket(payload: TaskWsEntry) {
   const d = payload.data;
+  if (!d?.taskId) return null;
 
   return {
     taskId: d.taskId,
@@ -39,10 +101,9 @@ function mapTaskSocket(payload: any) {
 export const robotStateSocket = new StateSocket(
   "subscribe.robot.state",
   "unsubscribe.robot.state",
-  (data: any) => {
-    const payload = data.payload ?? data;
-
-    if (!payload?.state) return;
+  (data: unknown) => {
+    const payload = getEnvelopePayload<RobotWsPayload>(data);
+    if (!payload?.state || !payload.deviceId) return;
 
     const robotId = payload.deviceId;
     const patch = mapRobotState(payload);
@@ -54,20 +115,19 @@ export const robotStateSocket = new StateSocket(
 export const taskStateSocket = new StateSocket(
   "subscribe.task.state",
   "unsubscribe.task.state",
-  (data: any) => {
-    const payload = data.payload ?? data;
-    
+  (data: unknown) => {
+    const payload = getEnvelopePayload<TaskWsPayload>(data);
+
     if (!payload?.lists) return;
-    
-    console.log("task state:", payload);
-    
-    payload.lists.forEach((item: any) => {
+
+    payload.lists.forEach((item) => {
       const patch = mapTaskSocket(item);
+      if (!patch) return;
 
       store.dispatch(updateTask({
         taskId: patch.taskId,
         patch,
-        actType: item.actType
+        actType: item.actType as ActType | undefined
       }));
     });
   }

@@ -8,6 +8,25 @@ import api from '@/lib/api/axios';
 import axios from 'axios';
 import { API_BASE_URL } from '../runtime-config';
 
+type ApiErrorPayload = {
+  message?: string | string[];
+};
+
+function getApiErrorMessage(err: unknown, fallback: string) {
+  if (axios.isAxiosError<ApiErrorPayload>(err)) {
+    const message = err.response?.data?.message;
+
+    if (Array.isArray(message)) {
+      const joined = message.filter(Boolean).join(', ');
+      if (joined) return joined;
+    } else if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+
+  return getErrorMessage(err, fallback);
+}
+
 export const registerUser = createAsyncThunk<AuthResult, RegisterCreds, { rejectValue: string }>(
   "auth/register",
   async (credentials: RegisterCreds, thunkAPI) => {
@@ -45,10 +64,9 @@ export const changePassword = createAsyncThunk(
   "auth/changePassword",
   async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }, thunkAPI) => {
     try {
-      return await api.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, { currentPassword, newPassword }, {
-      });
-    } catch (err: any) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+      await api.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, { currentPassword, newPassword });
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue(getApiErrorMessage(err, 'Password change failed'));
     }
   }
 );
@@ -60,8 +78,8 @@ export const forgotPassword = createAsyncThunk(
       const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
 
       return response.data;
-    } catch (err: any) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue(getApiErrorMessage(err, 'Failed to send reset OTP'));
     }
   }
 );
@@ -71,8 +89,8 @@ export const resetPassword = createAsyncThunk(
   async ({ email, resetToken, otp, newPassword }: { email: string; resetToken: string; otp: string; newPassword: string }, thunkAPI) => {
     try {
       await axios.post(`${API_BASE_URL}/auth/reset-password`, { email, resetToken, otp, newPassword });
-    } catch (err: any) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || err.message);
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue(getApiErrorMessage(err, 'Failed to reset password'));
     }
   }
 );
