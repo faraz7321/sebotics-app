@@ -3,18 +3,46 @@ import Navbar from "./components/Navbar";
 import { fetchUser } from "./lib/slices/UserSlice";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "./store";
+import { refreshToken } from "./lib/slices/AuthSlice";
+import { listBusinesses } from "./lib/slices/BusinessSlice";
 
 export default function RootLayout() {
   const dispatch = useAppDispatch();
   const { user, loading } = useAppSelector((state) => state.user);
   const { accessToken } = useAppSelector((state) => state.auth);
+  const businesses = useAppSelector((state) => state.business.businesses);
+  const businessLoading = useAppSelector((state) => state.business.loading);
+  const businessesLoaded = useAppSelector((state) => state.business.hasLoaded);
+  const keepLoggedIn = localStorage.getItem("keepLoggedIn") === "true";
 
   useEffect(() => {
-    // If we have a token but no user, fetch it immediately
-    if (accessToken && !user) {
-      dispatch(fetchUser());
+    const bootstrapSession = async () => {
+      if (!keepLoggedIn) return;
+
+      // Hard-refresh case: cookie still exists but accessToken in memory is empty.
+      if (!accessToken) {
+        const refreshed = await dispatch(refreshToken());
+        if (refreshToken.fulfilled.match(refreshed)) {
+          await dispatch(fetchUser());
+        }
+        return;
+      }
+
+      if (!user && !loading) {
+        await dispatch(fetchUser());
+      }
+    };
+
+    void bootstrapSession();
+  }, [accessToken, user, loading, keepLoggedIn, dispatch]);
+
+  useEffect(() => {
+    if (!accessToken || businessLoading || businessesLoaded || businesses.length > 0) {
+      return;
     }
-  }, [accessToken, user, loading, dispatch]);
+
+    void dispatch(listBusinesses());
+  }, [accessToken, businessLoading, businessesLoaded, businesses.length, dispatch]);
 
 
   return (

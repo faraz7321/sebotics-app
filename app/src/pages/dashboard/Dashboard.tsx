@@ -158,10 +158,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="bg-slate-50 font-sans text-slate-900">
+    <div className="h-full overflow-y-auto bg-slate-50 font-sans text-slate-900">
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+      <div className="flex-1 p-6 pb-28 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {/* LEFT PANEL - ROBOTS */}
         <div className="lg:col-span-4">

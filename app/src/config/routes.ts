@@ -8,6 +8,7 @@ export const ROUTES = {
   },
   USER: {
     PROFILE: "/user/profile",
+    CHANGE_PASSWORD: "/user/change-password",
   },
   DASHBOARD: {
     HOME: "/home",

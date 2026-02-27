@@ -42,6 +42,8 @@ function App() {
               <Route path={ROUTES.BUSINESSES.PAGE} element={<Businesses />} />
             </Route>
             <Route path={ROUTES.USER.PROFILE} element={<Profile />} />
+            <Route path={ROUTES.USER.CHANGE_PASSWORD} element={<Profile />} />
+            <Route path="*" element={<Navigate to={ROUTES.DASHBOARD.HOME} replace />} />
           </Route>
         </Route>
 

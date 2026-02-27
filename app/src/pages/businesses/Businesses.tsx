@@ -1,14 +1,18 @@
 import BusinessDetailsPanel from "@/components/business/BusinessDetailsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { listBusinesses, setSelectedBusinessId } from "@/lib/slices/BusinessSlice";
 import { fetchUser, listUsers } from "@/lib/slices/UserSlice";
 import type { Business } from "@/lib/types/BusinessTypes";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { List } from "lucide-react";
+import { ArrowLeft, List } from "lucide-react";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/config/routes";
 
 export default function Businesses() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const users = useAppSelector((state) => state.user.users);
   const { businesses, selectedBusinessId } = useAppSelector(
     (state) => state.business
@@ -32,7 +36,17 @@ export default function Businesses() {
   }, [dispatch]);
 
   return (
-    <div className="pt-10 pl-50 grid grid-cols-12 gap-10">
+    <div className="pt-10 px-10 grid grid-cols-12 gap-10">
+      <div className="col-span-12 flex items-center">
+        <Button
+          variant="outline"
+          className="hover:cursor-pointer"
+          onClick={() => navigate(ROUTES.DASHBOARD.HOME)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Home
+        </Button>
+      </div>
 
       {/* LEFT — Businesses list */}
       <div className="col-span-3">
