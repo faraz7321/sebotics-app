@@ -80,12 +80,12 @@ export class LoginDto {
   @ApiProperty({
     description: 'Password for login',
     type: String,
-    minLength: 6,
+    minLength: 8,
     maxLength: 72,
     example: 'SecurePass123!',
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   @MaxLength(72)
   password!: string;
 }
@@ -155,12 +155,12 @@ export class ChangePasswordDto {
   @ApiProperty({
     description: 'Current password',
     type: String,
-    minLength: 6,
+    minLength: 8,
     maxLength: 72,
     example: 'OldSecurePass123!',
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   @MaxLength(72)
   currentPassword!: string;
 
