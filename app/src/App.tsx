@@ -6,31 +6,31 @@ import { FileQuestion } from 'lucide-react';
 import { Loader } from './components/ui/loader';
 import { Button } from './components/ui/button';
 
+import RootLayout from './RootLayout';
+
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
+import ForgotPassword from './pages/auth/ForgotPassword';
 
-import RootLayout from './RootLayout';
 import DashBoard from './pages/dashboard/Dashboard';
 import Businesses from './pages/businesses/Businesses';
+import Profile from './pages/profile/Profile';
+
 import { useAppSelector } from './store';
 
 function App() {
   const isAuthLoading = useAppSelector((state) => state.auth.loading);
 
-  if (isAuthLoading) {
-    return (
-      <Loader variant="fullscreen" />
-    );
-  }
-
   return (
     <BrowserRouter>
+      {isAuthLoading && <Loader variant="fullscreen" />}
       <Routes>
 
         {/* Public Routes */}
         <Route element={<PublicRoute />}>
           <Route path={ROUTES.AUTH.SIGN_IN} element={<SignIn />} />
           <Route path={ROUTES.AUTH.SIGN_UP} element={<SignUp />} />
+          <Route path={ROUTES.AUTH.FORGOT_PASSWORD} element={<ForgotPassword />} />
         </Route>
 
         {/* Protected Routes */}
@@ -41,6 +41,7 @@ function App() {
             <Route element={<AdminRoute />}>
               <Route path={ROUTES.BUSINESSES.PAGE} element={<Businesses />} />
             </Route>
+            <Route path={ROUTES.USER.PROFILE} element={<Profile />} />
           </Route>
         </Route>
 

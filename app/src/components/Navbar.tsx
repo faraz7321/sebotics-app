@@ -1,5 +1,5 @@
-import { Store, ChevronDown, LogOut } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Store, ChevronDown, LogOut, UserIcon, KeyRound } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { logout } from "@/lib/slices/AuthSlice";
@@ -22,6 +22,12 @@ export default function Navbar() {
   const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
 
   const selectedBusiness = businesses.find(b => b.id === selectedBusinessId);
+
+  const handleLogout = () => {
+    robotStateSocket.disconnect();
+    taskStateSocket.disconnect();
+    dispatch(logout());
+  };
 
   return (
     <header className="bg-white border-b border-slate-200 p-4 grid grid-cols-3 items-center">
@@ -80,23 +86,42 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* RIGHT — Logout */}
-      <div className="flex justify-end items-center">
-        <Separator orientation="vertical" className="mx-1 h-4" />
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:cursor-pointer"
-          onClick={() => {
-            robotStateSocket.disconnect();
-            taskStateSocket.disconnect();
-            dispatch(logout());
-          }}
-        >
-          <LogOut className="h-5 w-5" />
-        </Button>
-      </div>
+      {/* LEFT- User Dropdown */}
+      <div className="flex justify-end items-center gap-2">
+        <Separator orientation="vertical" className="h-8" />
 
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-2 p-1 pr-2 rounded-xl hover:bg-emerald-50 border border-slate-100 cursor-pointer transition-all">
+              <div className="h-8 w-8 rounded-full bg-emerald-600 flex items-center justify-center text-white">
+                <UserIcon className="h-4 w-4" />
+              </div>
+              <ChevronDown className="h-3 w-3 text-slate-400" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 mt-2 rounded-2xl">
+            <DropdownMenuLabel className="font-normal p-4">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-bold text-slate-800">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-slate-500">{user?.email}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="hover:cursor-pointer" onClick={() => navigate(ROUTES.USER.PROFILE)}>
+              <UserIcon className="mr-2 h-4 w-4" /> Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem className="hover:cursor-pointer" onClick={() => navigate(ROUTES.USER.CHANGE_PASSWORD)}>
+              <KeyRound className="mr-2 h-4 w-4" /> Password
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="hover:cursor-pointer text-red-600" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" /> Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
   );
 }

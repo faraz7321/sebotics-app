@@ -4,13 +4,17 @@ export const ROUTES = {
   AUTH: {
     SIGN_IN: "/login",
     SIGN_UP: "/register",
+    FORGOT_PASSWORD: "/forgot-password",
+  },
+  USER: {
+    PROFILE: "/user/profile",
   },
   DASHBOARD: {
     HOME: "/home",
   },
   BUSINESSES: {
     PAGE: "/businesses",
-  }
+  },
 } as const;
 
 export const API_ENDPOINTS = {
@@ -18,6 +22,9 @@ export const API_ENDPOINTS = {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
     REFRESH: "/auth/refresh",
+    CHANGE_PASSWORD: "/auth/change-password",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
   },
   USER: {
     LIST: "/users",

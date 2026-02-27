@@ -140,7 +140,17 @@ export default function SignIn() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-semibold ml-1">Password</Label>
+              <div className="flex justify-between items-center px-1">
+                <Label htmlFor="pass" className="text-sm font-semibold">Password</Label>
+                <Button
+                  variant="link"
+                  className="h-auto p-0 text-xs font-bold text-primary hover:cursor-pointer"
+                  type="button"
+                  onClick={() => navigate(ROUTES.AUTH.FORGOT_PASSWORD)}
+                >
+                  Forgot?
+                </Button>
+              </div>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><Lock size={18} /></span>
                 <Input
