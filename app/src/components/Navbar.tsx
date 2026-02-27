@@ -49,7 +49,7 @@ export default function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-9 md:h-10 w-full max-w-[180px] sm:max-w-[260px] md:max-w-[420px] gap-2 md:gap-3 px-2.5 sm:px-3 md:px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 hover:cursor-pointer justify-between"
+                className="h-9 md:h-10 w-full max-w-[170px] sm:max-w-[220px] md:max-w-[300px] gap-2 md:gap-3 px-2.5 sm:px-3 md:px-4 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 hover:cursor-pointer justify-between"
               >
                 <div className="flex items-center min-w-0 gap-2">
                   <Store className="h-4 w-4 text-slate-500 shrink-0" />
