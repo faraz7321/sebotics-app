@@ -18,6 +18,19 @@ export const listRobots = createAsyncThunk(
   }
 );
 
+export const getRobot = createAsyncThunk(
+  "robot/get",
+  async (robotId: string, thunkAPI) => {
+    try {
+      const response = await api.get(API_ENDPOINTS.ROBOT.GET.replace('{robotId}', robotId));
+
+      return response.data;
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue(getErrorMessage(err, 'Failed to get robot'));
+    }
+  }
+);
+
 const initialState: RobotState = {
   loading: false,
   error: null,
@@ -51,6 +64,21 @@ const robotSlice = createSlice({
         state.robots = action.payload.data.list;
       })
       .addCase(listRobots.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(getRobot.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getRobot.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+
+        const robot = action.payload.data;
+
+        state.robots = state.robots.map(r => r.robotId === robot.robotId ? robot : r);
+      })
+      .addCase(getRobot.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

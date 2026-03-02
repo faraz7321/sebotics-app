@@ -36,12 +36,13 @@ export default function Businesses() {
   }, [dispatch]);
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="pt-6 md:pt-10 px-4 md:px-10 pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
-        <div className="col-span-1 lg:col-span-12 flex items-center">
+    <div className="h-full overflow-y-auto bg-slate-50/50">
+      <div className="max-w-[1600px] mx-auto relative px-4 md:px-10">
+        {/* Back Button - Positioned to the side */}
+        <div className="pt-6 md:pt-10 flex justify-start">
           <Button
-            variant="outline"
-            className="hover:cursor-pointer"
+            variant="ghost"
+            className="hover:cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors rounded-xl"
             onClick={() => navigate(ROUTES.DASHBOARD.HOME)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -49,20 +50,22 @@ export default function Businesses() {
           </Button>
         </div>
 
-        {/* LEFT — Businesses list */}
-        <div className="col-span-1 lg:col-span-4 xl:col-span-3">
-          <Card className="border border-slate-200 shadow-none rounded-xl h-[55vh] min-h-[320px] lg:h-[600px] flex flex-col">
-            <CardHeader className="border-b border-slate-200 p-4">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
-                <List className="h-4 w-4" />
-                Businesses
-              </CardTitle>
-            </CardHeader>
+        {/* Main Content - Centered */}
+        <div className="max-w-7xl mx-auto pt-4 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
+          {/* LEFT — Businesses list */}
+          <div className="col-span-1 lg:col-span-4 xl:col-span-4">
+            <Card className="border border-slate-200 shadow-xl shadow-slate-200/50 rounded-3xl h-[55vh] min-h-[320px] lg:h-[700px] flex flex-col bg-white overflow-hidden">
+              <CardHeader className="border-b border-slate-100 p-6">
+                <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-slate-400">
+                  <List className="h-4 w-4" />
+                  Businesses
+                </CardTitle>
+              </CardHeader>
 
-            <CardContent className="p-0 flex-1 overflow-y-auto relative">
-                <div className="divide-y divide-slate-200">
+              <CardContent className="p-0 flex-1 overflow-y-auto relative">
+                <div className="divide-y divide-slate-100">
                   {businesses.length === 0 ? (
-                    <div className="p-4 text-slate-400 text-sm text-center">
+                    <div className="p-8 text-slate-400 text-sm text-center italic">
                       No businesses listed
                     </div>
                   ) : (
@@ -72,7 +75,10 @@ export default function Businesses() {
                       return (
                         <div
                           key={business.id}
-                          className={`border-b cursor-pointer transition-all ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"}`}
+                          className={`cursor-pointer transition-all duration-200 ${isSelected
+                              ? "bg-blue-50 border-l-4 border-blue-600"
+                              : "hover:bg-slate-50 border-l-4 border-transparent"
+                            }`}
                           onClick={() =>
                             dispatch(
                               setSelectedBusinessId(
@@ -81,30 +87,34 @@ export default function Businesses() {
                             )
                           }
                         >
-                          <div className="p-4 flex justify-between items-center">
+                          <div className="p-6 flex justify-between items-center">
                             <div>
-                              <p className="font-medium text-sm">{business.name}</p>
-                              <p className="text-xs text-slate-500">{business.address || "No address"}</p>
+                              <p className={`font-bold text-sm ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>
+                                {business.name}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-1 line-clamp-1">{business.address || "No address"}</p>
                             </div>
-                            <span className="text-xs text-slate-400">{users.filter(u => business.userIds.includes(u.id)).length} Users</span>
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+                              }`}>
+                              {users.filter(u => business.userIds.includes(u.id)).length} Users
+                            </span>
                           </div>
                         </div>
                       );
                     })
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            </CardContent>
-          </Card>
-        </div>
-
-
-        {/* RIGHT — Business details */}
-        <div className="col-span-1 lg:col-span-8 xl:col-span-7">
-          <BusinessDetailsPanel
-            business={selectedBusiness}
-            users={users}
-          />
+          {/* RIGHT — Business details */}
+          <div className="col-span-1 lg:col-span-8 xl:col-span-8">
+            <BusinessDetailsPanel
+              business={selectedBusiness}
+              users={users}
+            />
+          </div>
         </div>
       </div>
     </div>

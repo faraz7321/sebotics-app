@@ -12,6 +12,7 @@ import { fetchUser, listUsers } from "@/lib/slices/UserSlice";
 
 import { CallRobotSheet } from "@/components/robot/CallRobotSheet";
 import { EmergencyStopSheet } from "@/components/robot/EmergencyStopSheet";
+import ViewRobotSheet from "@/components/robot/ViewRobotSheet";
 
 import { listRobots } from "@/lib/slices/RobotSlice";
 import { ROLES } from "@/config/constants";
@@ -19,6 +20,7 @@ import { listTasks } from "@/lib/slices/TaskSlice";
 import { listPointsOfInterest } from "@/lib/slices/mapSlice";
 import { RobotList } from "@/components/robot/RobotList";
 import { TaskList } from "@/components/task/TaskList";
+import ViewTaskSheet from "@/components/task/ViewTaskSheet";
 
 import {
   handleCreateTask,
@@ -83,7 +85,16 @@ export default function Dashboard() {
 
   const [callOpen, setCallOpen] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
   const [selectedRobotForCall, setSelectedRobotForCall] = useState<Robot | null>(null);
+  const [selectedRobotForView, setSelectedRobotForView] = useState<Robot | null>(null);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+
+  const handleCallRobot = (robot: Robot) => {
+    setSelectedRobotForCall(robot);
+    setCallOpen(true);
+  };
 
   const getPoisByRobotArea = (robot: Robot, poiType: PoiType) => {
     return pois.filter((poi) => {
@@ -144,17 +155,19 @@ export default function Dashboard() {
   };
 
   const handleEmergencyStop = (robotId: string) => {
-    const taskId = tasks.find((t) => t.robotId === robotId && t.isExcute)?.taskId;
+    const activeTasks = tasks.filter((t) => t.robotId === robotId && t.isExcute);
 
-    console.log("Emergency stop:", robotId);
-    console.log("Active task for robot:", taskId ?? "None");
+    console.log("Emergency stop for robot:", robotId);
+    console.log("Active tasks found:", activeTasks.length);
 
-    if (taskId) {
-      handleCancelTask({ dispatch: dispatch, businessId: selectedBusinessId!, taskId: taskId });
+    if (activeTasks.length > 0) {
+      activeTasks.forEach((task) => {
+        console.log("Stopping task:", task.taskId);
+        handleCancelTask({ dispatch: dispatch, businessId: selectedBusinessId!, taskId: task.taskId });
+      });
     } else {
-      console.warn("No active task found for robot:", robotId);
+      console.warn("No active tasks found for robot:", robotId);
     }
-
   };
 
   return (
@@ -167,11 +180,11 @@ export default function Dashboard() {
         <div className="lg:col-span-4">
           <RobotList
             robots={filteredrobots}
-            onCallRobot={(robot) => {
-              setSelectedRobotForCall(robot);
-              setCallOpen(true);
+            selectedRobotId={selectedRobotForView?.robotId}
+            onViewRobot={(robot) => {
+              setSelectedRobotForView(robot);
+              setViewOpen(true);
             }}
-            onReturnToDock={(robot) => handleReturnToDock(robot)}
           />
         </div>
 
@@ -181,12 +194,11 @@ export default function Dashboard() {
           <TaskList
             tasks={tasks}
             selectedBusinessId={selectedBusinessId}
-            onExecuteTask={(taskId) =>
-              handleExecuteTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
-            }
-            onCancelTask={(taskId) =>
-              handleCancelTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
-            }
+            selectedTaskId={selectedTask?.taskId}
+            onViewTask={(task) => {
+              setSelectedTask(task);
+              setTaskOpen(true);
+            }}
           />
         </div>
       </div>
@@ -243,6 +255,26 @@ export default function Dashboard() {
         onOpenChange={setStopOpen}
         robots={filteredrobots}
         onStop={(robotId) => handleEmergencyStop(robotId)}
+      />
+
+      <ViewRobotSheet
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        robot={selectedRobotForView}
+        onCall={handleCallRobot}
+        onReturnToDock={handleReturnToDock}
+      />
+
+      <ViewTaskSheet
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        task={selectedTask}
+        onExecuteTask={(taskId) =>
+          handleExecuteTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
+        }
+        onCancelTask={(taskId) =>
+          handleCancelTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
+        }
       />
 
     </div>

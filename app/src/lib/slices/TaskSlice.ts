@@ -25,6 +25,19 @@ export const listTasks = createAsyncThunk(
   }
 );
 
+export const getTask = createAsyncThunk(
+  "task/get",
+  async (taskId: string, thunkAPI) => {
+    try {
+      const response = await api.get(API_ENDPOINTS.TASK.GET.replace(`{taskId}`, taskId));
+
+      return response.data;
+    } catch (err: unknown) {
+      return thunkAPI.rejectWithValue(getErrorMessage(err, 'Failed to get task'));
+    }
+  }
+);
+
 export const createTask = createAsyncThunk(
   "task/create",
   async (task: CreateTaskRequest, thunkAPI) => {
@@ -55,8 +68,7 @@ export const executeTask = createAsyncThunk(
   "task/execute",
   async (taskId: string, thunkAPI) => {
     try {
-      const url = `${API_ENDPOINTS.TASK.EXECUTE}/${taskId}/execute`;
-      const response = await api.post(url);
+      const response = await api.post(API_ENDPOINTS.TASK.EXECUTE.replace(`{taskId}`, taskId));
 
       return response.data;
     } catch (err: unknown) {
@@ -69,9 +81,7 @@ export const cancelTask = createAsyncThunk(
   "task/cancel",
   async (taskId: string, thunkAPI) => {
     try {
-      const url = `${API_ENDPOINTS.TASK.CANCEL}/${taskId}/cancel`;
-
-      const response = await api.post(url, { taskId });
+      const response = await api.post(API_ENDPOINTS.TASK.CANCEL.replace(`{taskId}`, taskId));
 
       return response.data;
     } catch (err: unknown) {
@@ -129,71 +139,86 @@ const TaskSlice = createSlice({
           };
         });
       })
+      .addCase(getTask.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getTask.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+
+        const task = action.payload.data;
+
+        state.tasks = state.tasks.map(t => t.taskId === task.taskId ? task : t);
+      })
+      .addCase(getTask.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       .addCase(listTasks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-    // Create
-    .addCase(createTask.pending, (state) => {
-      state.loading = true;
-    })
-    .addCase(createTask.fulfilled, (state, action) => {
-      state.loading = false;
-      state.error = null;
+      // Create
+      .addCase(createTask.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createTask.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
 
-      console.log("Task created successfully:", action.payload.data);
+        console.log("Task created successfully:", action.payload.data);
 
-      // state.tasks.push(action.payload.data);
-    })
-    .addCase(createTask.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    })
-    // Create V3
-    .addCase(createTaskv3.pending, (state) => {
-      state.loading = true;
-    })
-    .addCase(createTaskv3.fulfilled, (state, action) => {
-      state.loading = false;
-      state.error = null;
+        // state.tasks.push(action.payload.data);
+      })
+      .addCase(createTask.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Create V3
+      .addCase(createTaskv3.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createTaskv3.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
 
-      console.log("Task created successfully (V3):", action.payload.data);
-    })
-    .addCase(createTaskv3.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    })
-    // Execute
-    .addCase(executeTask.pending, (state) => {
-      state.loading = true;
-    })
-    .addCase(executeTask.fulfilled, (state, action) => {
-      state.loading = false;
-      state.error = null;
+        console.log("Task created successfully (V3):", action.payload.data);
+      })
+      .addCase(createTaskv3.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Execute
+      .addCase(executeTask.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(executeTask.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
 
-      console.log("Task executed successfully:", action.payload.message);
-    })
-    .addCase(executeTask.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    })
-    // Cancel
-    .addCase(cancelTask.pending, (state) => {
-      state.loading = true;
-    })
-    .addCase(cancelTask.fulfilled, (state, action) => {
-      state.loading = false;
-      state.error = null;
+        console.log("Task executed successfully:", action.payload.message);
+      })
+      .addCase(executeTask.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Cancel
+      .addCase(cancelTask.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(cancelTask.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
 
-      console.log("Task cancelled successfully:", action.payload.message);
-      // const cancelledTaskId = action.payload.data.taskId;
-      // state.tasks = state.tasks.filter(task => task.taskId !== cancelledTaskId);
-    })
-    .addCase(cancelTask.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    });
-},
+        console.log("Task cancelled successfully:", action.payload.message);
+        // const cancelledTaskId = action.payload.data.taskId;
+        // state.tasks = state.tasks.filter(task => task.taskId !== cancelledTaskId);
+      })
+      .addCase(cancelTask.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+  },
 });
 
 export const { updateTask } = TaskSlice.actions;
