@@ -33,6 +33,7 @@ export const API_ENDPOINTS = {
   },
   ROBOT: {
     LIST: "/autoxing/robots/list",
+    GET: "/autoxing/robots/{robotId}/state-v2",
   },
   BUSINESS: {
     LIST: "/autoxing/businesses/list",
@@ -46,9 +47,10 @@ export const API_ENDPOINTS = {
   },
   TASK: {
     LIST: "/autoxing/tasks/list",
+    GET: "/autoxing/tasks/v2/{taskId}/state",
     CREATE: "/autoxing/tasks",
     CREATE_V3: "/autoxing/tasks/v3",
-    EXECUTE: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/execute
-    CANCEL: "/autoxing/tasks", // expects /autoxing/tasks/{taskId}/cancel
+    EXECUTE: "/autoxing/tasks/{taskId}/execute",
+    CANCEL: "/autoxing/tasks/{taskId}/cancel",
   },
 } as const;

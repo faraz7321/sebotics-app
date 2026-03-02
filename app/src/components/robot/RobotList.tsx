@@ -2,7 +2,6 @@ import {
   Bot,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,17 +10,20 @@ import {
 } from "@/components/ui/card";
 
 import type { Robot } from "@/lib/types/RobotTypes";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
+import { useAppDispatch } from "@/store";
+import { getRobot } from "@/lib/slices/RobotSlice";
 
 interface RobotListProps {
   robots: Robot[];
-  onCallRobot: (robot: Robot) => void;
-  onReturnToDock: (robot: Robot) => void;
+  selectedRobotId?: string;
+  onViewRobot: (robot: Robot) => void;
 }
 
-export function RobotList({ robots, onCallRobot, onReturnToDock }: RobotListProps) {
-  const [selectedRobot, setSelectedRobot] = useState<Robot | null>(null);
+export function RobotList({ robots, selectedRobotId, onViewRobot }: RobotListProps) {
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (robots.length === 0) return;
@@ -40,9 +42,16 @@ export function RobotList({ robots, onCallRobot, onReturnToDock }: RobotListProp
       robotStateSocket.subscribe(robot.robotId);
       taskStateSocket.subscribe(robot.robotId);
     });
-    
 
   }, [robots]);
+
+  const handleViewRobot = async (robot: Robot) => {
+    if (robot.isOnLine) {
+      await dispatch(getRobot(robot.robotId));
+    }
+
+    onViewRobot(robot);
+  };
 
   return (
     <Card className="border border-slate-200 shadow-none rounded-xl h-[50vh] min-h-[320px] lg:h-[460px] flex flex-col">
@@ -61,78 +70,23 @@ export function RobotList({ robots, onCallRobot, onReturnToDock }: RobotListProp
             </div>
           ) : (
             robots.map((robot) => {
-              const isSelected = selectedRobot?.robotId === robot.robotId;
-
               return (
                 <div
                   key={robot.robotId}
-                  className={`border-b cursor-pointer transition-all ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
-                    }`}
-                  onClick={() => setSelectedRobot(isSelected ? null : robot)}
-                >
-                  {/* COLLAPSED HEADER */}
-                  <div className="p-4 flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-sm">{robot.name || robot.robotId}</p>
-                      <p className="text-xs text-slate-500">{robot.isOnLine ? "Online" : "Offline"}</p>
-                    </div>
-                    <span className="text-xs text-slate-400">{robot.battery}%</span>
-                  </div>
-
-                  {/* EXPANDED DETAILS */}
-                  {isSelected && (
-                    <div className="px-4 pb-4 pt-2 border-t border-slate-200 space-y-2 text-sm">
-                      <div>
-                        <span className="text-slate-500">Model:</span> {robot.model}
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Status:</span>{" "}
-                        {robot.isTask
-                          ? "Working"
-                          : robot.isCharging
-                            ? "Charging"
-                            : robot.isOnLine
-                              ? "Idle"
-                              : "Offline"}
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Manual Mode:</span> {robot.isManualMode ? "Yes" : "No"}
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Remote Mode:</span> {robot.isRemoteMode ? "Yes" : "No"}
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Emergency Stop:</span> {robot.isEmergencyStop ? "Yes" : "No"}
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Coordinates:</span> ({robot.x}, {robot.y}) | Yaw: {robot.yaw}°
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Area:</span> {robot.areaId || "Unassigned"}
-                      </div>
-                      {robot.errors.length > 0 && (
-                        <div className="text-red-500">
-                          Errors: {robot.errors.join(", ")}
-                        </div>
-                      )}
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2 border-green-500 text-green-600 hover:bg-green-100 hover:cursor-pointer"
-                        onClick={() => {
-                          onCallRobot(robot);
-                        }}
-                      >
-                        Call Robot
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full mt-2 border-green-500 text-green-600 hover:bg-green-100 hover:cursor-pointer"
-                        onClick={() => onReturnToDock(robot)}
-                      >
-                        Return to Dock
-                      </Button>
-                    </div>
+                  className={cn(
+                    "border-b transition-all cursor-pointer p-4 flex justify-between items-center",
+                    selectedRobotId === robot.robotId ? "bg-blue-50" : "hover:bg-slate-50"
                   )}
+                  onClick={() => handleViewRobot(robot)}
+                >
+                  <div>
+                    <p className="font-medium text-sm">{robot.name || robot.robotId}</p>
+                    <p className="text-xs text-slate-500">{robot.isOnLine ? "Online" : "Offline"}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-slate-400">{robot.battery}%</span>
+                    <div className={`w-2 h-2 rounded-full ${robot.isOnLine ? 'bg-green-500' : 'bg-slate-300'}`} />
+                  </div>
                 </div>
               );
             })
