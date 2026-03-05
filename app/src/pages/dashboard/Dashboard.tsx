@@ -21,6 +21,7 @@ import { listPointsOfInterest } from "@/lib/slices/mapSlice";
 import { RobotList } from "@/components/robot/RobotList";
 import { TaskList } from "@/components/task/TaskList";
 import ViewTaskSheet from "@/components/task/ViewTaskSheet";
+import type { Task } from "@/lib/types/TaskTypes";
 
 import {
   handleCreateTask,
@@ -92,7 +93,7 @@ export default function Dashboard() {
   const [taskOpen, setTaskOpen] = useState(false);
   const [selectedRobotForCall, setSelectedRobotForCall] = useState<Robot | null>(null);
   const [selectedRobotForView, setSelectedRobotForView] = useState<Robot | null>(null);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const handleCallRobot = (robot: Robot) => {
     setSelectedRobotForCall(robot);

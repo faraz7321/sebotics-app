@@ -24,15 +24,15 @@ function getInitialCooldownSeconds() {
     return 0;
   }
 
-  const timeSinceLastResend = Date.now() - parsed;
-  const remainingTimeMs = Math.max(0, OTP_COOLDOWN_SECONDS * 1000 - timeSinceLastResend);
+  const elapsedMs = Date.now() - parsed;
+  const remainingMs = Math.max(0, OTP_COOLDOWN_SECONDS * 1000 - elapsedMs);
 
-  if (remainingTimeMs <= 0) {
+  if (remainingMs <= 0) {
     sessionStorage.removeItem('lastOTPResend');
     return 0;
   }
 
-  return Math.ceil(remainingTimeMs / 1000);
+  return Math.ceil(remainingMs / 1000);
 }
 
 export default function ForgotPassword() {

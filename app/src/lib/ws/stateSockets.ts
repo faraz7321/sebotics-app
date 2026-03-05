@@ -117,7 +117,6 @@ export const taskStateSocket = new StateSocket(
   "unsubscribe.task.state",
   (data: unknown) => {
     const payload = getEnvelopePayload<TaskWsPayload>(data);
-
     if (!payload?.lists) return;
 
     payload.lists.forEach((item) => {
