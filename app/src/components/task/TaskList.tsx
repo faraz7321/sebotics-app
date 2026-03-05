@@ -8,10 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ActTypeLabel, ActType, type Task } from "@/lib/types/TaskTypes";
+import { ActType, type Task, getActLabel } from "@/lib/types/TaskTypes";
 import { cn } from "@/lib/utils";
 import { useAppDispatch } from "@/store";
 import { getTask } from "@/lib/slices/TaskSlice";
+import { useTranslation } from "react-i18next";
 
 interface TaskListProps {
   tasks: Task[];
@@ -27,11 +28,7 @@ export function TaskList({
   onViewTask
 }: TaskListProps) {
   const dispatch = useAppDispatch();
-
-  function getActLabel(actType?: ActType) {
-    if (!actType) return "—";
-    return ActTypeLabel[actType] ?? `Act ${actType}`;
-  };
+  const { t } = useTranslation();
 
   function getTaskStatus(task: Task): { label: string; className: string } {
     if (!task.actType) {
@@ -44,7 +41,7 @@ export function TaskList({
     // Finished
     if (task.actType === ActType.TaskFinished || task.actType === ActType.ArrivedAtDestination) {
       return {
-        label: "Finished",
+        label: t('tasks.status.finished'),
         className: "bg-slate-100 text-slate-700 border-slate-200",
       };
     }
@@ -52,7 +49,7 @@ export function TaskList({
     // Paused
     if (task.actType === ActType.TaskPaused) {
       return {
-        label: "Paused",
+        label: t('tasks.status.paused'),
         className: "bg-yellow-100 text-yellow-700 border-yellow-200",
       };
     }
@@ -60,14 +57,14 @@ export function TaskList({
     // Executing
     if (task.actType === ActType.GoToDestination || task.actType === ActType.TaskStarted) {
       return {
-        label: "Executing",
+        label: t('tasks.status.executing'),
         className: "bg-green-100 text-green-700 border-green-200",
       };
     }
 
     // Fallback for unknown actType
     return {
-      label: ActTypeLabel[task.actType as ActType] ?? `Act ${task.actType}`,
+      label: getActLabel(t, task.actType),
       className: "bg-slate-100 text-slate-700 border-slate-200",
     };
   };
@@ -83,7 +80,7 @@ export function TaskList({
       <CardHeader className="border-b border-slate-200 p-4">
         <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
           <List className="h-4 w-4" />
-          Tasks
+          {t('tasks.title')}
         </CardTitle>
       </CardHeader>
 
@@ -92,7 +89,7 @@ export function TaskList({
           {tasks.filter((task) => task.businessId === selectedBusinessId).length === 0 ? (
             <div className="p-8 text-slate-400 text-sm text-center flex flex-col items-center gap-2">
               <List className="h-8 w-8 opacity-20" />
-              <p>No tasks available</p>
+              <p>{t('tasks.noTasks')}</p>
             </div>
           ) : (
             tasks
@@ -102,7 +99,7 @@ export function TaskList({
                 const date = task.createTime ? new Date(Number(task.createTime)) : null;
                 const formattedDate =
                   date && !isNaN(date.getTime())
-                    ? date.toLocaleString()
+                    ? date.toLocaleString("en-US", { timeZone: "Europe/Berlin" })
                     : "---";
 
                 return (
@@ -120,16 +117,16 @@ export function TaskList({
                       </h3>
 
                       <p className="text-xs text-slate-500">
-                        Robot:{" "}
+                        {t('tasks.details.robotLabel')}:{" "}
                         <span className="font-semibold text-slate-700">
                           {task.robotId}
                         </span>
                       </p>
 
                       <p className="text-xs text-slate-500">
-                        Action:{" "}
+                        {t('tasks.details.actionLabel')}:{" "}
                         <span className="font-semibold text-slate-700">
-                          {getActLabel(task.actType)}
+                          {getActLabel(t, task.actType)}
                         </span>
                       </p>
                     </div>

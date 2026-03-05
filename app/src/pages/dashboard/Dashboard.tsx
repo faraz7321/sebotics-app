@@ -29,9 +29,12 @@ import {
 } from "@/lib/tasks/taskHandlers";
 import { PoiType } from "@/lib/types/MapTypes";
 import type { Robot } from "@/lib/types/RobotTypes";
+import { useTranslation } from "react-i18next";
+import { getCestTimestamp } from "@/lib/utils";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const robots = useAppSelector((state) => state.robot.robots);
   const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
@@ -64,8 +67,8 @@ export default function Dashboard() {
     if (!selectedBusinessId) return;
 
     const fetchTasks = async () => {
-      // time in miliseconds
-      const now = Date.now();
+      // time in miliseconds, adjusted to CEST
+      const now = getCestTimestamp();
       const twoHoursAgo = now - (2 * 60 * 60 * 1000);
 
       await dispatch(listTasks({
@@ -214,20 +217,20 @@ export default function Dashboard() {
                 setSelectedRobotForCall(null);
                 setCallOpen(true);
               }}
-              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-medium gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed"
+              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed transition-all"
             >
               <Zap className="h-5 w-5" />
-              Call Robot
+              {t('dashboard.callRobot')}
             </Button>
 
             <Button
               variant="outline"
               disabled={!selectedBusinessId}
               onClick={() => setStopOpen(true)}
-              className="h-12 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-medium gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed"
+              className="h-12 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-bold gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed transition-all"
             >
               <AlertOctagon className="h-5 w-5 text-red-500" />
-              Stop
+              {t('dashboard.stop')}
             </Button>
           </div>
         </div>

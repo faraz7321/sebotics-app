@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+
 export const ActType = {
   TaskStarted: 1000,
   TaskFinished: 1001,
@@ -29,34 +31,41 @@ export const ActType = {
 
 export type ActType = typeof ActType[keyof typeof ActType];
 
-export const ActTypeLabel: Record<ActType, string> = {
-  [ActType.TaskStarted]: "Task started",
-  [ActType.TaskFinished]: "Task finished",
-  [ActType.Reserved]: "Reserved",
 
-  [ActType.CallElevator]: "Call elevator",
-  [ActType.SwitchMap]: "Switch map",
-  [ActType.PlayAudio]: "Play audio",
-  [ActType.OpenCompartment]: "Open compartment",
-  [ActType.CallAutomaticDoor]: "Call automatic door",
-  [ActType.CallTurnstile]: "Call turnstile",
-  [ActType.DetectDoorOrTurnstileArea]: "Detect door/turnstile area",
-  [ActType.EnterElevator]: "Enter elevator",
-  [ActType.ExitElevator]: "Exit elevator",
-  [ActType.GoToDestination]: "Go to destination",
-  [ActType.ArrivedAtDestination]: "Arrived at destination",
-  [ActType.DockToPile]: "Dock to pile",
-  [ActType.TaskPaused]: "Task paused",
-  [ActType.CallPhoneBox]: "Call phone box",
-  [ActType.CloseCompartment]: "Close compartment",
-  [ActType.SetSprayLevel]: "Set spray level",
-  [ActType.ReserveElevator]: "Reserve elevator",
-  [ActType.SetLedStrip]: "Set LED strip",
-  [ActType.SetSpeed]: "Set speed",
-  [ActType.WaitForInteraction]: "Wait for interaction",
-  [ActType.JackingLift]: "Jacking lift",
-  [ActType.JackingLower]: "Jacking lower",
+export const getActLabel = (t: TFunction, actType?: ActType) => {
+  if (!actType) return t('common.none');
+
+  const actMap: Record<number, string> = {
+    [ActType.TaskStarted]: t('tasks.acts.taskStarted'),
+    [ActType.TaskFinished]: t('tasks.acts.taskFinished'),
+    [ActType.Reserved]: t('tasks.acts.reserved'),
+    [ActType.CallElevator]: t('tasks.acts.callElevator'),
+    [ActType.SwitchMap]: t('tasks.acts.switchMap'),
+    [ActType.PlayAudio]: t('tasks.acts.playAudio'),
+    [ActType.OpenCompartment]: t('tasks.acts.openCompartment'),
+    [ActType.CallAutomaticDoor]: t('tasks.acts.callAutomaticDoor'),
+    [ActType.CallTurnstile]: t('tasks.acts.callTurnstile'),
+    [ActType.DetectDoorOrTurnstileArea]: t('tasks.acts.detectDoorArea'),
+    [ActType.EnterElevator]: t('tasks.acts.enterElevator'),
+    [ActType.ExitElevator]: t('tasks.acts.exitElevator'),
+    [ActType.GoToDestination]: t('tasks.acts.goToDestination'),
+    [ActType.ArrivedAtDestination]: t('tasks.acts.arrivedAtDestination'),
+    [ActType.DockToPile]: t('tasks.acts.dockToPile'),
+    [ActType.TaskPaused]: t('tasks.acts.taskPaused'),
+    [ActType.CallPhoneBox]: t('tasks.acts.callPhoneBox'),
+    [ActType.CloseCompartment]: t('tasks.acts.closeCompartment'),
+    [ActType.SetSprayLevel]: t('tasks.acts.setSprayLevel'),
+    [ActType.ReserveElevator]: t('tasks.acts.reserveElevator'),
+    [ActType.SetLedStrip]: t('tasks.acts.setLedStrip'),
+    [ActType.SetSpeed]: t('tasks.acts.setSpeed'),
+    [ActType.WaitForInteraction]: t('tasks.acts.waitForInteraction'),
+    [ActType.JackingLift]: t('tasks.acts.jackingLift'),
+    [ActType.JackingLower]: t('tasks.acts.jackingLower'),
+  };
+
+  return actMap[actType] ?? `Act ${actType}`;
 };
+
 
 export type Task = {
   taskId: string;

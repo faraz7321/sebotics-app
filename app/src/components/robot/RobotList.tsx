@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 import { useAppDispatch } from "@/store";
 import { getRobot } from "@/lib/slices/RobotSlice";
+import { useTranslation } from "react-i18next";
 
 interface RobotListProps {
   robots: Robot[];
@@ -24,6 +25,7 @@ interface RobotListProps {
 
 export function RobotList({ robots, selectedRobotId, onViewRobot }: RobotListProps) {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (robots.length === 0) return;
@@ -58,7 +60,7 @@ export function RobotList({ robots, selectedRobotId, onViewRobot }: RobotListPro
       <CardHeader className="border-b border-slate-200 p-4">
         <CardTitle className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-slate-600">
           <Bot className="h-4 w-4" />
-          Robots
+          {t('robots.title')}
         </CardTitle>
       </CardHeader>
 
@@ -66,7 +68,7 @@ export function RobotList({ robots, selectedRobotId, onViewRobot }: RobotListPro
         <div className="divide-y divide-slate-200">
           {robots && robots.length === 0 ? (
             <div className="p-4 text-slate-400 text-sm text-center">
-              No robots available
+              {t('robots.noRobots')}
             </div>
           ) : (
             robots.map((robot) => {
@@ -81,7 +83,7 @@ export function RobotList({ robots, selectedRobotId, onViewRobot }: RobotListPro
                 >
                   <div>
                     <p className="font-medium text-sm">{robot.name || robot.robotId}</p>
-                    <p className="text-xs text-slate-500">{robot.isOnLine ? "Online" : "Offline"}</p>
+                    <p className="text-xs text-slate-500">{robot.isOnLine ? t('robots.status.online') : t('robots.status.offline')}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-slate-400">{robot.battery}%</span>

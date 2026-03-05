@@ -3,6 +3,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { logout } from "@/lib/slices/AuthSlice";
+import { useTranslation } from "react-i18next";
 
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setSelectedBusinessId } from "@/lib/slices/BusinessSlice";
@@ -14,6 +15,7 @@ import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 export default function Navbar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const isManageBusinessesPage = location.pathname === ROUTES.BUSINESSES.PAGE;
 
@@ -54,7 +56,7 @@ export default function Navbar() {
                 <div className="flex items-center min-w-0 gap-2">
                   <Store className="h-4 w-4 text-slate-500 shrink-0" />
                   <span className="font-medium text-xs sm:text-sm md:text-base truncate">
-                    {selectedBusiness?.name || "Select Business"}
+                    {selectedBusiness?.name || t('nav.selectBusiness')}
                   </span>
                 </div>
                 <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
@@ -67,7 +69,7 @@ export default function Navbar() {
             >
               <div className="max-h-64 overflow-y-auto">
                 {businesses.length === 0 ? (
-                  <div className="px-2 py-2 text-sm text-slate-500">No businesses found</div>
+                  <div className="px-2 py-2 text-sm text-slate-500">{t('nav.noBusinesses')}</div>
                 ) : (
                   businesses.map((b) => (
                     <DropdownMenuItem
@@ -88,7 +90,7 @@ export default function Navbar() {
                   className="w-full mt-2 hover:cursor-pointer"
                   onClick={() => navigate(ROUTES.BUSINESSES.PAGE)}
                 >
-                  Manage Businesses
+                  {t('nav.manageBusinesses')}
                 </Button>
               )}
             </DropdownMenuContent>
@@ -120,14 +122,14 @@ export default function Navbar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="hover:cursor-pointer" onClick={() => navigate(ROUTES.USER.PROFILE)}>
-              <UserIcon className="mr-2 h-4 w-4" /> Profile
+              <UserIcon className="mr-2 h-4 w-4" /> {t('nav.profile')}
             </DropdownMenuItem>
             <DropdownMenuItem className="hover:cursor-pointer" onClick={() => navigate(ROUTES.USER.CHANGE_PASSWORD)}>
-              <KeyRound className="mr-2 h-4 w-4" /> Password
+              <KeyRound className="mr-2 h-4 w-4" /> {t('nav.password')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="hover:cursor-pointer text-red-600" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" /> Logout
+              <LogOut className="mr-2 h-4 w-4" /> {t('nav.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

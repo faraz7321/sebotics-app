@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertOctagon } from "lucide-react";
 import type { Robot } from "@/lib/types/RobotTypes";
+import { useTranslation } from "react-i18next";
 
 type EmergencyStopProps = {
   open: boolean;
@@ -22,6 +23,8 @@ export function EmergencyStopSheet({
   robots,
   onStop,
 }: EmergencyStopProps) {
+  const { t } = useTranslation();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -34,18 +37,18 @@ export function EmergencyStopSheet({
           border-t
           p-0
         "
-        >
+      >
         <DialogHeader className="p-4 border-b">
           <DialogTitle className="text-center text-red-600 flex items-center justify-center gap-2">
             <AlertOctagon className="h-5 w-5" />
-            Emergency Stop
+            {t('robots.emergencyStop')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="p-4 space-y-3 max-h-[50vh] overflow-y-auto">
           {robots.length === 0 ? (
             <div className="text-center text-sm text-slate-400">
-              No robots available
+              {t('robots.noRobots')}
             </div>
           ) : (
             robots.map((robot) => (
@@ -60,7 +63,7 @@ export function EmergencyStopSheet({
               >
                 <span>{robot.name || robot.robotId}</span>
                 <span className="text-xs text-slate-500">
-                  {robot.isOnLine ? "Online" : "Offline"}
+                  {robot.isOnLine ? t('robots.status.online') : t('robots.status.offline')}
                 </span>
               </Button>
             ))
@@ -73,7 +76,7 @@ export function EmergencyStopSheet({
             className="w-full hover:cursor-pointer hover:bg-slate-200"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('robots.actions.cancel')}
           </Button>
         </div>
       </DialogContent>
