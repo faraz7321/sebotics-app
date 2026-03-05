@@ -29,11 +29,8 @@ if (!apiBaseUrl) {
 export const API_BASE_URL = apiBaseUrl;
 
 const wsBaseUrl =
- normalizeUrl(import.meta.env.VITE_PUBLIC_WS_URL) ??
- normalizeUrl(runtimeConfig.WS_BASE_URL);
-
-if (!wsBaseUrl) {
-  throw new Error("VITE_PUBLIC_WS_URL (or runtime WS_BASE_URL) is required");
-}
+  normalizeUrl(import.meta.env.VITE_PUBLIC_WS_URL) ??
+  normalizeUrl(runtimeConfig.WS_BASE_URL) ??
+  "/ws/autoxing";
 
 export const WS_BASE_URL = wsBaseUrl;

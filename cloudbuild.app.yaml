@@ -32,10 +32,17 @@ steps:
           EXTRA_ARGS="$$EXTRA_ARGS --service-account=${_SERVICE_ACCOUNT}"
         fi
 
-        if [ -n "${_APP_API_BASE_URL}" ] || [ -n "${_APP_API_PROXY_TARGET}" ]; then
+        if [ -n "${_APP_API_BASE_URL}" ] || [ -n "${_APP_API_PROXY_TARGET}" ] || [ -n "${_APP_WS_BASE_URL}" ]; then
           ENV_VARS=""
           if [ -n "${_APP_API_BASE_URL}" ]; then
             ENV_VARS="VITE_PUBLIC_API_URL=${_APP_API_BASE_URL}"
+          fi
+          if [ -n "${_APP_WS_BASE_URL}" ]; then
+            if [ -n "$$ENV_VARS" ]; then
+              ENV_VARS="$$ENV_VARS,VITE_PUBLIC_WS_URL=${_APP_WS_BASE_URL}"
+            else
+              ENV_VARS="VITE_PUBLIC_WS_URL=${_APP_WS_BASE_URL}"
+            fi
           fi
           if [ -n "${_APP_API_PROXY_TARGET}" ]; then
             if [ -n "$$ENV_VARS" ]; then
@@ -77,3 +84,4 @@ substitutions:
   _SERVICE_ACCOUNT: "sebotics-ax-app-sa@sebotics.iam.gserviceaccount.com"
   _APP_API_BASE_URL: ""
   _APP_API_PROXY_TARGET: ""
+  _APP_WS_BASE_URL: "/ws/autoxing"
