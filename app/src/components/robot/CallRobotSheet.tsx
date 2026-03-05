@@ -10,6 +10,7 @@ import type { PointOfInterest } from "@/lib/types/MapTypes";
 import type { Robot } from "@/lib/types/RobotTypes";
 import { useAppSelector } from "@/store";
 import { Loader } from "../ui/loader";
+import { useTranslation } from "react-i18next";
 
 type CallRobotProps = {
   open: boolean;
@@ -19,16 +20,14 @@ type CallRobotProps = {
 };
 
 export function CallRobotSheet({ open, onOpenChange, onCall, selectedRobot }: CallRobotProps) {
+  const { t } = useTranslation();
   const robots = useAppSelector((state) => state.robot.robots);
   const { loading, pointsOfInterest } = useAppSelector((state) => state.map);
 
-  // Filter POIs based on whether a specific robot is selected
   const filteredPois = pointsOfInterest.filter((poi) => {
     if (selectedRobot) {
-      // If a specific robot is selected, only show POIs in that robot's area
       return poi.areaId === selectedRobot.areaId;
     } else {
-      // Otherwise, show POIs that match any robot's area
       return robots.some((robot) => robot.areaId === poi.areaId);
     }
   });
@@ -48,7 +47,7 @@ export function CallRobotSheet({ open, onOpenChange, onCall, selectedRobot }: Ca
       >
         <DialogHeader className="p-4 border-b">
           <DialogTitle className="text-center">
-            {selectedRobot ? `Call Robot ${selectedRobot.robotId}` : "Call Robot"}
+            {selectedRobot ? `${t('robots.actions.callTitle')} ${selectedRobot.robotId}` : t('robots.actions.callTitle')}
           </DialogTitle>
         </DialogHeader>
 
@@ -65,14 +64,14 @@ export function CallRobotSheet({ open, onOpenChange, onCall, selectedRobot }: Ca
                     onOpenChange(false);
                   }}
                 >
-                  <span>Type: {poi.type} {poi.name ? poi.name : "Unnamed"}</span>
+                  <span>{t('robots.actions.type')}: {poi.type} {poi.name ? poi.name : t('robots.actions.unnamed')}</span>
                 </Button>
               ))
             ) : (
               <div className="text-center text-sm text-slate-400">
-                No destinations available
+                {t('robots.actions.noDestinations')}
               </div>
-            )} 
+            )}
           </> : (
             <div>
               <Loader variant="container" />
@@ -86,7 +85,7 @@ export function CallRobotSheet({ open, onOpenChange, onCall, selectedRobot }: Ca
             className="w-full hover:cursor-pointer hover:bg-slate-200"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {t('robots.actions.cancel')}
           </Button>
         </div>
       </DialogContent>

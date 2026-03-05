@@ -2,9 +2,10 @@ import { listTasks, createTask, executeTask, cancelTask, createTaskv3 } from "@/
 import { TaskType, RunType, RouteMode, type CreateTaskRequest, DispatchType } from "@/lib/types/TaskTypes";
 import { PoiType, type PointOfInterest } from "@/lib/types/MapTypes";
 import type { AppDispatch } from "@/store";
+import { getCestTimestamp } from "@/lib/utils";
 
 export async function refreshTasks(dispatch: AppDispatch, businessId: string) {
-  const now = Date.now();
+  const now = getCestTimestamp();
   const twoHoursAgo = now - 2 * 60 * 60 * 1000;
   await dispatch(listTasks({
     businessId,

@@ -9,10 +9,12 @@ import { ArrowLeft, List } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/config/routes";
+import { useTranslation } from "react-i18next";
 
 export default function Businesses() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const users = useAppSelector((state) => state.user.users);
   const { businesses, selectedBusinessId } = useAppSelector(
     (state) => state.business
@@ -42,11 +44,11 @@ export default function Businesses() {
         <div className="pt-6 md:pt-10 flex justify-start">
           <Button
             variant="ghost"
-            className="hover:cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors rounded-xl"
+            className="hover:cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors rounded-xl font-bold"
             onClick={() => navigate(ROUTES.DASHBOARD.HOME)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+            {t('businessesPage.backToHome')}
           </Button>
         </div>
 
@@ -54,19 +56,19 @@ export default function Businesses() {
         <div className="max-w-7xl mx-auto pt-4 pb-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
           {/* LEFT — Businesses list */}
           <div className="col-span-1 lg:col-span-4 xl:col-span-4">
-            <Card className="border border-slate-200 shadow-xl shadow-slate-200/50 rounded-3xl h-[55vh] min-h-[320px] lg:h-[700px] flex flex-col bg-white overflow-hidden">
+            <Card className="border border-slate-200 shadow-xl shadow-slate-200/50 rounded-3xl h-[55vh] min-h-[320px] lg:h-[600px] flex flex-col bg-white overflow-hidden">
               <CardHeader className="border-b border-slate-100 p-6">
                 <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] flex items-center gap-2 text-slate-400">
                   <List className="h-4 w-4" />
-                  Businesses
+                  {t('businessesPage.title')}
                 </CardTitle>
               </CardHeader>
 
               <CardContent className="p-0 flex-1 overflow-y-auto relative">
                 <div className="divide-y divide-slate-100">
                   {businesses.length === 0 ? (
-                    <div className="p-8 text-slate-400 text-sm text-center italic">
-                      No businesses listed
+                    <div className="p-8 text-slate-400 text-sm text-center italic font-medium">
+                      {t('businessesPage.noBusinesses')}
                     </div>
                   ) : (
                     businesses.map((business: Business) => {
@@ -76,8 +78,8 @@ export default function Businesses() {
                         <div
                           key={business.id}
                           className={`cursor-pointer transition-all duration-200 ${isSelected
-                              ? "bg-blue-50 border-l-4 border-blue-600"
-                              : "hover:bg-slate-50 border-l-4 border-transparent"
+                            ? "bg-slate-100 border-l-4 border-slate-600"
+                            : "hover:bg-slate-50 border-l-4 border-transparent"
                             }`}
                           onClick={() =>
                             dispatch(
@@ -89,14 +91,13 @@ export default function Businesses() {
                         >
                           <div className="p-6 flex justify-between items-center">
                             <div>
-                              <p className={`font-bold text-sm ${isSelected ? 'text-blue-700' : 'text-slate-700'}`}>
+                              <p className={`font-bold text-sm text-slate-700`}>
                                 {business.name}
                               </p>
-                              <p className="text-xs text-slate-400 mt-1 line-clamp-1">{business.address || "No address"}</p>
+                              <p className="text-xs text-slate-400 mt-1 line-clamp-1 font-medium">{business.address || t('businessesPage.noAddress')}</p>
                             </div>
-                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
-                              }`}>
-                              {users.filter(u => business.userIds.includes(u.id)).length} Users
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-500`}>
+                              {users.filter(u => business.userIds.includes(u.id)).length} {t('businessesPage.users')}
                             </span>
                           </div>
                         </div>

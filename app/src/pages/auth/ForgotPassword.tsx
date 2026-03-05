@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Mail, KeyRound, ShieldCheck, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, KeyRound, ShieldCheck, Lock, Eye, EyeOff, Languages } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 // shadcn/ui components
 import { Button } from "@/components/ui/button";
@@ -37,8 +38,9 @@ function getInitialCooldownSeconds() {
 export default function ForgotPassword() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
 
-  const resetToken = useAppSelector(s => s.auth.resetToken); // Get reset token from Redux state
+  const resetToken = useAppSelector(s => s.auth.resetToken);
 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -47,8 +49,8 @@ export default function ForgotPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [isSubmitted, setIsSubmitted] = useState(false); // Step 1 -> 2
-  const [isVerified, setIsVerified] = useState(false);   // Step 2 -> 3
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState(getInitialCooldownSeconds);
@@ -79,14 +81,11 @@ export default function ForgotPassword() {
   }, [timeLeft]);
 
   function validatePassword(password: string) {
-    if (!password) return "Password is required";
-
-    if (password.length < 6) return "Password must be at least 6 characters";
-
+    if (!password) return t('auth.errors.passwordRequired');
+    if (password.length < 8) return t('auth.errors.passwordMin');
     return null;
   }
 
-  // Step 1: Request OTP
   const handleSubmitEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -96,24 +95,19 @@ export default function ForgotPassword() {
     if (forgotPassword.fulfilled.match(res)) {
       setIsLoading(false);
       setIsSubmitted(true);
-
       startOtpCooldown();
-
     } else {
       setIsLoading(false);
       startOtpCooldown();
-      alert("Failed to send OTP. Please try again.");
+      alert(t('auth.errors.otpFail'));
     }
   };
 
-  // Step 2: Submit OTP
   const handleSubmitOtp = (e: React.FormEvent) => {
     e.preventDefault();
-
     setIsVerified(true);
   };
 
-  // Step 2: Reset Password
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -124,58 +118,82 @@ export default function ForgotPassword() {
       return;
     }
 
+    if (newPassword !== confirmPassword) {
+      setIsLoading(false);
+      return;
+    }
+
     const res = await dispatch(resetPassword({ email, resetToken: resetToken!, otp: otp, newPassword }));
 
     if (resetPassword.fulfilled.match(res)) {
       setIsLoading(false);
       setIsPasswordUpdated(true);
-
       setNewPassword("");
       setConfirmPassword("");
-
       sessionStorage.removeItem('lastOTPResend');
 
       setTimeout(() => {
         navigate(ROUTES.AUTH.SIGN_IN);
       }, 3000);
-
     } else {
       setIsLoading(false);
     }
   };
 
+  const toggleLanguage = () => {
+    const nextLang = i18n.language.startsWith('de') ? 'en' : 'de';
+    void i18n.changeLanguage(nextLang);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4 relative">
+      {/* Language Toggle */}
+      <div className="absolute top-8 right-8 flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleLanguage}
+          className="rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-2 px-3 h-10 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold"
+        >
+          <Languages className="h-4 w-4" />
+          <span>{i18n.language.startsWith('de') ? 'Deutsch' : 'English'}</span>
+          <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md ml-1 uppercase">
+            {i18n.language.startsWith('de') ? 'DE' : 'EN'}
+          </span>
+        </Button>
+      </div>
+
       <Card className="w-full max-w-md border-none shadow-2xl shadow-slate-200/60 rounded-[2rem] overflow-hidden bg-white">
-        <CardContent className="p-8 lg:p-6">
+        <CardContent className="p-8 lg:p-10">
 
           {/* STEP 1: EMAIL ENTRY */}
           {!isSubmitted && !isVerified && (
             <div className="animate-in fade-in duration-300">
-              <header className="mb-2">
-                <div className="h-12 w-12 rounded-xl bg-[#059669]/10 text-[#0f172a] flex items-center justify-center mb-4">
-                  <KeyRound size={24} />
+              <header className="mb-8">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
+                  <KeyRound size={28} strokeWidth={2.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0f172a]">Reset Password</h3>
-                <p className="text-sm text-[#64748b] mt-1">Enter your email to receive a recovery code</p>
+                <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('auth.forgotPassword.title')}</h3>
+                <p className="text-sm text-slate-500 font-medium mt-1">{t('auth.forgotPassword.subtitle')}</p>
               </header>
-              <form className="space-y-4" onSubmit={handleSubmitEmail}>
+              <form className="space-y-6" onSubmit={handleSubmitEmail}>
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold ml-1 text-[#0f172a]">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={18} />
+                  <Label className="text-sm font-bold text-slate-700 ml-1">{t('auth.forgotPassword.emailLabel')}</Label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} strokeWidth={2.5} />
                     <Input
                       required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 h-12 rounded-xl bg-[#f8fafc] border-[#e2e8f0] focus-visible:ring-[#059669]/20"
+                      placeholder={t('auth.forgotPassword.emailPlaceholder')}
+                      className="pl-12 h-12 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all"
                     />
                   </div>
                 </div>
-                <Button disabled={isLoading || !canResendOtp} className="w-full h-12 rounded-xl font-bold bg-[#0f172a] hover:bg-[#1e293b] text-white">
-                  {isLoading ? "Sending..." : "Send Reset OTP"}
+                <Button disabled={isLoading || !canResendOtp} className="w-full h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800">
+                  {isLoading ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.sendCode')}
                 </Button>
                 {!canResendOtp && (
-                  <p className="w-full text-center text-sm text-[#64748b]">
-                    Wait for <b>{timeLeft} seconds</b> to request OTP again.
+                  <p className="w-full text-center text-xs text-slate-500 font-bold uppercase tracking-wider">
+                    {t('auth.forgotPassword.waitPrefix')} {timeLeft} {t('auth.forgotPassword.waitSuffix')}
                   </p>
                 )}
               </form>
@@ -185,20 +203,20 @@ export default function ForgotPassword() {
           {/* STEP 2: OTP VERIFICATION */}
           {isSubmitted && !isVerified && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
-              <header className="mb-6">
-                <div className="h-12 w-12 rounded-xl bg-[#059669]/10 text-[#0f172a] flex items-center justify-center mb-4">
-                  <ShieldCheck size={24} />
+              <header className="mb-8">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
+                  <ShieldCheck size={28} strokeWidth={2.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0f172a]">Input OTP</h3>
-                <p className="text-sm text-[#64748b] mt-1">If your email exists, an OTP was sent.</p>
+                <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('auth.forgotPassword.otpTitle')}</h3>
+                <p className="text-sm text-slate-500 font-medium mt-1">{t('auth.forgotPassword.otpSubtitle')}</p>
               </header>
-              <form className="space-y-4" onSubmit={handleSubmitOtp}>
+              <form className="space-y-6" onSubmit={handleSubmitOtp}>
                 <Input
                   maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  className="h-14 rounded-xl bg-[#f8fafc] border-[#e2e8f0] text-center text-2xl font-black tracking-[0.5em] focus-visible:ring-[#059669]/20"
+                  className="h-16 rounded-2xl bg-slate-50 border-slate-100 text-center text-3xl font-black tracking-[0.5em] focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all"
                 />
-                <Button disabled={isLoading || otp.length < 6} className="w-full h-12 rounded-xl font-bold bg-[#0f172a] hover:bg-[#1e293b] text-white">
-                  Next
+                <Button disabled={isLoading || otp.length < 6} className="w-full h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800">
+                  {t('auth.forgotPassword.verify')}
                 </Button>
               </form>
             </div>
@@ -207,60 +225,59 @@ export default function ForgotPassword() {
           {/* STEP 3: SET NEW PASSWORD */}
           {isVerified && (
             <div className="animate-in slide-in-from-right-4 duration-400">
-              <header className="mb-6">
-                <div className="h-12 w-12 rounded-xl bg-[#059669]/10 text-[#0f172a] flex items-center justify-center mb-4">
-                  <Lock size={24} />
+              <header className="mb-8">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
+                  <Lock size={28} strokeWidth={2.5} />
                 </div>
-                <h3 className="text-2xl font-bold text-[#0f172a]">New Password</h3>
-                <p className="text-sm text-[#64748b] mt-1">Set a secure password for your account</p>
+                <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('auth.forgotPassword.newPasswordTitle')}</h3>
+                <p className="text-sm text-slate-500 font-medium mt-1">{t('auth.forgotPassword.newPasswordSubtitle')}</p>
               </header>
               <form className="space-y-4" onSubmit={handleResetPassword}>
-                <div>
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold ml-1">New Password</Label>
-                    <div className="relative">
+                    <Label className="text-sm font-bold text-slate-700 ml-1">{t('auth.forgotPassword.passwordLabel')}</Label>
+                    <div className="relative group">
                       <Input
                         type={showPassword ? "text" : "password"} value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="h-12 rounded-xl bg-[#f8fafc] border-[#e2e8f0] focus-visible:ring-[#059669]/20"
+                        className="h-12 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all"
                       />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]">
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                        {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
                       </button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold ml-1">Confirm Password</Label>
-                    <div className="relative">
+                    <Label className="text-sm font-bold text-slate-700 ml-1">{t('auth.forgotPassword.confirmPasswordLabel')}</Label>
+                    <div className="relative group">
                       <Input
                         type={showConfirmPassword ? "text" : "password"} value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="h-12 rounded-xl bg-[#f8fafc] border-[#e2e8f0] focus-visible:ring-[#059669]/20"
+                        className="h-12 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all"
                       />
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]">
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                        {showConfirmPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
                       </button>
                     </div>
                   </div>
-
                 </div>
-                <Button disabled={isLoading || newPassword !== confirmPassword || !newPassword || isPasswordUpdated} className="w-full h-12 rounded-xl font-bold bg-[#0f172a] hover:bg-[#1e293b] text-white">
-                  {isLoading ? "Updating..." : "Update Password"}
+                <Button disabled={isLoading || newPassword !== confirmPassword || !newPassword || isPasswordUpdated} className="w-full h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800 mt-4">
+                  {isLoading ? t('auth.forgotPassword.updating') : t('auth.forgotPassword.submit')}
                 </Button>
                 {isPasswordUpdated && (
-                  <p className="w-full text-center text-sm text-[#64748b]">
-                    Successfully updated Password! Redirecting to signin...
+                  <p className="w-full text-center text-sm text-emerald-600 font-bold mt-4">
+                    {t('auth.forgotPassword.success')}
                   </p>
                 )}
               </form>
             </div>
           )}
 
-          <footer className="mt-10 text-center pt-2">
-            <p className="text-sm text-[#64748b] font-medium">
-              Remembered your password?{" "}
-              <Link to={ROUTES.AUTH.SIGN_IN} className="text-[#0f172a] font-bold hover:underline">
-                Sign In
+          <footer className="mt-10 text-center border-t border-slate-100 pt-6">
+            <p className="text-sm text-slate-500 font-bold">
+              {t('auth.forgotPassword.backPrompt')}{" "}
+              <Link to={ROUTES.AUTH.SIGN_IN} className="text-primary hover:text-primary/80 transition-colors ml-1">
+                {t('auth.forgotPassword.backToSignIn')}
               </Link>
             </p>
           </footer>
