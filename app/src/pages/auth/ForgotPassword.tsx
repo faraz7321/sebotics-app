@@ -12,6 +12,29 @@ import { ROUTES } from '@/config/routes';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { forgotPassword, resetPassword } from '@/lib/slices/AuthSlice';
 
+const OTP_COOLDOWN_SECONDS = 60;
+
+function getInitialCooldownSeconds() {
+  const lastResendTime = sessionStorage.getItem('lastOTPResend');
+  if (!lastResendTime) return 0;
+
+  const parsed = Number.parseInt(lastResendTime, 10);
+  if (Number.isNaN(parsed)) {
+    sessionStorage.removeItem('lastOTPResend');
+    return 0;
+  }
+
+  const elapsedMs = Date.now() - parsed;
+  const remainingMs = Math.max(0, OTP_COOLDOWN_SECONDS * 1000 - elapsedMs);
+
+  if (remainingMs <= 0) {
+    sessionStorage.removeItem('lastOTPResend');
+    return 0;
+  }
+
+  return Math.ceil(remainingMs / 1000);
+}
+
 export default function ForgotPassword() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -30,41 +53,32 @@ export default function ForgotPassword() {
   const [isVerified, setIsVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [canResendOtp, setCanResendOtp] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(getInitialCooldownSeconds);
   const [isPasswordUpdated, setIsPasswordUpdated] = useState(false);
+  const canResendOtp = timeLeft === 0;
+
+  const startOtpCooldown = () => {
+    sessionStorage.setItem('lastOTPResend', Date.now().toString());
+    setTimeLeft(OTP_COOLDOWN_SECONDS);
+  };
 
   useEffect(() => {
-    const lastResendTime = sessionStorage.getItem('lastOTPResend');
-    if (lastResendTime) {
-      const timeSinceLastResend = Date.now() - parseInt(lastResendTime);
-      const remainingTime = Math.max(0, 60000 - timeSinceLastResend);
-
-      if (remainingTime > 0) {
-        setTimeLeft(Math.ceil(remainingTime / 1000));
-        setCanResendOtp(false);
-      } else {
-        sessionStorage.removeItem('lastOTPResend');
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    if (timeLeft > 0) {
-      timer = setTimeout(() => {
-        setTimeLeft((t) => Math.max(0, t - 1));
-      }, 1000);
-    } else if (!canResendOtp) {
-      setCanResendOtp(true);
-      sessionStorage.removeItem('lastOTPResend');
+    if (timeLeft <= 0) {
+      return undefined;
     }
 
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [timeLeft, canResendOtp]);
+    const timer = window.setTimeout(() => {
+      setTimeLeft((current) => {
+        const next = Math.max(0, current - 1);
+        if (next === 0) {
+          sessionStorage.removeItem('lastOTPResend');
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [timeLeft]);
 
   function validatePassword(password: string) {
     if (!password) return t('auth.errors.passwordRequired');
@@ -81,14 +95,10 @@ export default function ForgotPassword() {
     if (forgotPassword.fulfilled.match(res)) {
       setIsLoading(false);
       setIsSubmitted(true);
-      sessionStorage.setItem('lastOTPResend', Date.now().toString());
-      setTimeLeft(60);
-      setCanResendOtp(false);
+      startOtpCooldown();
     } else {
       setIsLoading(false);
-      sessionStorage.setItem('lastOTPResend', Date.now().toString());
-      setTimeLeft(60);
-      setCanResendOtp(false);
+      startOtpCooldown();
       alert(t('auth.errors.otpFail'));
     }
   };
