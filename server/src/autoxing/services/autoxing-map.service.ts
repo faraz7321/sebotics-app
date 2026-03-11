@@ -84,6 +84,10 @@ export class AutoxingMapService {
     return this.autoxingApiService.getAreaBaseMap(areaId);
   }
 
+  getMapMeta(areaId: string) {
+    return this.autoxingApiService.getMapMeta(areaId);
+  }
+
   async getRobotDeployInfo(user: JwtUser, robotId: string) {
     const response = await this.autoxingApiService.getRobotDeployInfo(robotId);
     await this.assertDeployDataAccess(user, response.data);

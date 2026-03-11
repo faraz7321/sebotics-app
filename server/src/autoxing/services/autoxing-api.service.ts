@@ -131,6 +131,10 @@ export class AutoxingApiService {
     return this.getBinary(`/map/v1.1/area/${areaId}/base-map`);
   }
 
+  getMapMeta(areaId: string) {
+    return this.get(`/map/v1.1/area/${areaId}/map-meta`);
+  } 
+
   getRobotDeployInfo(robotId: string) {
     return this.get(`/map/v1.1/robot/${robotId}/deploy`);
   }
