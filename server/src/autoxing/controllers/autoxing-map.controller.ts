@@ -76,7 +76,9 @@ export class AutoxingMapController {
   @ApiOkResponse({ type: AutoxingBaseMapResponseDto })
   async getAreaBaseMap(@Param('areaId') areaId: string) {
     const { buffer } = await this.autoxingMapService.getAreaBaseMap(areaId);
+    const mapMeta = await this.autoxingMapService.getMapMeta(areaId);
     return {
+      mapMeta: mapMeta.data,
       base64: buffer.toString('base64'),
     };
   }
