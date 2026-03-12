@@ -41,7 +41,7 @@ export default function Businesses() {
     <div className="h-full overflow-y-auto bg-slate-50/50">
       <div className="max-w-[1600px] mx-auto relative px-4 md:px-10">
         {/* Back Button - Positioned to the side */}
-        <div className="pt-6 md:pt-10 flex justify-start">
+        <div className="hidden md:block pt-6 md:pt-10 flex justify-start">
           <Button
             variant="ghost"
             className="hover:cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors rounded-xl font-bold"

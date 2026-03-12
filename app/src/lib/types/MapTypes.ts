@@ -44,9 +44,35 @@ export type PointOfInterest = {
   yaw: number;
 }
 
+export type Area = {
+  buildingId: string;
+  businessId: string;
+
+  createTime: number;
+  floor: number;
+  floorName: string;
+  id: string;
+  name: string;
+  updateTime: number;
+  version: string;
+}
+
+export interface MapMeta {
+  originX: number;
+  originY: number;
+  pixelHeight: number;
+  pixelWidth: number;
+  resolution: number;
+}
+
+
 export interface MapState {
   loading: boolean;
   error: string | null;
 
   pointsOfInterest: PointOfInterest[];
+  areas: Area[];
+
+  baseMap: string | null;
+  mapMeta: MapMeta | null;
 }

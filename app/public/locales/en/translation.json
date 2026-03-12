@@ -296,5 +296,14 @@
     "noUsersAvailable": "No users available",
     "assign": "Assign",
     "unassign": "Unassign"
+  },
+  "maps": {
+    "areas": "Areas",
+    "noAreasFound": "No areas found",
+    "unnamedArea": "Unnamed Area",
+    "floor": "Floor",
+    "viewport": "Viewport",
+    "noAreaSelected": "No Area Selected",
+    "pickAreaDescription": "Pick an area from the left panel to display the map."
   }
 }

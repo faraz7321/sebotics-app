@@ -16,6 +16,9 @@ export const ROUTES = {
   BUSINESSES: {
     PAGE: "/businesses",
   },
+  MAPS: {
+    PAGE: "/maps",
+  },
 } as const;
 
 export const API_ENDPOINTS = {
@@ -43,6 +46,10 @@ export const API_ENDPOINTS = {
   MAP: {
     POINTS_OF_INTEREST: {
       LIST: "/autoxing/maps/pois/list",
+    },
+    AREAS: {
+      LIST: "/autoxing/maps/areas/list",
+      BASE_MAP: "/autoxing/maps/areas/{areaId}/base-map",
     },
   },
   TASK: {

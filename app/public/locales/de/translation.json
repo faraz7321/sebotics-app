@@ -296,5 +296,14 @@
     "noUsersAvailable": "Keine Benutzer verfügbar",
     "assign": "Zuweisen",
     "unassign": "Entfernen"
+  },
+  "maps": {
+    "areas": "Bereiche",
+    "noAreasFound": "Keine Bereiche gefunden",
+    "unnamedArea": "Unbenannter Bereich",
+    "floor": "Etage",
+    "viewport": "Ansicht",
+    "noAreaSelected": "Kein Bereich ausgewählt",
+    "pickAreaDescription": "Wählen Sie einen Bereich im linken Panel, um die Karte anzuzeigen."
   }
 }

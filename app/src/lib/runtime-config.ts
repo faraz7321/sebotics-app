@@ -1,6 +1,7 @@
 type RuntimeConfig = {
   API_BASE_URL?: string;
   WS_BASE_URL?: string;
+  MAPBOX_TOKEN?: string;
 };
 
 function normalizeUrl(value: string | undefined | null) {
@@ -34,3 +35,13 @@ const wsBaseUrl =
   "/ws/autoxing";
 
 export const WS_BASE_URL = wsBaseUrl;
+
+const mapboxToken =
+  import.meta.env.VITE_MAPBOX_TOKEN ??
+  runtimeConfig.MAPBOX_TOKEN;
+
+if (!mapboxToken) {
+  throw new Error("VITE_MAPBOX_TOKEN (or runtime MAPBOX_TOKEN) is required");
+}
+
+export const MAPBOX_TOKEN = mapboxToken;
