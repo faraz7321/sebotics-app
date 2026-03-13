@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { MailerModule } from './mailer/mailer.module';
+import { ConfigController } from './config/config.controller';
 
 function readPositiveInt(configService: ConfigService, key: string, fallback: number) {
   const raw = configService.get<string>(key);
@@ -21,6 +22,7 @@ function readPositiveInt(configService: ConfigService, key: string, fallback: nu
 }
 
 @Module({
+  controllers: [ConfigController],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
