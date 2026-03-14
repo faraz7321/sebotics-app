@@ -1,4 +1,3 @@
-import { MAPBOX_TOKEN } from '@/lib/config';
 import React, { useMemo, useRef, useEffect } from 'react';
 import Map, {
   Source,
@@ -17,6 +16,7 @@ interface IndoorMapProps {
   mapMeta: MapMeta;
   points: PointOfInterest[];
   robots: Robot[];
+  mapboxToken: string;
 }
 
 const darkEmptyStyle: StyleSpecification = {
@@ -39,7 +39,7 @@ const worldLat = 37.7750;
 const metersPerLat = 111320;
 const metersPerLng = 111320 * Math.cos(worldLat * Math.PI / 180);
 
-export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMeta, robots }) => {
+export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMeta, robots, mapboxToken }) => {
   const mapRef = useRef<MapRef>(null);
 
   // Calculate coordinates based on map metadata
@@ -157,7 +157,7 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
       }}
       style={{ width: '100%', height: '100%' }}
       mapStyle={darkEmptyStyle}
-      mapboxAccessToken={MAPBOX_TOKEN}
+      mapboxAccessToken={mapboxToken}
       attributionControl={false}
       maxBounds={bounds}
       maxPitch={0}

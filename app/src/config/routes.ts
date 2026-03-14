@@ -22,6 +22,9 @@ export const ROUTES = {
 } as const;
 
 export const API_ENDPOINTS = {
+  CONFIG: {
+    MAPBOX_TOKEN: "/config/mapbox-token",
+  },
   AUTH: {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",

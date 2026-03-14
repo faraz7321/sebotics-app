@@ -6,11 +6,14 @@ import { MapIcon, ChevronRight, ArrowLeft, Map as MapIcon2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/config/routes";
+import { API_ENDPOINTS, ROUTES } from "@/config/routes";
 import { useTranslation } from "react-i18next";
 import { IndoorMap } from "@/components/map/IndoorMap";
 import { listRobots } from "@/lib/slices/RobotSlice";
 import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
+
+import api from '@/lib/api/axios';
+
 
 export default function Maps() {
   const dispatch = useAppDispatch();
@@ -23,6 +26,17 @@ export default function Maps() {
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const selectedBusinessPoints = pointsOfInterest.filter(poi => poi.areaId === selectedAreaId);
   const selectedBusinessRobots = robots.filter(robot => robot.areaId === selectedAreaId);
+  const [mapboxToken, setMapboxToken] = useState<string>('');
+
+  useEffect(() => {
+    api.get(API_ENDPOINTS.CONFIG.MAPBOX_TOKEN)
+      .then(res => {
+        setMapboxToken(res.data.token);
+      })
+      .catch(err => {
+        console.error('Failed to fetch mapbox token:', err);
+      });
+  }, []);
 
   useEffect(() => {
     if (!businessId) return;
@@ -201,13 +215,18 @@ export default function Maps() {
                 {/* STATE 2: Area Selected & Map Ready */}
                 {!loading && selectedAreaId && baseMap ? (
                   <div className="absolute inset-0 w-full h-full animate-in fade-in duration-500">
-                    {mapMeta && (
+                    {mapMeta && mapboxToken ? (
                       <IndoorMap
                         mapMeta={mapMeta}
                         base64Image={baseMap}
                         points={selectedBusinessPoints}
                         robots={selectedBusinessRobots}
+                        mapboxToken={mapboxToken}
                       />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 z-20">
+                        <Loader variant="container" />
+                      </div>
                     )}
                   </div>
                 ) : !loading && !selectedAreaId ? (
