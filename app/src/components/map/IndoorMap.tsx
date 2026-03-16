@@ -3,6 +3,7 @@ import Map, {
   Source,
   Layer,
   NavigationControl,
+  Popup,
   type MapRef,
   type LngLatBoundsLike
 } from 'react-map-gl/mapbox';
@@ -10,6 +11,9 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { type StyleSpecification } from 'mapbox-gl';
 import { type PointOfInterest, type MapMeta } from "@/lib/types/MapTypes";
 import type { Robot } from '@/lib/types/RobotTypes';
+import { Button } from '../ui/button';
+import { Label } from '../ui/label';
+import { useTranslation } from 'react-i18next';
 
 interface IndoorMapProps {
   base64Image: string;
@@ -17,6 +21,7 @@ interface IndoorMapProps {
   points: PointOfInterest[];
   robots: Robot[];
   mapboxToken: string;
+  onRobotSend: (poi: PointOfInterest) => void;
 }
 
 const darkEmptyStyle: StyleSpecification = {
@@ -39,8 +44,26 @@ const worldLat = 37.7750;
 const metersPerLat = 111320;
 const metersPerLng = 111320 * Math.cos(worldLat * Math.PI / 180);
 
-export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMeta, robots, mapboxToken }) => {
+export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMeta, robots, mapboxToken, onRobotSend }) => {
+  const { t } = useTranslation();
+
   const mapRef = useRef<MapRef>(null);
+
+  const [cursor, setCursor] = React.useState<string>('grab');
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  const onMouseEnter = () => setCursor('pointer');
+  const onMouseLeave = () => setCursor('grab');
+
+  const handleMouseDown = () => setIsDragging(true);
+  const handleMouseUp = () => setIsDragging(false);
+
+  const currentCursor = isDragging ? 'grabbing' : cursor;
+
+  const [selectedPoi, setSelectedPoi] = React.useState<{
+    poi: PointOfInterest;
+    coordinates: [number, number];
+  } | null>(null);
 
   // Calculate coordinates based on map metadata
   const { dynamicCoordinates, center, bounds } = useMemo(() => {
@@ -146,6 +169,24 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
     ? base64Image
     : `data:image/png;base64,${base64Image}`;
 
+  const handleMapClick = (event: any) => {
+    const feature = event.features && event.features[0];
+
+    if (feature) {
+      const clickedId = feature.properties.id;
+      const originalPoi = points.find(p => p.id === clickedId);
+
+      if (originalPoi) {
+        setSelectedPoi({
+          poi: originalPoi,
+          coordinates: feature.geometry.coordinates as [number, number]
+        });
+      }
+    } else {
+      setSelectedPoi(null);
+    }
+  };
+
   return (
     <Map
       ref={mapRef}
@@ -158,6 +199,13 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
       style={{ width: '100%', height: '100%' }}
       mapStyle={darkEmptyStyle}
       mapboxAccessToken={mapboxToken}
+      cursor={currentCursor}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onClick={handleMapClick}
+      interactiveLayerIds={['poi-circles']}
       attributionControl={false}
       maxBounds={bounds}
       maxPitch={0}
@@ -190,8 +238,18 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
           id="poi-circles"
           type="circle"
           paint={{
-            'circle-radius': 4,
-            'circle-color': '#3b82f6',
+            'circle-radius': [
+              'case',
+              ['==', ['get', 'id'], selectedPoi?.poi.id || ''],
+              8,
+              5
+            ],
+            'circle-color': [
+              'case',
+              ['==', ['get', 'id'], selectedPoi?.poi.id || ''],
+              '#ef4444',
+              '#3b82f6'
+            ],
             'circle-stroke-width': 2,
             'circle-stroke-color': '#ffffff'
           }}
@@ -269,6 +327,41 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
           }}
         />
       </Source>
+
+      {selectedPoi && (
+        <Popup
+          longitude={selectedPoi.coordinates[0]}
+          latitude={selectedPoi.coordinates[1]}
+          anchor="bottom"
+          onClose={() => setSelectedPoi(null)}
+          closeOnClick={false}
+          offset={15}
+          className="min-w-[160px] rounded-lg border bg-popover text-popover-foreground shadow-md outline-none"
+        >
+          <div className="flex flex-col space-y-1.5">
+            <div className="flex items-center justify-between gap-4">
+              <Label className="font-semibold">
+                {selectedPoi.poi.name}
+              </Label>
+            </div>
+            <p className="text-[10px] text-muted-foreground font-mono">
+              ID: {selectedPoi.poi.id}
+            </p>
+          </div>
+
+          <div className="my-2 h-[1px] bg-border" />
+
+          <div className="flex flex-col gap-2">
+            <Button
+              size="sm"
+              className="w-full h-8 text-xs hover:cursor-pointer bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => onRobotSend(selectedPoi.poi)}
+            >
+              {t('robots.call')}
+            </Button>
+          </div>
+        </Popup>
+      )}
     </Map>
   );
 };

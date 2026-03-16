@@ -32,6 +32,7 @@ import { PoiType } from "@/lib/types/MapTypes";
 import type { Robot } from "@/lib/types/RobotTypes";
 import { useTranslation } from "react-i18next";
 import { getCestTimestamp } from "@/lib/utils";
+import { getIdleRobot, getOnlineRobot } from "@/lib/helpers/robotHelpers";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
@@ -41,7 +42,7 @@ export default function Dashboard() {
   const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
   const tasks = useAppSelector((state) => state.task.tasks);
   const pois = useAppSelector((state) => state.map.pointsOfInterest);
-  const filteredrobots = robots.filter((r) => r.businessId === selectedBusinessId);
+  const selectedBusinessRobots = robots.filter((r) => r.businessId === selectedBusinessId);
 
   useEffect(() => {
     const getBusinesses = async () => {
@@ -128,19 +129,6 @@ export default function Dashboard() {
     return dock;
   }
 
-  const getIdleRobot = () => {
-    const idleRobot = filteredrobots.find(
-      (robot) => robot.isOnLine && !robot.isTask && !robot.isCharging
-    );
-    return idleRobot?.robotId;
-  };
-
-  const getOnlineRobot = () => {
-    const onlineRobot = filteredrobots.find((robot) => robot.isOnLine);
-
-    return onlineRobot?.robotId;
-  };
-
   const handleReturnToDock = (robot: Robot) => {
     const chargingDock = getChargingDock(robot);
     if (!chargingDock) {
@@ -183,7 +171,7 @@ export default function Dashboard() {
         {/* LEFT PANEL - ROBOTS */}
         <div className="lg:col-span-4">
           <RobotList
-            robots={filteredrobots}
+            robots={selectedBusinessRobots}
             selectedRobotId={selectedRobotForView?.robotId}
             onViewRobot={(robot) => {
               setSelectedRobotForView(robot);
@@ -247,7 +235,7 @@ export default function Dashboard() {
             dispatch: dispatch,
             businessId: selectedBusinessId!,
             poi: poi,
-            robotId: selectedRobotForCall?.robotId || getIdleRobot() || getOnlineRobot() || "",
+            robotId: selectedRobotForCall?.robotId || getIdleRobot(selectedBusinessRobots) || getOnlineRobot(selectedBusinessRobots) || "",
             execute: true,
             isV3: true
           });
@@ -257,7 +245,7 @@ export default function Dashboard() {
       <EmergencyStopSheet
         open={stopOpen}
         onOpenChange={setStopOpen}
-        robots={filteredrobots}
+        robots={selectedBusinessRobots}
         onStop={(robotId) => handleEmergencyStop(robotId)}
       />
 
