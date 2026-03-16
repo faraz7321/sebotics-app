@@ -5,23 +5,23 @@ export class RegisterDto {
   @ApiProperty({
     description: 'First name',
     type: String,
-    maxLength: 10,
+    maxLength: 20,
     example: 'John',
   })
   @IsString()
   @MinLength(1)
-  @MaxLength(10)
+  @MaxLength(20)
   firstName!: string;
 
   @ApiProperty({
     description: 'Last name',
     type: String,
-    maxLength: 10,
+    maxLength: 20,
     example: 'Doe',
   })
   @IsString()
   @MinLength(1)
-  @MaxLength(10)
+  @MaxLength(20)
   lastName!: string;
 
   @ApiProperty({
@@ -39,13 +39,13 @@ export class RegisterDto {
     description: 'Username for the new account',
     type: String,
     minLength: 1,
-    maxLength: 8,
+    maxLength: 20,
     pattern: '^[A-Za-z0-9]+$',
     example: 'john123',
   })
   @IsString()
   @MinLength(1)
-  @MaxLength(8)
+  @MaxLength(20)
   @Matches(/^[A-Za-z0-9]+$/, {
     message: 'username must contain only letters and numbers',
   })
