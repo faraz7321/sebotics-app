@@ -29,6 +29,7 @@ jobs:
       GCP_APP_RUNTIME_SA: ${{ vars.GCP_APP_RUNTIME_SA || secrets.GCP_APP_RUNTIME_SA }}
       GCP_CLOUDSQL_CONNECTION: ${{ vars.GCP_CLOUDSQL_CONNECTION || secrets.GCP_CLOUDSQL_CONNECTION }}
       GCP_DATABASE_URL_SECRET: ${{ vars.GCP_DATABASE_URL_SECRET || secrets.GCP_DATABASE_URL_SECRET }}
+      GCP_MAPBOX_TOKEN: ${{ vars.GCP_MAPBOX_TOKEN || secrets.GCP_MAPBOX_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,6 +51,7 @@ jobs:
               "GCP_APP_RUNTIME_SA",
               "GCP_CLOUDSQL_CONNECTION",
               "GCP_DATABASE_URL_SECRET",
+              "GCP_MAPBOX_TOKEN",
           ]
 
           env_file = os.environ["GITHUB_ENV"]
@@ -179,6 +181,10 @@ jobs:
 
           if [ -n "${GCP_CLOUDSQL_CONNECTION}" ]; then
             substitutions+=("_CLOUDSQL_CONNECTION=${GCP_CLOUDSQL_CONNECTION}")
+          fi
+
+          if [ -n "${GCP_MAPBOX_TOKEN}" ]; then
+            substitutions+=("_MAPBOX_TOKEN_SECRET=${GCP_MAPBOX_TOKEN}")
           fi
 
           gcloud builds submit . \
