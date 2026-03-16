@@ -13,6 +13,9 @@ import { listRobots } from "@/lib/slices/RobotSlice";
 import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 import api from '@/lib/api/axios';
+import type { PointOfInterest } from "@/lib/types/MapTypes";
+import { handleCreateTask } from "@/lib/tasks/taskHandlers";
+import { getIdleRobot, getOnlineRobot } from "@/lib/helpers/robotHelpers";
 
 
 export default function Maps() {
@@ -20,13 +23,15 @@ export default function Maps() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const businessId = useAppSelector((state) => state.business.selectedBusinessId);
-  const { areas, pointsOfInterest, loading, baseMap, mapMeta } = useAppSelector((state) => state.map);
+  const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
   const { robots } = useAppSelector((state) => state.robot);
+  const { areas, pointsOfInterest, loading, baseMap, mapMeta } = useAppSelector((state) => state.map);
+
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string>('');
+
   const selectedBusinessPoints = pointsOfInterest.filter(poi => poi.areaId === selectedAreaId);
   const selectedBusinessRobots = robots.filter(robot => robot.areaId === selectedAreaId);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
 
   useEffect(() => {
     api.get(API_ENDPOINTS.CONFIG.MAPBOX_TOKEN)
@@ -39,12 +44,13 @@ export default function Maps() {
   }, []);
 
   useEffect(() => {
-    if (!businessId) return;
+    if (!selectedBusinessId) return;
+    setSelectedAreaId(null);
 
     const getAreas = async () => {
-      if (!businessId) return;
+      if (!selectedBusinessId) return;
       try {
-        await dispatch(listAreas(businessId));
+        await dispatch(listAreas(selectedBusinessId));
       } catch (error) {
         console.error('Error fetching areas:', error);
       }
@@ -52,7 +58,7 @@ export default function Maps() {
 
     const getPointsOfInterest = async () => {
       try {
-        await dispatch(listPointsOfInterest(businessId));
+        await dispatch(listPointsOfInterest(selectedBusinessId));
       } catch (error) {
         console.error('Error fetching points of interest:', error);
       }
@@ -70,7 +76,7 @@ export default function Maps() {
     getAreas();
     getPointsOfInterest();
     getRobots();
-  }, [businessId, dispatch]);
+  }, [selectedBusinessId, dispatch]);
 
   // Handle real-time robot updates
   useEffect(() => {
@@ -96,8 +102,6 @@ export default function Maps() {
     };
   }, [robots]);
 
-
-
   const handleViewMap = async (id: string) => {
     setSelectedAreaId(id);
     try {
@@ -107,8 +111,19 @@ export default function Maps() {
     }
   };
 
+  const handleCallRobot = async (poi: PointOfInterest) => {
+    handleCreateTask({
+      dispatch: dispatch,
+      businessId: selectedBusinessId!,
+      poi: poi,
+      robotId: getIdleRobot(selectedBusinessRobots) || getOnlineRobot(selectedBusinessRobots) || "",
+      execute: true,
+      isV3: true
+    });
+  };
+
   return (
-    <div key={businessId} className="h-full overflow-y-auto bg-slate-50/50 pb-12">
+    <div key={selectedBusinessId} className="h-full overflow-y-auto bg-slate-50/50 pb-12">
       <div className="max-w-[1600px] mx-auto relative px-4 md:px-10">
 
         {/* Back Button */}
@@ -222,6 +237,7 @@ export default function Maps() {
                         points={selectedBusinessPoints}
                         robots={selectedBusinessRobots}
                         mapboxToken={mapboxToken}
+                        onRobotSend={handleCallRobot}
                       />
                     ) : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 z-20">
