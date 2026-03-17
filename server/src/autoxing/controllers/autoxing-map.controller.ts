@@ -83,6 +83,19 @@ export class AutoxingMapController {
     };
   }
 
+  @Get('areas/:areaId/base-map-hd')
+  @ApiOperation({ summary: 'Proxy Autoxing area HD (1080p) base-map endpoint (base64 encoded)' })
+  @ApiParam({ name: 'areaId', type: String })
+  @ApiOkResponse({ type: AutoxingBaseMapResponseDto })
+  async getAreaBaseMapHD(@Param('areaId') areaId: string) {
+    const { buffer } = await this.autoxingMapService.getAreaBaseMapHD(areaId);
+    const mapMeta = await this.autoxingMapService.getMapMeta(areaId);
+    return {
+      mapMeta: mapMeta.data,
+      base64: buffer.toString('base64'),
+    };
+  }
+
   @Get('robots/:robotId/deploy')
   @ApiOperation({ summary: 'Proxy Autoxing robot deployment endpoint' })
   @ApiParam({ name: 'robotId', type: String })

@@ -84,6 +84,10 @@ export class AutoxingMapService {
     return this.autoxingApiService.getAreaBaseMap(areaId);
   }
 
+  getAreaBaseMapHD(areaId: string) {
+    return this.autoxingApiService.getAreaBaseMapHD(areaId);
+  }
+
   getMapMeta(areaId: string) {
     return this.autoxingApiService.getMapMeta(areaId);
   }

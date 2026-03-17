@@ -26,9 +26,10 @@ The server Cloud Run service expects:
 - `SEBOTICS_AX_AUTOXING_APP_ID`
 - `SEBOTICS_AX_AUTOXING_APP_SECRET`
 - `SEBOTICS_AX_AUTOXING_APP_CODE`
+- `SEBOTICS_AX_MAPBOX_TOKEN`
 
-These are mapped to runtime env vars (`DATABASE_URL`, `JWT_SECRET`, etc.) in
-`cloudbuild.server.yaml` substitution `_SECRETS`.
+These are mapped to runtime env vars (`DATABASE_URL`, `JWT_SECRET`, `MAPBOX_TOKEN`, etc.) in
+`cloudbuild.server.yaml` substitution `_SECRETS` and `_MAPBOX_TOKEN_SECRET`.
 
 ## GitHub repository secrets
 
@@ -51,6 +52,8 @@ Set these in `Settings > Secrets and variables > Actions > Variables`.
 - `GCP_SERVER_RUNTIME_SA` (default: `sebotics-ax-server-sa@sebotics.iam.gserviceaccount.com`)
 - `GCP_APP_RUNTIME_SA` (default: `sebotics-ax-app-sa@sebotics.iam.gserviceaccount.com`)
 - `GCP_CLOUDSQL_CONNECTION` (optional, `PROJECT:REGION:INSTANCE`)
+- `GCP_DATABASE_URL_SECRET` (GCP Secret Manager secret name for `DATABASE_URL`)
+- `GCP_MAPBOX_TOKEN` (GCP Secret Manager secret name for `MAPBOX_TOKEN`, e.g. `SEBOTICS_AX_MAPBOX_TOKEN`)
 - `GCP_API_BASE_URL` (default: `https://ax-server.sebotics.com/api`)
 - `GCP_APP_PUBLIC_URL` (default: `https://ax-app.sebotics.com`)
 - `GCP_SERVER_CORS_ORIGIN` (default: `https://ax-app.sebotics.com`)

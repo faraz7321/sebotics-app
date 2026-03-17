@@ -131,6 +131,39 @@ export class AutoxingApiService {
     return this.getBinary(`/map/v1.1/area/${areaId}/base-map`);
   }
 
+  async getAreaBaseMapHD(areaId: string) {
+    const appCode = process.env.AUTOXING_APP_CODE?.trim();
+    if (!appCode) {
+      throw new Error('AUTOXING_APP_CODE is required');
+    }
+
+    const url = `${this.baseUrl}/geo/area/${areaId}/base-map/1080`;
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: appCode.startsWith('APPCODE') ? appCode : `APPCODE ${appCode}`,
+        },
+      });
+    } catch (error) {
+      this.logger.error('Autoxing HD base-map request failed', { areaId, error });
+      throw new BadGatewayException('Autoxing request failed');
+    }
+
+    if (!response.ok) {
+      const body = await response.text();
+      this.logger.error(`Autoxing HD base-map request failed: ${response.status}`, body);
+      throw new BadGatewayException('Autoxing request failed');
+    }
+
+    return {
+      contentType: response.headers.get('content-type') ?? 'application/octet-stream',
+      buffer: Buffer.from(await response.arrayBuffer()),
+    };
+  }
+
   getMapMeta(areaId: string) {
     return this.get(`/map/v1.1/area/${areaId}/map-meta`);
   } 
