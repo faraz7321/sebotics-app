@@ -15,11 +15,11 @@ type ViewTaskProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task: Task | null;
-  onExecuteTask: (taskId: string) => void;
+  // onExecuteTask: (taskId: string) => void;
   onCancelTask: (taskId: string) => void;
 };
 
-export default function ViewTaskSheet({ open, onOpenChange, task, onExecuteTask, onCancelTask }: ViewTaskProps) {
+export default function ViewTaskSheet({ open, onOpenChange, task, onCancelTask }: ViewTaskProps) {
   const { t } = useTranslation();
   if (!task) return null;
 
@@ -100,15 +100,15 @@ export default function ViewTaskSheet({ open, onOpenChange, task, onExecuteTask,
                   <Play className="h-3 w-3" />
                   {t('tasks.details.commands')}
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
+                <div className="grid gap-2">
+                  {/*<Button
                     variant="outline"
                     className="h-10 text-xs hover:cursor-pointer border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 font-bold rounded-lg flex items-center gap-2 transition-all active:scale-95 shadow-sm"
                     onClick={() => onExecuteTask(task.taskId)}
                   >
                     <Play className="h-3.5 w-3.5" />
                     {t('tasks.actions.execute')}
-                  </Button>
+                  </Button>*/}
                   <Button
                     variant="outline"
                     className="h-10 text-xs hover:cursor-pointer border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 font-bold rounded-lg flex items-center gap-2 transition-all active:scale-95 shadow-sm"

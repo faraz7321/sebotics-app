@@ -25,7 +25,6 @@ import type { Task } from "@/lib/types/TaskTypes";
 
 import {
   handleCreateTask,
-  handleExecuteTask,
   handleCancelTask,
 } from "@/lib/tasks/taskHandlers";
 import { PoiType } from "@/lib/types/MapTypes";
@@ -261,9 +260,9 @@ export default function Dashboard() {
         open={taskOpen}
         onOpenChange={setTaskOpen}
         task={selectedTask}
-        onExecuteTask={(taskId) =>
-          handleExecuteTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
-        }
+        //onExecuteTask={(taskId) =>
+        // handleExecuteTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
+        //}
         onCancelTask={(taskId) =>
           handleCancelTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
         }
