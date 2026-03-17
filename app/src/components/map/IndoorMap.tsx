@@ -8,7 +8,7 @@ import Map, {
   type LngLatBoundsLike
 } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { type StyleSpecification } from 'mapbox-gl';
+import { MapMouseEvent, type StyleSpecification } from 'mapbox-gl';
 import { type PointOfInterest, type MapMeta } from "@/lib/types/MapTypes";
 import type { Robot } from '@/lib/types/RobotTypes';
 import { Button } from '../ui/button';
@@ -169,21 +169,24 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
     ? base64Image
     : `data:image/png;base64,${base64Image}`;
 
-  const handleMapClick = (event: any) => {
-    const feature = event.features && event.features[0];
+  const handleMapClick = (event: MapMouseEvent) => {
+    const features = event.target.queryRenderedFeatures(event.point);
+    const feature = features[0];
 
-    if (feature) {
-      const clickedId = feature.properties.id;
-      const originalPoi = points.find(p => p.id === clickedId);
-
-      if (originalPoi) {
-        setSelectedPoi({
-          poi: originalPoi,
-          coordinates: feature.geometry.coordinates as [number, number]
-        });
-      }
-    } else {
+    if (!feature || feature.geometry.type !== "Point") {
       setSelectedPoi(null);
+      return;
+    }
+
+    const props = feature.properties as { id: string };
+
+    const originalPoi = points.find(p => p.id === props.id);
+
+    if (originalPoi) {
+      setSelectedPoi({
+        poi: originalPoi,
+        coordinates: feature.geometry.coordinates as [number, number],
+      });
     }
   };
 
