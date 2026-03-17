@@ -30,6 +30,13 @@ export default function Maps() {
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string>('');
 
+  // Reset selected area when business changes
+  const [prevBusinessId, setPrevBusinessId] = useState(selectedBusinessId);
+  if (selectedBusinessId !== prevBusinessId) {
+    setPrevBusinessId(selectedBusinessId);
+    setSelectedAreaId(null);
+  }
+
   const selectedBusinessPoints = pointsOfInterest.filter(poi => poi.areaId === selectedAreaId);
   const selectedBusinessRobots = robots.filter(robot => robot.areaId === selectedAreaId);
 
@@ -45,7 +52,6 @@ export default function Maps() {
 
   useEffect(() => {
     if (!selectedBusinessId) return;
-    setSelectedAreaId(null);
 
     const getAreas = async () => {
       if (!selectedBusinessId) return;
