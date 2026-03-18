@@ -160,7 +160,7 @@ export type TaskPoint = {
 
 export interface CreateTaskRequest {
   name: string;
-  robotId: string;
+  robotId?: string;
   businessId?: string;
   routeMode: number;
   runMode?: RunMode;

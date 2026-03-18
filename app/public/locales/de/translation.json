@@ -176,6 +176,7 @@
     "actions": {
       "callTitle": "Roboter rufen",
       "callDesc": "Wählen Sie einen Zielort für den Roboter",
+      "callNow": "Roboter rufen (priorisiert)",
       "stopTitle": "Not-Aus",
       "stopDesc": "Alle Bewegungen des Roboters sofort stoppen",
       "confirmStop": "Stopp bestätigen",
@@ -262,6 +263,7 @@
     }
   },
   "common": {
+    "or": "Oder",
     "close": "Schließen",
     "cancel": "Abbrechen",
     "save": "Speichern",

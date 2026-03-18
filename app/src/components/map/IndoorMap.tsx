@@ -21,7 +21,7 @@ interface IndoorMapProps {
   points: PointOfInterest[];
   robots: Robot[];
   mapboxToken: string;
-  onRobotSend: (poi: PointOfInterest) => void;
+  onRobotSend: (poi: PointOfInterest, robotId?: string) => void;
 }
 
 const darkEmptyStyle: StyleSpecification = {
@@ -355,13 +355,62 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
           <div className="my-2 h-[1px] bg-border" />
 
           <div className="flex flex-col gap-2">
+            {/* Primary Action: Call to this POI */}
             <Button
               size="sm"
-              className="w-full h-8 text-xs hover:cursor-pointer bg-green-600 hover:bg-green-700 text-white"
+              className="w-full h-9 hover:cursor-pointer text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm transition-all active:scale-95"
               onClick={() => onRobotSend(selectedPoi.poi)}
             >
-              {t('robots.call')}
+              <div className="flex items-center gap-2">
+                {t('robots.call')}
+              </div>
             </Button>
+
+            {/* Robot Selection List */}
+            {robots && robots.length > 0 && (
+              <div>
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-slate-100" />
+                  </div>
+                  <div className="relative flex justify-center text-[10px] uppercase">
+                    <span className="bg-white px-2 text-slate-400 font-medium tracking-widest">
+                      {t('common.or')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="max-h-[120px] overflow-y-auto custom-scrollbar pr-1 space-y-1">
+                    {/* Logic: Filter first, then check length, then map */}
+                    {robots.filter((r) => r.isOnLine).length > 0 ? (
+                      robots
+                        .filter((robot) => robot.isOnLine)
+                        .map((robot) => (
+                          <Button
+                            key={robot.robotId}
+                            variant="outline" // Changed to outline to differentiate from the main call button
+                            size="sm"
+                            onClick={() => onRobotSend(selectedPoi.poi, robot.robotId)}
+                            className="w-full h-9 justify-start px-3 hover:cursor-pointer text-xs font-semibold border-slate-200 hover:border-green-500 hover:text-green-600 transition-all"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                              <span className="truncate">
+                                {robot.name || robot.robotId}
+                              </span>
+                            </div>
+                          </Button>
+                        ))
+                    ) : (
+                      <p className="text-[10px] text-slate-400 italic p-2 text-center">
+                        {t('robots.noRobots')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </Popup>
       )}
