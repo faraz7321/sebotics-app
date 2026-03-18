@@ -31,7 +31,6 @@ import { PoiType } from "@/lib/types/MapTypes";
 import type { Robot } from "@/lib/types/RobotTypes";
 import { useTranslation } from "react-i18next";
 import { getCestTimestamp } from "@/lib/utils";
-import { getIdleRobot, getOnlineRobot } from "@/lib/helpers/robotHelpers";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
@@ -91,11 +90,16 @@ export default function Dashboard() {
   const [stopOpen, setStopOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
+
+  const [priorityCall, setPriorityCall] = useState(false);
   const [selectedRobotForCall, setSelectedRobotForCall] = useState<Robot | null>(null);
   const [selectedRobotForView, setSelectedRobotForView] = useState<Robot | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const handleCallRobot = (robot: Robot) => {
+  const handleCallRobot = (robot: Robot, isPriority: boolean) => {
+    if (isPriority) {
+      setPriorityCall(true);
+    }
     setSelectedRobotForCall(robot);
     setCallOpen(true);
   };
@@ -141,6 +145,7 @@ export default function Dashboard() {
       poi: chargingDock,
       robotId: robot.robotId,
       execute: true,
+      priority: true, // immediately send to charging dock
       isV3: false
     });
   };
@@ -234,10 +239,12 @@ export default function Dashboard() {
             dispatch: dispatch,
             businessId: selectedBusinessId!,
             poi: poi,
-            robotId: selectedRobotForCall?.robotId || getIdleRobot(selectedBusinessRobots) || getOnlineRobot(selectedBusinessRobots) || "",
+            robotId: selectedRobotForCall?.robotId || "",
             execute: true,
+            priority: priorityCall,
             isV3: true
           });
+          setPriorityCall(false);
         }}
       />
 
@@ -252,7 +259,7 @@ export default function Dashboard() {
         open={viewOpen}
         onOpenChange={setViewOpen}
         robot={selectedRobotForView}
-        onCall={handleCallRobot}
+        onCall={(robot, isPriority) => handleCallRobot(robot, isPriority)}
         onReturnToDock={handleReturnToDock}
       />
 

@@ -15,8 +15,6 @@ import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 import api from '@/lib/api/axios';
 import type { PointOfInterest } from "@/lib/types/MapTypes";
 import { handleCreateTask } from "@/lib/tasks/taskHandlers";
-import { getIdleRobot, getOnlineRobot } from "@/lib/helpers/robotHelpers";
-
 
 export default function Maps() {
   const dispatch = useAppDispatch();
@@ -117,13 +115,14 @@ export default function Maps() {
     }
   };
 
-  const handleCallRobot = async (poi: PointOfInterest) => {
+  const handleCallRobot = async (poi: PointOfInterest, robotId?: string) => {
     handleCreateTask({
       dispatch: dispatch,
       businessId: selectedBusinessId!,
       poi: poi,
-      robotId: getIdleRobot(selectedBusinessRobots) || getOnlineRobot(selectedBusinessRobots) || "",
+      robotId: robotId || "",
       execute: true,
+      priority: robotId ? true : false,
       isV3: true
     });
   };

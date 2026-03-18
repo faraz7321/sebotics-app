@@ -27,20 +27,17 @@ export async function performTaskAction(
 }
 
 export async function handleCreateTask(
-  { dispatch, businessId, poi, robotId, execute = false, isV3 = true }:
+  { dispatch, businessId, poi, robotId, execute = false, priority = false, isV3 = true }:
     {
       dispatch: AppDispatch,
       businessId: string,
       poi: PointOfInterest,
       robotId?: string,
       execute: boolean,
+      priority: boolean,
       isV3: boolean
     }
 ) {
-  if (!robotId) {
-    console.warn("No robot available");
-    return;
-  }
 
   const config = getTaskConfigByPoi(poi.type as PoiType);
   if (!config) {
@@ -50,7 +47,7 @@ export async function handleCreateTask(
 
   const task: CreateTaskRequest = {
     name: `Go to ${poi.name || poi.id}`,
-    robotId,
+    robotId: robotId || "",
     businessId,
     ...config,
     taskPts: [
@@ -62,7 +59,7 @@ export async function handleCreateTask(
         })
       }
     ],
-    ...(isV3 && { dispatchType: DispatchType.Queue })
+    ...(isV3 && { dispatchType: priority ? DispatchType.Ordinary : DispatchType.Queue })
   };
 
   const actionCreator = isV3 ? createTaskv3 : createTask;

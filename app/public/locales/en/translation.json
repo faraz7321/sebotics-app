@@ -176,6 +176,7 @@
     "actions": {
       "callTitle": "Call Robot",
       "callDesc": "Select a target location for the robot",
+      "callNow": "Call Robot (priority)",
       "stopTitle": "Emergency Stop",
       "stopDesc": "Immediately stop all robot movements",
       "confirmStop": "Confirm Stop",
@@ -262,6 +263,7 @@
     }
   },
   "common": {
+    "or": "Or",
     "close": "Close",
     "cancel": "Cancel",
     "save": "Save",

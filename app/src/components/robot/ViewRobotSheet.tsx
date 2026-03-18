@@ -15,7 +15,7 @@ type ViewRobotProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   robot: Robot | null;
-  onCall: (robot: Robot) => void;
+  onCall: (robot: Robot, isPriority: boolean) => void;
   onReturnToDock: (robot: Robot) => void;
 };
 
@@ -40,16 +40,16 @@ export default function ViewRobotSheet({ open, onOpenChange, robot, onCall, onRe
       >
         <div className="flex flex-col h-full bg-white">
           <DialogHeader className="p-6 border-b bg-slate-50 shrink-0">
-            <DialogTitle className="flex items-center gap-3 text-xl font-bold">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
               <Bot className="h-6 w-6 text-blue-600" />
               {t('robots.details.title')}
             </DialogTitle>
-            <div className="text-sm text-slate-500 mt-1 uppercase font-bold tracking-widest text-[10px]">
+            <div className="text-sm text-slate-500 uppercase font-bold tracking-widest text-[10px]">
               {t('robots.details.serial')}: <span className="font-mono text-[11px] bg-white border border-slate-200 px-2 py-0.5 rounded-lg ml-1 text-slate-700">{robot.robotId}</span>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 p-5 space-y-6 overflow-hidden flex flex-col">
+          <div className="flex-1 p-3 space-y-6 overflow-hidden flex flex-col">
             {/* Status Grid */}
             <section className="shrink-0">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
@@ -86,7 +86,7 @@ export default function ViewRobotSheet({ open, onOpenChange, robot, onCall, onRe
                 <Info className="h-3 w-3" />
                 {t('robots.details.machineData')}
               </h3>
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3 overflow-y-auto">
+              <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 space-y-2 overflow-y-auto">
                 <DetailRow label={t('robots.details.displayName')} value={robot.name || t('common.none')} />
                 <DetailRow label={t('robots.details.hardwareModel')} value={robot.model || t('common.na')} />
                 <DetailRow label={t('robots.details.mac')} value={robot.mac} isMono />
@@ -121,7 +121,7 @@ export default function ViewRobotSheet({ open, onOpenChange, robot, onCall, onRe
                 <Button
                   variant="outline"
                   className="h-10 text-xs hover:cursor-pointer border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-all font-bold rounded-lg shadow-sm active:scale-95"
-                  onClick={() => onCall(robot)}
+                  onClick={() => onCall(robot, false)} // queued call
                 >
                   {t('robots.actions.callTitle')}
                 </Button>
@@ -131,6 +131,15 @@ export default function ViewRobotSheet({ open, onOpenChange, robot, onCall, onRe
                   onClick={() => onReturnToDock(robot)}
                 >
                   {t('robots.actions.docking')}
+                </Button>
+              </div>
+              <div className="grid p-2">
+                <Button
+                  variant="outline"
+                  className="h-10 text-xs hover:cursor-pointer border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all font-bold rounded-lg shadow-sm active:scale-95"
+                  onClick={() => onCall(robot, true)} // priority call
+                >
+                  {t('robots.actions.callNow')}
                 </Button>
               </div>
             </section>
