@@ -133,7 +133,7 @@ jobs:
           docker run -d --name sebotics-ax-sql-proxy \
             -p 127.0.0.1:6543:5432 \
             gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.18.2 \
-            --verbose \
+            --debug-logs \
             --token "${ACCESS_TOKEN}" \
             --address 0.0.0.0 \
             "${GCP_CLOUDSQL_CONNECTION}" >/dev/null
@@ -148,12 +148,12 @@ jobs:
           cd server
           npm ci
 
-          for i in $(seq 1 30); do
+          for i in $(seq 1 10); do
             if DATABASE_URL="${DATABASE_URL}" npx prisma db execute --stdin <<<'SELECT 1;' >/dev/null 2>&1; then
               echo "Cloud SQL proxy is ready."
               break
             fi
-            echo "Waiting for Cloud SQL proxy/DB... ($i/30)"
+            echo "Waiting for Cloud SQL proxy/DB... ($i/10)"
             sleep 2
           done
 
