@@ -199,7 +199,7 @@ export default function SignIn() {
 
             <Button
               disabled={isLoading}
-              className="w-full h-12 rounded-2xl text-md font-bold shadow-lg shadow-primary/20 mt-4 active:scale-[0.98] transition-all"
+              className="w-full h-12 hover:cursor-pointer rounded-2xl text-md font-bold shadow-lg shadow-primary/20 mt-4 active:scale-[0.98] transition-all"
             >
               {isLoading ? (
                 t('auth.signIn.signingIn')

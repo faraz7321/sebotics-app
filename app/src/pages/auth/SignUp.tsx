@@ -250,7 +250,7 @@ export default function SignUp() {
 
             <Button
               disabled={isLoading}
-              className="w-full h-12 rounded-2xl text-md font-bold shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-all"
+              className="w-full h-12 hover:cursor-pointer rounded-2xl text-md font-bold shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-all"
             >
               {isLoading ? t('auth.signUp.creatingAccount') : <>{t('auth.signUp.submit')} <ArrowRight className="ml-2 h-5 w-5" /></>}
             </Button>

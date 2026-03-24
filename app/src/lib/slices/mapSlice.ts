@@ -50,6 +50,8 @@ export const getBaseMap = createAsyncThunk(
 
 const initialState: MapState = {
   loading: false,
+  areasLoading: false,
+  mapLoading: false,
   error: null,
 
   pointsOfInterest: [],
@@ -87,24 +89,29 @@ const mapSlice = createSlice({
       // List Areas
       .addCase(listAreas.pending, (state) => {
         state.loading = true;
+        state.areasLoading = true;
       })
       .addCase(listAreas.fulfilled, (state, action) => {
         state.loading = false;
+        state.areasLoading = false;
         state.error = null;
 
         state.areas = action.payload.data.list;
       })
       .addCase(listAreas.rejected, (state, action) => {
         state.loading = false;
+        state.areasLoading = false;
         state.error = action.payload as string;
       })
 
       // Get Base Map
       .addCase(getBaseMap.pending, (state) => {
         state.loading = true;
+        state.mapLoading = true;
       })
       .addCase(getBaseMap.fulfilled, (state, action) => {
         state.loading = false;
+        state.mapLoading = false;
         state.error = null;
 
         state.baseMap = action.payload.base64;
@@ -112,6 +119,7 @@ const mapSlice = createSlice({
       })
       .addCase(getBaseMap.rejected, (state, action) => {
         state.loading = false;
+        state.mapLoading = false;
         state.error = action.payload as string;
       })
   },

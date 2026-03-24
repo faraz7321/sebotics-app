@@ -68,6 +68,8 @@ export interface MapMeta {
 
 export interface MapState {
   loading: boolean;
+  areasLoading: boolean;
+  mapLoading: boolean;
   error: string | null;
 
   pointsOfInterest: PointOfInterest[];
