@@ -3,7 +3,6 @@ import {
   ChevronDown,
   LogOut,
   UserIcon,
-  KeyRound,
   MapIcon,
   Menu,
   LayoutDashboard,
@@ -241,9 +240,6 @@ export default function Navbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate(ROUTES.USER.PROFILE)}>
                   <UserIcon className="mr-3 h-4 w-4 text-slate-500" /> {t('nav.profile')}
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer py-3" onClick={() => navigate(ROUTES.USER.CHANGE_PASSWORD)}>
-                  <KeyRound className="mr-3 h-4 w-4 text-slate-500" /> {t('nav.password')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer py-3 text-red-600 focus:bg-red-50 focus:text-red-600" onClick={handleLogout}>

@@ -113,7 +113,7 @@ export default function SignIn() {
           variant="ghost"
           size="sm"
           onClick={toggleLanguage}
-          className="rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-2 px-3 h-10 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold"
+          className="rounded-xl bg-white hover:cursor-pointer border border-slate-200 shadow-sm flex items-center gap-2 px-3 h-10 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold"
         >
           <Languages className="h-4 w-4" />
           <span>{i18n.language.startsWith('de') ? 'Deutsch' : 'English'}</span>
