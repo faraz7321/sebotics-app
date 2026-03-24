@@ -130,7 +130,7 @@ jobs:
 
           docker rm -f sebotics-ax-sql-proxy >/dev/null 2>&1 || true
 
-          docker run -d --rm --name sebotics-ax-sql-proxy \
+          docker run -d --name sebotics-ax-sql-proxy \
             -p 127.0.0.1:6543:5432 \
             gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.18.2 \
             --verbose \
@@ -156,6 +156,13 @@ jobs:
             echo "Waiting for Cloud SQL proxy/DB... ($i/30)"
             sleep 2
           done
+
+          # If we never became ready, show proxy logs and fail clearly
+          if ! docker ps --format '{{.Names}}' | grep -q '^sebotics-ax-sql-proxy$'; then
+            echo "Cloud SQL proxy container is not running. Logs:"
+            docker logs sebotics-ax-sql-proxy || true
+            exit 1
+          fi
 
           # Final check (and show logs if it fails)
           DATABASE_URL="${DATABASE_URL}" npx prisma db execute --stdin <<<'SELECT 1;' >/dev/null
