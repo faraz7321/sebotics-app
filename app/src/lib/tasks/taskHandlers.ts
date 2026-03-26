@@ -75,6 +75,56 @@ export async function handleCreateTask(
   }
 }
 
+export async function handleCreateMultiPointTask(
+  { dispatch, businessId, pois, robotId, execute = false, priority = false, isV3 = true }:
+    {
+      dispatch: AppDispatch,
+      businessId: string,
+      pois: PointOfInterest[],
+      robotId?: string,
+      execute: boolean,
+      priority: boolean,
+      isV3: boolean
+    }
+) {
+  // For multi-point tasks, we only support ShelfPoint POIs
+  const hasNonShelfPoint = pois.some(p => p.type !== PoiType.ShelfPoint);
+  if (hasNonShelfPoint) {
+    console.warn("Multi-point tasks are only supported for ShelfPoint POIs");
+    return;
+  }
+
+  const task: CreateTaskRequest = {
+    name: `Drop Off: ${pois.map(p => p.name || p.id).join(' -> ')}`,
+    robotId: robotId || "",
+    businessId,
+    // Hardcoded config for multi-point ShelfPoint tasks
+    routeMode: RouteMode.ShortestDistanceRouting,
+    taskType: TaskType.Factory,
+    runType: RunType.Lifting,
+    taskPts: pois.map(poi => ({
+      areaId: poi.areaId || "",
+      poiId: poi.id,
+      ...(isV3 && {
+        ext: { name: poi.name || "", id: poi.id }
+      })
+    })),
+    ...(isV3 && { dispatchType: priority ? DispatchType.Ordinary : DispatchType.Queue })
+  };
+
+  const actionCreator = isV3 ? createTaskv3 : createTask;
+  const response = await dispatch(actionCreator(task));
+
+  if (actionCreator.fulfilled.match(response)) {
+    if (execute) {
+      await dispatch(executeTask(response.payload.data.taskId));
+    }
+    await refreshTasks(dispatch, businessId);
+  } else {
+    console.error(`Failed to create multi-point task ${isV3 ? 'v3' : 'v1'}`, response.payload);
+  }
+}
+
 export async function handleExecuteTask(
   { dispatch, businessId, taskId }:
     { dispatch: AppDispatch, businessId: string, taskId: string }) {
@@ -104,10 +154,11 @@ function getTaskConfigByPoi(type: PoiType) {
       taskType: TaskType.Restaurant,
       runType: RunType.Return,
     },
+    // Single-point task config for ShelfPoint
     [PoiType.ShelfPoint]: {
       routeMode: RouteMode.ShortestDistanceRouting,
-      taskType: TaskType.Factory,
-      runType: RunType.Lifting,
+      taskType: TaskType.Delivery,
+      runType: RunType.DirectDelivery,
     },
   };
 

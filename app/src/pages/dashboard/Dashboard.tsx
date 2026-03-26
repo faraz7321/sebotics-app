@@ -1,6 +1,7 @@
 import {
   AlertOctagon,
   Zap,
+  Package,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { fetchUser, listUsers } from "@/lib/slices/UserSlice";
 
 import { CallRobotSheet } from "@/components/robot/CallRobotSheet";
 import { EmergencyStopSheet } from "@/components/robot/EmergencyStopSheet";
+import { DropOffSheet } from "@/components/robot/DropOffSheet";
 import ViewRobotSheet from "@/components/robot/ViewRobotSheet";
 
 import { listRobots } from "@/lib/slices/RobotSlice";
@@ -25,6 +27,7 @@ import type { Task } from "@/lib/types/TaskTypes";
 
 import {
   handleCreateTask,
+  handleCreateMultiPointTask,
   handleCancelTask,
 } from "@/lib/tasks/taskHandlers";
 import { PoiType } from "@/lib/types/MapTypes";
@@ -87,6 +90,7 @@ export default function Dashboard() {
   }, [selectedBusinessId, dispatch]);
 
   const [callOpen, setCallOpen] = useState(false);
+  const [dropOffOpen, setDropOffOpen] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
@@ -203,17 +207,28 @@ export default function Dashboard() {
       {/* BOTTOM ACTION BAR */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-4">
         <div className="border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
             <Button
               disabled={!selectedBusinessId}
               onClick={() => {
                 setSelectedRobotForCall(null);
                 setCallOpen(true);
               }}
-              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed transition-all"
+              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-blue-300 disabled:hover:bg-blue-300 disabled:cursor-not-allowed transition-all"
             >
               <Zap className="h-5 w-5" />
               {t('dashboard.callRobot')}
+            </Button>
+
+            <Button
+              disabled={!selectedBusinessId}
+              onClick={() => {
+                setDropOffOpen(true);
+              }}
+              className="h-12 md:h-14 rounded-xl bg-orange-700 hover:bg-orange-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed transition-all"
+            >
+              <Package className="h-5 w-5" />
+              {t('dashboard.dropOff', 'Drop Off')}
             </Button>
 
             <Button
@@ -245,6 +260,21 @@ export default function Dashboard() {
             isV3: true
           });
           setPriorityCall(false);
+        }}
+      />
+
+      <DropOffSheet
+        open={dropOffOpen}
+        onOpenChange={setDropOffOpen}
+        onDropOff={(pickup, dropoff) => {
+          handleCreateMultiPointTask({
+            dispatch: dispatch,
+            businessId: selectedBusinessId!,
+            pois: [pickup, dropoff],
+            execute: true,
+            priority: false,
+            isV3: true
+          });
         }}
       />
 
