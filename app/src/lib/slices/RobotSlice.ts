@@ -76,7 +76,7 @@ const robotSlice = createSlice({
 
         const robot = action.payload.data;
 
-        state.robots = state.robots.map(r => r.robotId === robot.robotId ? robot : r);
+        state.robots = state.robots.map(r => r.robotId === robot.robotId ? { ...r, ...robot } : r);
       })
       .addCase(getRobot.rejected, (state, action) => {
         state.loading = false;

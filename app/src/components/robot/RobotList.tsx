@@ -10,9 +10,7 @@ import {
 } from "@/components/ui/card";
 
 import type { Robot } from "@/lib/types/RobotTypes";
-import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 import { useAppDispatch } from "@/store";
 import { getRobot } from "@/lib/slices/RobotSlice";
 import { useTranslation } from "react-i18next";
@@ -25,32 +23,11 @@ interface RobotListProps {
 
 export function RobotList({ robots, selectedRobotId, onViewRobot }: RobotListProps) {
   const dispatch = useAppDispatch();
+
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (robots.length === 0) return;
-
-    // Connect socket if not already connected
-    if (!robotStateSocket.isConnected()) {
-      robotStateSocket.connect();
-    }
-
-    if (!taskStateSocket.isConnected()) {
-      taskStateSocket.connect();
-    }
-
-    // Subscribe to all robots in the list
-    robots.forEach((robot) => {
-      robotStateSocket.subscribe(robot.robotId);
-      taskStateSocket.subscribe(robot.robotId);
-    });
-
-  }, [robots]);
-
   const handleViewRobot = async (robot: Robot) => {
-    if (robot.isOnLine) {
-      await dispatch(getRobot(robot.robotId));
-    }
+    await dispatch(getRobot(robot.robotId));
 
     onViewRobot(robot);
   };

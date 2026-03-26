@@ -10,11 +10,11 @@ import { API_ENDPOINTS, ROUTES } from "@/config/routes";
 import { useTranslation } from "react-i18next";
 import { IndoorMap } from "@/components/map/IndoorMap";
 import { listRobots } from "@/lib/slices/RobotSlice";
-import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 import api from '@/lib/api/axios';
 import type { PointOfInterest } from "@/lib/types/MapTypes";
 import { handleCreateTask } from "@/lib/tasks/taskHandlers";
+import type { Robot } from "@/lib/types/RobotTypes";
 
 export default function Maps() {
   const dispatch = useAppDispatch();
@@ -23,7 +23,7 @@ export default function Maps() {
 
   const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
   const { robots } = useAppSelector((state) => state.robot);
-  const { areas, pointsOfInterest, loading, baseMap, mapMeta } = useAppSelector((state) => state.map);
+  const { areas, pointsOfInterest, areasLoading, mapLoading, baseMap, mapMeta } = useAppSelector((state) => state.map);
 
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string>('');
@@ -35,8 +35,8 @@ export default function Maps() {
     setSelectedAreaId(null);
   }
 
-  const selectedBusinessPoints = pointsOfInterest.filter(poi => poi.areaId === selectedAreaId);
-  const selectedBusinessRobots = robots.filter(robot => robot.areaId === selectedAreaId);
+  const selectedBusinessPoints = pointsOfInterest.filter((poi: PointOfInterest) => poi.areaId === selectedAreaId);
+  const selectedBusinessRobots = robots.filter((robot: Robot) => robot.areaId === selectedAreaId);
 
   useEffect(() => {
     api.get(API_ENDPOINTS.CONFIG.MAPBOX_TOKEN)
@@ -81,30 +81,6 @@ export default function Maps() {
     getPointsOfInterest();
     getRobots();
   }, [selectedBusinessId, dispatch]);
-
-  // Handle real-time robot updates
-  useEffect(() => {
-    if (robots.length === 0) return;
-
-    if (!robotStateSocket.isConnected()) {
-      robotStateSocket.connect();
-    }
-    if (!taskStateSocket.isConnected()) {
-      taskStateSocket.connect();
-    }
-
-    robots.forEach((robot) => {
-      robotStateSocket.subscribe(robot.robotId);
-      taskStateSocket.subscribe(robot.robotId);
-    });
-
-    return () => {
-      robots.forEach((robot) => {
-        robotStateSocket.unsubscribe(robot.robotId);
-        taskStateSocket.unsubscribe(robot.robotId);
-      });
-    };
-  }, [robots]);
 
   const handleViewMap = async (id: string) => {
     setSelectedAreaId(id);
@@ -157,12 +133,12 @@ export default function Maps() {
               </CardHeader>
 
               <CardContent className="p-0 flex-1 overflow-y-auto relative custom-scrollbar">
-                {loading && areas.length === 0 ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                {areasLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10 animate-in fade-in duration-300">
                     <Loader variant="container" />
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     {areas.length === 0 ? (
                       <div className="p-8 text-slate-400 text-sm text-center italic font-medium">
                         {t('maps.noAreasFound')}
@@ -225,15 +201,15 @@ export default function Maps() {
               </CardHeader>
 
               <CardContent className="flex-1 p-0 relative bg-slate-50/30 overflow-hidden">
-                {/* STATE 1: Loading Map Data */}
-                {loading && selectedAreaId && (
+                {/* STATE 1: Loaders */}
+                {(mapLoading) && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 z-20 animate-in fade-in">
                     <Loader variant="container" />
                   </div>
                 )}
 
                 {/* STATE 2: Area Selected & Map Ready */}
-                {!loading && selectedAreaId && baseMap ? (
+                {!mapLoading && selectedAreaId && baseMap ? (
                   <div className="absolute inset-0 w-full h-full animate-in fade-in duration-500">
                     {mapMeta && mapboxToken ? (
                       <IndoorMap
@@ -250,7 +226,7 @@ export default function Maps() {
                       </div>
                     )}
                   </div>
-                ) : !loading && !selectedAreaId ? (
+                ) : !mapLoading && !areasLoading && !selectedAreaId ? (
                   /* STATE 3: No Area Selected */
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
                     <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 mb-8 transform transition-transform hover:scale-105">

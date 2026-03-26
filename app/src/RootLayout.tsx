@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "./store";
 import { refreshToken } from "./lib/slices/AuthSlice";
 import { listBusinesses } from "./lib/slices/BusinessSlice";
+import { useRobotSockets } from "./lib/hooks/useRobotSockets";
 
 export default function RootLayout() {
   const dispatch = useAppDispatch();
@@ -14,6 +15,9 @@ export default function RootLayout() {
   const businessLoading = useAppSelector((state) => state.business.loading);
   const businessesLoaded = useAppSelector((state) => state.business.hasLoaded);
   const keepLoggedIn = localStorage.getItem("keepLoggedIn") === "true";
+  
+  // Manage robot state sockets
+  useRobotSockets();
 
   useEffect(() => {
     const bootstrapSession = async () => {

@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { assignBusiness, unassignBusiness } from "@/lib/slices/BusinessSlice";
 import { useTranslation } from "react-i18next";
+import type { User } from "@/lib/types/UserTypes";
+import { ROLES } from "@/config/constants";
 
 type Props = {
   businessName: string;
@@ -73,7 +75,7 @@ export function ManageUsersModal({
           {users.length === 0 ? (
             <p className="text-sm text-slate-400 font-medium text-center py-8">{t('businessPanel.noUsersAvailable')}</p>
           ) : (
-            users.map((user) => {
+            users.filter((user: User) => user.role === ROLES.CLIENT).map((user: User) => {
               const isAssigned = assignedUsers.includes(user.id);
               return (
                 <div

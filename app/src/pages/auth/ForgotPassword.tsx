@@ -153,7 +153,7 @@ export default function ForgotPassword() {
           variant="ghost"
           size="sm"
           onClick={toggleLanguage}
-          className="rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-2 px-3 h-10 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold"
+          className="rounded-xl hover:cursor-pointer bg-white border border-slate-200 shadow-sm flex items-center gap-2 px-3 h-10 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold"
         >
           <Languages className="h-4 w-4" />
           <span>{i18n.language.startsWith('de') ? 'Deutsch' : 'English'}</span>
@@ -188,7 +188,7 @@ export default function ForgotPassword() {
                     />
                   </div>
                 </div>
-                <Button disabled={isLoading || !canResendOtp} className="w-full h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800">
+                <Button disabled={isLoading || !canResendOtp} className="w-full h-12 rounded-2xl hover:cursor-pointer font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800">
                   {isLoading ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.sendCode')}
                 </Button>
                 {!canResendOtp && (
@@ -215,7 +215,7 @@ export default function ForgotPassword() {
                   maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   className="h-16 rounded-2xl bg-slate-50 border-slate-100 text-center text-3xl font-black tracking-[0.5em] focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all"
                 />
-                <Button disabled={isLoading || otp.length < 6} className="w-full h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800">
+                <Button disabled={isLoading || otp.length < 6} className="w-full h-12 hover:cursor-pointer rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800">
                   {t('auth.forgotPassword.verify')}
                 </Button>
               </form>
@@ -261,7 +261,7 @@ export default function ForgotPassword() {
                     </div>
                   </div>
                 </div>
-                <Button disabled={isLoading || newPassword !== confirmPassword || !newPassword || isPasswordUpdated} className="w-full h-12 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800 mt-4">
+                <Button disabled={isLoading || newPassword !== confirmPassword || !newPassword || isPasswordUpdated} className="w-full h-12 rounded-2xl hover:cursor-pointer font-bold shadow-lg shadow-primary/20 transition-all bg-slate-900 hover:bg-slate-800 mt-4">
                   {isLoading ? t('auth.forgotPassword.updating') : t('auth.forgotPassword.submit')}
                 </Button>
                 {isPasswordUpdated && (

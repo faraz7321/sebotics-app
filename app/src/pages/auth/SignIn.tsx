@@ -113,7 +113,7 @@ export default function SignIn() {
           variant="ghost"
           size="sm"
           onClick={toggleLanguage}
-          className="rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-2 px-3 h-10 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold"
+          className="rounded-xl bg-white hover:cursor-pointer border border-slate-200 shadow-sm flex items-center gap-2 px-3 h-10 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold"
         >
           <Languages className="h-4 w-4" />
           <span>{i18n.language.startsWith('de') ? 'Deutsch' : 'English'}</span>
@@ -199,7 +199,7 @@ export default function SignIn() {
 
             <Button
               disabled={isLoading}
-              className="w-full h-12 rounded-2xl text-md font-bold shadow-lg shadow-primary/20 mt-4 active:scale-[0.98] transition-all"
+              className="w-full h-12 hover:cursor-pointer rounded-2xl text-md font-bold shadow-lg shadow-primary/20 mt-4 active:scale-[0.98] transition-all"
             >
               {isLoading ? (
                 t('auth.signIn.signingIn')

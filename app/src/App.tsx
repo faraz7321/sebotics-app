@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { ROUTES } from './config/routes';
 import { AdminRoute, ProtectedRoute, PublicRoute } from './components/auth/AuthGuards';
 
@@ -23,7 +23,7 @@ function App() {
   const isAuthLoading = useAppSelector((state) => state.auth.loading);
 
   return (
-    <BrowserRouter>
+    <Router>
       {isAuthLoading && <Loader variant="fullscreen" />}
       <Routes>
 
@@ -61,7 +61,7 @@ function App() {
         } />
 
       </Routes>
-    </BrowserRouter >
+    </Router >
   );
 }
 
