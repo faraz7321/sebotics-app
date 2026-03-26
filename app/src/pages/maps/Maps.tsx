@@ -10,11 +10,11 @@ import { API_ENDPOINTS, ROUTES } from "@/config/routes";
 import { useTranslation } from "react-i18next";
 import { IndoorMap } from "@/components/map/IndoorMap";
 import { listRobots } from "@/lib/slices/RobotSlice";
-import { robotStateSocket, taskStateSocket } from "@/lib/ws/stateSockets";
 
 import api from '@/lib/api/axios';
 import type { PointOfInterest } from "@/lib/types/MapTypes";
 import { handleCreateTask } from "@/lib/tasks/taskHandlers";
+import type { Robot } from "@/lib/types/RobotTypes";
 
 export default function Maps() {
   const dispatch = useAppDispatch();
@@ -35,8 +35,8 @@ export default function Maps() {
     setSelectedAreaId(null);
   }
 
-  const selectedBusinessPoints = pointsOfInterest.filter(poi => poi.areaId === selectedAreaId);
-  const selectedBusinessRobots = robots.filter(robot => robot.areaId === selectedAreaId);
+  const selectedBusinessPoints = pointsOfInterest.filter((poi: PointOfInterest) => poi.areaId === selectedAreaId);
+  const selectedBusinessRobots = robots.filter((robot: Robot) => robot.areaId === selectedAreaId);
 
   useEffect(() => {
     api.get(API_ENDPOINTS.CONFIG.MAPBOX_TOKEN)
@@ -81,30 +81,6 @@ export default function Maps() {
     getPointsOfInterest();
     getRobots();
   }, [selectedBusinessId, dispatch]);
-
-  // Handle real-time robot updates
-  useEffect(() => {
-    if (robots.length === 0) return;
-
-    if (!robotStateSocket.isConnected()) {
-      robotStateSocket.connect();
-    }
-    if (!taskStateSocket.isConnected()) {
-      taskStateSocket.connect();
-    }
-
-    robots.forEach((robot) => {
-      robotStateSocket.subscribe(robot.robotId);
-      taskStateSocket.subscribe(robot.robotId);
-    });
-
-    return () => {
-      robots.forEach((robot) => {
-        robotStateSocket.unsubscribe(robot.robotId);
-        taskStateSocket.unsubscribe(robot.robotId);
-      });
-    };
-  }, [robots]);
 
   const handleViewMap = async (id: string) => {
     setSelectedAreaId(id);
