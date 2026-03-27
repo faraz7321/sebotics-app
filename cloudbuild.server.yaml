@@ -61,6 +61,7 @@ steps:
           --region "${_REGION}" \
           --platform managed \
           --port 8080 \
+          --session-affinity \
           $$EXTRA_ARGS
 
 images:
@@ -79,7 +80,7 @@ substitutions:
   _CPU: "1"
   _MEMORY: "512Mi"
   _CONCURRENCY: "80"
-  _TIMEOUT: "300s"
+  _TIMEOUT: "3600s"
   _MIN_INSTANCES: "0"
   _MAX_INSTANCES: "20"
   _INGRESS: "all"
