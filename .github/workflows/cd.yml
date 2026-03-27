@@ -221,7 +221,7 @@ jobs:
             "_APP_SERVICE=${GCP_APP_SERVICE}"
             "_IMAGE_TAG=${GITHUB_SHA}"
             "_APP_API_BASE_URL=/api"
-            "_APP_WS_BASE_URL=/ws/autoxing
+            "_APP_WS_BASE_URL=/ws/autoxing"
             "_APP_API_PROXY_TARGET=${API_PROXY_TARGET}"
           )
 
