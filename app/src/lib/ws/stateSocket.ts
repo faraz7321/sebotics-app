@@ -4,11 +4,12 @@ type MessageHandler = (data: unknown) => void;
 
 export class StateSocket {
   private socket: WebSocket | null = null;
-  private baseUrl = WS_BASE_URL;
+  private readonly baseUrl = WS_BASE_URL;
 
   private subscribeAction: string;
   private unsubscribeAction: string;
   private onMessage: MessageHandler;
+  private getToken: (() => string | null) | null;
 
   private subscriptions = new Set<string>();
   private isConnecting = false;
@@ -16,18 +17,22 @@ export class StateSocket {
   constructor(
     subscribeAction: string,
     unsubscribeAction: string,
-    onMessage: MessageHandler
+    onMessage: MessageHandler,
+    getToken?: () => string | null
   ) {
     this.subscribeAction = subscribeAction;
     this.unsubscribeAction = unsubscribeAction;
     this.onMessage = onMessage;
+    this.getToken = getToken ?? null;
   }
 
   connect() {
     if (this.socket || this.isConnecting) return;
 
     this.isConnecting = true;
-    this.socket = new WebSocket(this.baseUrl);
+    const token = this.getToken?.();
+    const url = token ? `${this.baseUrl}?token=${encodeURIComponent(token)}` : this.baseUrl;
+    this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
       this.isConnecting = false;
