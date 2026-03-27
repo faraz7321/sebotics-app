@@ -98,6 +98,8 @@ function mapTaskSocket(payload: TaskWsEntry) {
   };
 }
 
+const getToken = () => store.getState().auth.accessToken ?? null;
+
 export const robotStateSocket = new StateSocket(
   "subscribe.robot.state",
   "unsubscribe.robot.state",
@@ -109,7 +111,8 @@ export const robotStateSocket = new StateSocket(
     const patch = mapRobotState(payload);
 
     store.dispatch(updateRobot({ robotId, patch }));
-  }
+  },
+  getToken
 );
 
 export const taskStateSocket = new StateSocket(
@@ -129,5 +132,6 @@ export const taskStateSocket = new StateSocket(
         actType: item.actType as ActType | undefined
       }));
     });
-  }
+  },
+  getToken
 );

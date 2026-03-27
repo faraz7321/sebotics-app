@@ -48,6 +48,7 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
   private readonly wsPath = '/ws/autoxing';
   private readonly autoxingWsBaseUrl: string;
   private readonly refreshTokenSecret: string;
+  private readonly jwtSecret: string;
   private readonly corsOrigin: string;
 
   constructor(
@@ -62,6 +63,7 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
     ).replace(/\/$/, '');
     this.refreshTokenSecret =
       this.configService.get<string>('REFRESH_TOKEN_SECRET') ?? '';
+    this.jwtSecret = this.configService.get<string>('JWT_SECRET') ?? '';
     this.corsOrigin = this.configService.get<string>('CORS_ORIGIN') ?? '';
   }
 
@@ -495,35 +497,39 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
   }
 
   private authenticate(request: IncomingMessage): JwtUser | null {
-    if (!this.refreshTokenSecret) {
-      this.logger.error(
-        'REFRESH_TOKEN_SECRET is missing, websocket authentication is disabled',
-      );
-      return null;
-    }
-
+    // Try cookie-based refresh token first (same-origin / nginx proxy flow)
     const refreshToken = this.extractRefreshTokenCookie(request);
-    if (!refreshToken) {
-      return null;
-    }
-
-    try {
-      const decoded = jwt.verify(
-        refreshToken,
-        this.refreshTokenSecret,
-      ) as JwtPayload;
-      if (!this.isJwtPayload(decoded)) {
-        return null;
+    if (refreshToken && this.refreshTokenSecret) {
+      try {
+        const decoded = jwt.verify(
+          refreshToken,
+          this.refreshTokenSecret,
+        ) as JwtPayload;
+        if (this.isJwtPayload(decoded)) {
+          return { userId: decoded.sub, username: decoded.username, role: decoded.role };
+        }
+      } catch {
+        // fall through to access token check
       }
-
-      return {
-        userId: decoded.sub,
-        username: decoded.username,
-        role: decoded.role,
-      };
-    } catch {
-      return null;
     }
+
+    // Fall back to ?token=<accessToken> query param (cross-origin direct WS)
+    if (this.jwtSecret) {
+      const url = new URL(request.url ?? '/', 'http://localhost');
+      const token = url.searchParams.get('token');
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, this.jwtSecret) as JwtPayload;
+          if (this.isJwtPayload(decoded)) {
+            return { userId: decoded.sub, username: decoded.username, role: decoded.role };
+          }
+        } catch {
+          return null;
+        }
+      }
+    }
+
+    return null;
   }
 
   private extractRefreshTokenCookie(request: IncomingMessage): string | null {
