@@ -279,7 +279,7 @@ export default function Dashboard() {
       {/* BOTTOM ACTION BAR */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-2">
         <div className="border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <Button
               disabled={!selectedBusinessId}
               onClick={() => {

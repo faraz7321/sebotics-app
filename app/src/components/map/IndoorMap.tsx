@@ -368,7 +368,7 @@ export const IndoorMap: React.FC<{
   const selectedAreaPoints = pointsOfInterest.filter((poi) => !selectedAreaId || poi.areaId === selectedAreaId);
 
   return (
-    <Card className="flex flex-col w-full border border-slate-100 rounded-3xl bg-white overflow-hidden min-h-[570px] shadow-none">
+    <Card className="flex flex-col w-full border border-slate-100 rounded-3xl bg-white overflow-hidden min-h-[550px] shadow-none">
       <CardHeader className="border-b border-slate-50 pt-2 pb-2 shrink-0">
         <div className="flex items-center gap-4">
           <DropdownMenu>
