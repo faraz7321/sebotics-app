@@ -19,7 +19,7 @@ type ViewTaskProps = {
   onCancelTask: (taskId: string) => void;
 };
 
-export default function ViewTaskSheet({ open, onOpenChange, task, onCancelTask }: ViewTaskProps) {
+export function ViewTaskSheet({ open, onOpenChange, task, onCancelTask }: ViewTaskProps) {
   const { t } = useTranslation();
   if (!task) return null;
 

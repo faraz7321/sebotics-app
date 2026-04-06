@@ -193,18 +193,6 @@ export default function Navbar() {
 
       {/* RIGHT: Desktop Nav Icons + User Dropdown */}
       <div className="flex items-center gap-1 md:gap-3">
-        {/* Maps Button (Desktop Only) */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hidden md:flex hover:cursor-pointer items-center gap-2 px-3 h-10 rounded-xl hover:bg-emerald-50 text-slate-600 transition-all border border-transparent hover:border-emerald-100"
-          onClick={() => navigate(ROUTES.MAPS.PAGE)}
-        >
-          <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
-            <MapIcon className="h-4 w-4" />
-          </div>
-          <span className="font-semibold text-sm">Maps</span>
-        </Button>
 
         <Separator orientation="vertical" className="h-6 hidden md:block bg-slate-200" />
 

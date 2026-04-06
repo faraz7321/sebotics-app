@@ -59,6 +59,7 @@ const initialState: MapState = {
 
   baseMap: null,
   mapMeta: null,
+  selectedAreaId: null,
 };
 
 const mapSlice = createSlice({
@@ -67,6 +68,9 @@ const mapSlice = createSlice({
   reducers: {
     clearBaseMap: (state) => {
       state.baseMap = null;
+    },
+    setSelectedAreaId: (state, action) => {
+      state.selectedAreaId = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -90,6 +94,8 @@ const mapSlice = createSlice({
       .addCase(listAreas.pending, (state) => {
         state.loading = true;
         state.areasLoading = true;
+        state.areas = [];
+        state.selectedAreaId = null;
       })
       .addCase(listAreas.fulfilled, (state, action) => {
         state.loading = false;
@@ -97,6 +103,11 @@ const mapSlice = createSlice({
         state.error = null;
 
         state.areas = action.payload.data.list;
+        if (state.areas.length > 0) {
+          state.selectedAreaId = state.areas[0].id;
+        } else {
+          state.selectedAreaId = null;
+        }
       })
       .addCase(listAreas.rejected, (state, action) => {
         state.loading = false;
@@ -125,5 +136,5 @@ const mapSlice = createSlice({
   },
 });
 
-export const { clearBaseMap } = mapSlice.actions;
+export const { clearBaseMap, setSelectedAreaId } = mapSlice.actions;
 export default mapSlice.reducer;

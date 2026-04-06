@@ -44,8 +44,9 @@ export function RobotList({ robots, selectedRobotId, onViewRobot }: RobotListPro
       <CardContent className="p-0 flex-1 overflow-y-auto">
         <div className="divide-y divide-slate-200">
           {robots && robots.length === 0 ? (
-            <div className="p-4 text-slate-400 text-sm text-center">
-              {t('robots.noRobots')}
+            <div className="p-8 text-slate-400 text-sm text-center flex flex-col items-center gap-2">
+              <Bot className="h-8 w-8 opacity-20" />
+              <p>{t('robots.noRobots')}</p>
             </div>
           ) : (
             robots.map((robot) => {

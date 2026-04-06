@@ -15,11 +15,10 @@ type ViewRobotProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   robot: Robot | null;
-  onCall: (robot: Robot, isPriority: boolean) => void;
   onReturnToDock: (robot: Robot) => void;
 };
 
-export default function ViewRobotSheet({ open, onOpenChange, robot, onCall, onReturnToDock }: ViewRobotProps) {
+export function ViewRobotSheet({ open, onOpenChange, robot, onReturnToDock }: ViewRobotProps) {
   const { t } = useTranslation();
   if (!robot) return null;
 
@@ -120,26 +119,10 @@ export default function ViewRobotSheet({ open, onOpenChange, robot, onCall, onRe
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
-                  className="h-10 text-xs hover:cursor-pointer border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-all font-bold rounded-lg shadow-sm active:scale-95"
-                  onClick={() => onCall(robot, false)} // queued call
-                >
-                  {t('robots.actions.callTitle')}
-                </Button>
-                <Button
-                  variant="outline"
                   className="h-10 text-xs hover:cursor-pointer border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all font-bold rounded-lg shadow-sm active:scale-95"
                   onClick={() => onReturnToDock(robot)}
                 >
                   {t('robots.actions.docking')}
-                </Button>
-              </div>
-              <div className="grid p-2">
-                <Button
-                  variant="outline"
-                  className="h-10 text-xs hover:cursor-pointer border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all font-bold rounded-lg shadow-sm active:scale-95"
-                  onClick={() => onCall(robot, true)} // priority call
-                >
-                  {t('robots.actions.callNow')}
                 </Button>
               </div>
             </section>

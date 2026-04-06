@@ -77,4 +77,5 @@ export interface MapState {
 
   baseMap: string | null;
   mapMeta: MapMeta | null;
+  selectedAreaId: string | null;
 }

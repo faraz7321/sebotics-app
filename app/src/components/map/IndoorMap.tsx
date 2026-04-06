@@ -14,14 +14,26 @@ import type { Robot } from '@/lib/types/RobotTypes';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { useTranslation } from 'react-i18next';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader } from "@/components/ui/loader";
+import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, MapIcon } from 'lucide-react';
+import { useAppDispatch, useAppSelector, type RootState } from "@/store";
+import { setSelectedAreaId } from "@/lib/slices/mapSlice";
 
-interface IndoorMapProps {
+interface MapCanvasProps {
   base64Image: string;
   mapMeta: MapMeta;
   points: PointOfInterest[];
   robots: Robot[];
   mapboxToken: string;
-  onRobotSend: (poi: PointOfInterest, robotId?: string) => void;
+  onRobotSend: (poi: PointOfInterest) => void;
 }
 
 const darkEmptyStyle: StyleSpecification = {
@@ -44,9 +56,8 @@ const worldLat = 37.7750;
 const metersPerLat = 111320;
 const metersPerLng = 111320 * Math.cos(worldLat * Math.PI / 180);
 
-export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMeta, robots, mapboxToken, onRobotSend }) => {
+const MapCanvas: React.FC<MapCanvasProps> = ({ base64Image, points, mapMeta, robots, mapboxToken, onRobotSend }) => {
   const { t } = useTranslation();
-
   const mapRef = useRef<MapRef>(null);
 
   const [cursor, setCursor] = React.useState<string>('grab');
@@ -115,7 +126,6 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
     }
   }, [bounds]);
 
-  // Convert SLAM POIs to map coordinates
   const poiData = useMemo(() => {
     return {
       type: 'FeatureCollection' as const,
@@ -179,7 +189,6 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
     }
 
     const props = feature.properties as { id: string };
-
     const originalPoi = points.find(p => p.id === props.id);
 
     if (originalPoi) {
@@ -241,23 +250,12 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
           id="poi-circles"
           type="circle"
           paint={{
-            'circle-radius': [
-              'case',
-              ['==', ['get', 'id'], selectedPoi?.poi.id || ''],
-              8,
-              5
-            ],
-            'circle-color': [
-              'case',
-              ['==', ['get', 'id'], selectedPoi?.poi.id || ''],
-              '#ef4444',
-              '#3b82f6'
-            ],
+            'circle-radius': ['case', ['==', ['get', 'id'], selectedPoi?.poi.id || ''], 8, 5],
+            'circle-color': ['case', ['==', ['get', 'id'], selectedPoi?.poi.id || ''], '#ef4444', '#3b82f6'],
             'circle-stroke-width': 2,
             'circle-stroke-color': '#ffffff'
           }}
         />
-
         <Layer
           id="poi-labels"
           type="symbol"
@@ -270,11 +268,7 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
             'text-ignore-placement': true,
             'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular']
           }}
-          paint={{
-            'text-color': '#ffffff',
-            'text-halo-color': '#334155',
-            'text-halo-width': 1.5
-          }}
+          paint={{ 'text-color': '#ffffff', 'text-halo-color': '#334155', 'text-halo-width': 1.5 }}
         />
       </Source>
 
@@ -292,9 +286,7 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
             'icon-allow-overlap': true,
             'icon-ignore-placement': true
           }}
-          paint={{
-            'icon-color': '#10b981' // Green for robots
-          }}
+          paint={{ 'icon-color': '#10b981' }}
         />
 
         {/* Robot Indicator Dot */}
@@ -323,11 +315,7 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
             'text-ignore-placement': true,
             'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular']
           }}
-          paint={{
-            'text-color': '#10b981',
-            'text-halo-color': '#ffffff',
-            'text-halo-width': 1.5
-          }}
+          paint={{ 'text-color': '#10b981', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 }}
         />
       </Source>
 
@@ -342,78 +330,111 @@ export const IndoorMap: React.FC<IndoorMapProps> = ({ base64Image, points, mapMe
           className="min-w-[160px] rounded-lg border bg-popover text-popover-foreground shadow-md outline-none"
         >
           <div className="flex flex-col space-y-1.5">
-            <div className="flex items-center justify-between gap-4">
-              <Label className="font-semibold">
-                {selectedPoi.poi.name}
-              </Label>
-            </div>
-            <p className="text-[10px] text-muted-foreground font-mono">
-              ID: {selectedPoi.poi.id}
-            </p>
+            <Label className="font-semibold">{selectedPoi.poi.name}</Label>
           </div>
-
           <div className="my-2 h-[1px] bg-border" />
-
-          <div className="flex flex-col gap-2">
-            {/* Primary Action: Call to this POI */}
-            <Button
-              size="sm"
-              className="w-full h-9 hover:cursor-pointer text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm transition-all active:scale-95"
-              onClick={() => onRobotSend(selectedPoi.poi)}
-            >
-              <div className="flex items-center gap-2">
-                {t('robots.call')}
-              </div>
-            </Button>
-
-            {/* Robot Selection List */}
-            {robots && robots.length > 0 && (
-              <div>
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-slate-100" />
-                  </div>
-                  <div className="relative flex justify-center text-[10px] uppercase">
-                    <span className="bg-white px-2 text-slate-400 font-medium tracking-widest">
-                      {t('common.or')}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="max-h-[120px] overflow-y-auto custom-scrollbar pr-1 space-y-1">
-                    {/* Logic: Filter first, then check length, then map */}
-                    {robots.filter((r) => r.isOnLine).length > 0 ? (
-                      robots
-                        .filter((robot) => robot.isOnLine)
-                        .map((robot) => (
-                          <Button
-                            key={robot.robotId}
-                            variant="outline" // Changed to outline to differentiate from the main call button
-                            size="sm"
-                            onClick={() => onRobotSend(selectedPoi.poi, robot.robotId)}
-                            className="w-full h-9 justify-start px-3 hover:cursor-pointer text-xs font-semibold border-slate-200 hover:border-green-500 hover:text-green-600 transition-all"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                              <span className="truncate">
-                                {robot.name || robot.robotId}
-                              </span>
-                            </div>
-                          </Button>
-                        ))
-                    ) : (
-                      <p className="text-[10px] text-slate-400 italic p-2 text-center">
-                        {t('robots.noRobots')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <Button
+            size="sm"
+            className="w-full h-7 hover:cursor-pointer text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm transition-all active:scale-95"
+            onClick={() => onRobotSend(selectedPoi.poi)}
+          >
+            {t('robots.call')}
+          </Button>
         </Popup>
       )}
     </Map>
+  );
+};
+
+export const IndoorMap: React.FC<{
+  mapboxToken: string | null;
+  onRobotSend: (poi: PointOfInterest) => void
+}> = ({ mapboxToken, onRobotSend }) => {
+  const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const {
+    areas,
+    areasLoading,
+    mapLoading,
+    baseMap,
+    mapMeta,
+    selectedAreaId,
+    pointsOfInterest
+  } = useAppSelector((state: RootState) => state.map);
+  const robots = useAppSelector((state: RootState) => state.robot.robots);
+  const selectedBusinessId = useAppSelector((state: RootState) => state.business.selectedBusinessId);
+
+  const selectedAreaRobots = robots.filter((r) => r.businessId === selectedBusinessId && r.areaId === selectedAreaId);
+  const selectedAreaPoints = pointsOfInterest.filter((poi) => !selectedAreaId || poi.areaId === selectedAreaId);
+
+  return (
+    <Card className="flex flex-col w-full border border-slate-100 rounded-3xl bg-white overflow-hidden min-h-[570px] shadow-none">
+      <CardHeader className="border-b border-slate-50 pt-2 pb-2 shrink-0">
+        <div className="flex items-center gap-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="p-0 hover:bg-transparent hover:cursor-pointer flex items-center gap-2 group">
+                <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">
+                  {selectedAreaId ? areas.find(a => a.id === selectedAreaId)?.name : t('maps.viewport')}
+                </CardTitle>
+                <ChevronDown className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 mt-2 rounded-xl shadow-xl border-slate-100 p-2">
+              {areas.map((area) => (
+                <DropdownMenuItem
+                  key={area.id}
+                  className={cn(
+                    "rounded-xl cursor-pointer py-3 px-4 mb-1 transition-all",
+                    selectedAreaId === area.id ? "bg-primary/10 text-primary font-bold" : "hover:bg-slate-50 text-slate-600"
+                  )}
+                  onClick={() => dispatch(setSelectedAreaId(area.id))}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm">{area.name}</span>
+                    <span className="text-[10px] uppercase tracking-wider opacity-60">Floor {area.floorName}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1 p-0 relative bg-slate-50/30 overflow-hidden">
+        {(mapLoading || areasLoading) && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/50 z-20 animate-in fade-in">
+            <Loader variant="container" />
+          </div>
+        )}
+
+        {!mapLoading && selectedAreaId && baseMap ? (
+          <div className="absolute inset-0 w-full h-full animate-in fade-in duration-500">
+            {mapMeta && mapboxToken ? (
+              <MapCanvas
+                mapMeta={mapMeta}
+                base64Image={baseMap}
+                points={selectedAreaPoints}
+                robots={selectedAreaRobots}
+                mapboxToken={mapboxToken}
+                onRobotSend={onRobotSend}
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/50 z-20">
+                <Loader variant="container" />
+              </div>
+            )}
+          </div>
+        ) : !mapLoading && !areasLoading && !selectedAreaId ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
+            <div className="bg-white p-10 rounded-[2.5rem] mb-8 transform transition-transform hover:scale-105 border border-slate-100">
+              <MapIcon className="h-20 w-20 text-slate-100" strokeWidth={1} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-400 tracking-tight">{t('maps.noAreaSelected')}</h3>
+            <p className="text-sm text-slate-400 font-medium mt-2 max-w-xs">{t('maps.pickAreaDescription')}</p>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 };
