@@ -111,7 +111,9 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
               <DialogTitle className="text-lg font-bold text-slate-900 leading-tight">
                 {t('robots.actions.callTitle')}
               </DialogTitle>
-              <p className="text-xs text-slate-500 font-medium tracking-tight">Configure and dispatch your robot</p>
+              <p className="text-xs text-slate-500 font-medium tracking-tight">
+                {t('robots.actions.callDescription', 'Configure and dispatch your robot')}
+              </p>
             </div>
           </div>
         </DialogHeader>
@@ -369,7 +371,12 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
               onClick={() => handleCall(activePoi)}
             >
               <Zap className="h-4 w-4" />
-              <span>Call to {activePoi.name || activePoi.id}</span>
+              <span>
+                {t('robots.actions.callTo', { 
+                  name: activePoi.name || activePoi.id, 
+                  defaultValue: `Call to ${activePoi.name || activePoi.id}` 
+                })}
+              </span>
             </Button>
           )}
         </div>

@@ -3,6 +3,9 @@ import {
   AlertOctagon,
   Zap,
   Package,
+  Map as MapIcon,
+  List as ListIcon,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -134,6 +137,7 @@ export default function Dashboard() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedPoiForCall, setSelectedPoiForCall] = useState<PointOfInterest | null>(null);
   const [activeTab, setActiveTab] = useState<'robots' | 'tasks'>('robots');
+  const [sliderOpen, setSliderOpen] = useState(false);
 
   const getChargingDock = (areaId?: string) => {
     if (!areaId) return null;
@@ -214,13 +218,50 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50 font-sans text-slate-900">
+    <div className="h-full overflow-y-auto bg-slate-50 font-sans text-slate-900 scroll-smooth">
+      <style>{`
+        .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib { display: none !important; }
+      `}</style>
+
+      {/* MOBILE LEFT NAVIGATION SLIDER */}
+      <div className={`fixed left-0 top-1/2 -translate-y-1/2 z-40 flex items-center transition-all duration-300 lg:hidden ${sliderOpen ? 'translate-x-2' : '-translate-x-[52px]'}`}>
+        <div className="flex flex-col gap-3 bg-white/95 backdrop-blur-sm shadow-xl border border-slate-200 p-2 rounded-full">
+          <button
+            onClick={() => {
+              document.getElementById('map-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              setSliderOpen(false);
+            }}
+            className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-all text-slate-600 hover:text-slate-900 shadow-sm"
+            title={t('dashboard.map', 'Map')}
+          >
+            <MapIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              document.getElementById('list-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              setSliderOpen(false);
+            }}
+            className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-all text-slate-600 hover:text-slate-900 shadow-sm"
+            title={t('dashboard.lists', 'Robot / Tasks')}
+          >
+            <ListIcon className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Toggle Button */}
+        <button
+          onClick={() => setSliderOpen(!sliderOpen)}
+          className="ml-1 flex items-center justify-center w-7 h-10 bg-white/90 backdrop-blur-sm border border-l-0 border-slate-200 rounded-r-xl shadow-lg text-slate-500 hover:text-slate-900 transition-all"
+        >
+          <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${sliderOpen ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
 
       {/* MAIN CONTENT */}
       <div className="flex-1 p-2 md:p-4 pb-32 md:pb-28 w-full grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
 
         {/* LEFT PANEL - MAP CONTAINER */}
-        <div className="lg:col-span-8 flex">
+        <div id="map-section" className="lg:col-span-8 flex scroll-mt-4">
           <IndoorMap
             mapboxToken={mapboxToken}
             onRobotSend={(poi) => {
@@ -231,19 +272,19 @@ export default function Dashboard() {
         </div>
 
         {/* RIGHT PANEL - TABS (ROBOTS & TASKS) */}
-        <div className="lg:col-span-4 flex flex-col gap-3">
+        <div id="list-section" className="lg:col-span-4 flex flex-col gap-3 scroll-mt-4">
           <div className="flex bg-slate-200/60 p-1 rounded-xl shrink-0">
             <button
               onClick={() => setActiveTab('robots')}
               className={`flex-1 cursor-pointer py-1.5 md:py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'robots' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
             >
-              {t('dashboard.robots', 'Robots')}
+              {t('dashboard.navRobots', 'Robots')}
             </button>
             <button
               onClick={() => setActiveTab('tasks')}
               className={`flex-1 cursor-pointer py-1.5 md:py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'tasks' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
             >
-              {t('dashboard.tasks', 'Tasks')}
+              {t('dashboard.navTasks', 'Tasks')}
             </button>
           </div>
 
@@ -275,21 +316,20 @@ export default function Dashboard() {
       </div>
 
 
-      {/* BOTTOM ACTION BAR */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-2">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-2 z-50">
         <div className="border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-3 gap-2 md:gap-4">
             <Button
               disabled={!selectedBusinessId}
               onClick={() => {
                 setSelectedPoiForCall(null);
                 setCallOpen(true);
               }}
-              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:hover:bg-slate-200 disabled:cursor-not-allowed transition-all"
+              className="h-10 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-1.5 md:gap-2 hover:cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:hover:bg-slate-200 disabled:cursor-not-allowed transition-all px-2 md:px-4"
             >
-              <Zap className="h-5 w-5" />
-              <span className="hidden sm:inline">{t('dashboard.callRobot')}</span>
-              <span className="sm:hidden text-xs">Call</span>
+              <Zap className="h-4 w-4 md:h-5 md:w-5" />
+              <span className="hidden sm:inline">{t('dashboard.callRobot', 'Call Robot')}</span>
+              <span className="sm:hidden text-[10px] leading-tight">{t('dashboard.actionCall', 'Call')}</span>
             </Button>
 
             <Button
@@ -297,22 +337,22 @@ export default function Dashboard() {
               onClick={() => {
                 setDropOffOpen(true);
               }}
-              className="h-12 md:h-14 rounded-xl bg-orange-700 hover:bg-orange-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:hover:bg-slate-200 disabled:cursor-not-allowed transition-all"
+              className="h-10 md:h-14 rounded-xl bg-orange-700 hover:bg-orange-600 text-white font-bold gap-1.5 md:gap-2 hover:cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:hover:bg-slate-200 disabled:cursor-not-allowed transition-all px-2 md:px-4"
             >
-              <Package className="h-5 w-5" />
+              <Package className="h-4 w-4 md:h-5 md:w-5" />
               <span className="hidden sm:inline">{t('dashboard.dropOff', 'Drop Off')}</span>
-              <span className="sm:hidden text-xs">Drop Off</span>
+              <span className="sm:hidden text-[10px] leading-tight">{t('dashboard.dropOff', 'Drop Off')}</span>
             </Button>
 
             <Button
               variant="outline"
               disabled={!selectedBusinessId}
               onClick={() => setStopOpen(true)}
-              className="h-12 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-bold gap-2 hover:cursor-pointer disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-white disabled:cursor-not-allowed transition-all"
+              className="h-10 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-bold gap-1.5 md:gap-2 hover:cursor-pointer disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-white disabled:cursor-not-allowed transition-all px-2 md:px-4"
             >
-              <AlertOctagon className="h-5 w-5 text-red-500" />
-              <span className="hidden sm:inline">{t('dashboard.stop')}</span>
-              <span className="sm:hidden text-xs">Stop</span>
+              <AlertOctagon className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
+              <span className="hidden sm:inline">{t('dashboard.stop', 'Stop')}</span>
+              <span className="sm:hidden text-[10px] leading-tight">{t('dashboard.stop', 'Stop')}</span>
             </Button>
           </div>
         </div>
