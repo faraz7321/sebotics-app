@@ -3,7 +3,6 @@ import {
   ChevronDown,
   LogOut,
   UserIcon,
-  MapIcon,
   Menu,
   LayoutDashboard,
   Settings
@@ -78,12 +77,6 @@ export default function Navbar() {
                 label="Dashboard"
                 onClick={() => navTo(ROUTES.DASHBOARD.HOME)}
                 active={location.pathname === ROUTES.DASHBOARD.HOME}
-              />
-              <MobileNavLink
-                icon={<MapIcon className="h-5 w-5" />}
-                label="Maps"
-                onClick={() => navTo(ROUTES.MAPS.PAGE)}
-                active={location.pathname === ROUTES.MAPS.PAGE}
               />
               {user?.role === ROLES.ADMIN && (
                 <MobileNavLink

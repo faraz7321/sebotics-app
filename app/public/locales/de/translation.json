@@ -175,6 +175,8 @@
     },
     "actions": {
       "callTitle": "Roboter rufen",
+      "callDescription": "Konfigurieren und entsenden Sie Ihren Roboter",
+      "callTo": "Ruf nach {{name}}",
       "callDesc": "Wählen Sie einen Zielort für den Roboter",
       "callNow": "Roboter rufen (priorisiert)",
       "stopTitle": "Not-Aus",
@@ -254,6 +256,17 @@
       "jackingLift": "Heben",
       "jackingLower": "Senken"
     },
+    "fields": {
+      "speed": "Geschwindigkeit",
+      "pauseTime": "Pausenzeit (min)",
+      "priority": "Priorität",
+      "return": "Rückkehr-Verhalten"
+    },
+    "return": {
+      "none": "Keine Rückkehr",
+      "current": "Aktuelle Position",
+      "docking": "Ladestation"
+    },
     "actions": {
       "execute": "Ausführen",
       "cancel": "Abbrechen",
@@ -305,7 +318,12 @@
     "liftRobotNotice": "Funktioniert nur mit Lift-Robotern",
     "pointsMustDiffer": "Punkte müssen unterschiedlich sein",
     "startTask": "Ablageaufgabe starten",
-    "regularDelivery": "Reguläre Lieferung"
+    "regularDelivery": "Reguläre Lieferung",
+    "map": "Karte",
+    "lists": "Roboter / Aufgaben",
+    "navRobots": "Roboter",
+    "navTasks": "Aufgaben",
+    "actionCall": "Rufen"
   },
   "businessPanel": {
     "selectPlaceholder": "Unternehmen zur Detailansicht wählen",
