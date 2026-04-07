@@ -165,6 +165,7 @@ export type TaskOptions = {
   speed?: number;
   returnType: 'none' | 'current' | 'docking';
   priority?: boolean;
+  pauseTime?: number;
 };
 
 export interface CreateTaskRequest {
@@ -181,9 +182,9 @@ export interface CreateTaskRequest {
   ignorePublicSite?: boolean;
   speed?: number;
   detourRadius?: number;
-  curPt?: TaskPoint[];
+  curPt?: TaskPoint;
   taskPts: TaskPoint[];
-  backPt?: TaskPoint[];
+  backPt?: TaskPoint;
   returnDest?: number;
   returnTime?: number;
   ext?: Record<string, string>;

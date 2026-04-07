@@ -29,7 +29,7 @@ export async function performTaskAction(
 }
 
 export async function handleCreateDeliveryTask(
-  { dispatch, businessId, poi, robotId, speed, returnDest, backPt, execute = false, priority = false, isV3 = true }:
+  { dispatch, businessId, poi, robotId, speed, returnDest, backPt, pauseTime, execute = false, priority = false, isV3 = true }:
     {
       dispatch: AppDispatch,
       businessId: string,
@@ -37,7 +37,8 @@ export async function handleCreateDeliveryTask(
       robotId?: string,
       speed?: number,
       returnDest?: number,
-      backPt?: TaskPoint[],
+      backPt?: TaskPoint,
+      pauseTime?: number,
       execute: boolean,
       priority: boolean,
       isV3: boolean
@@ -50,7 +51,7 @@ export async function handleCreateDeliveryTask(
     businessId,
     runNum: 1,
     taskType: TaskType.Delivery,
-    runType: RunType.DirectDelivery,
+    runType: RunType.MultiPointMealDelivery,
     routeMode: RouteMode.ShortestDistanceRouting,
     runMode: RunMode.FlexibleObstacleAvoidance,
     ignorePublicSite: false,
@@ -59,20 +60,22 @@ export async function handleCreateDeliveryTask(
     backPt,
     taskPts: [
       {
-        stopRadius: 0.5,
+        stopRadius: 1,
         areaId: poi.areaId || "",
         poiId: poi.id,
         ...(isV3 && {
           ext: { name: poi.name || "", id: poi.id }
         }),
-        stepActs: [
-          {
-            type: ActType.TaskPaused,
-            data: {
-              pauseTime: 120 // stop for two mins after reaching dest
+        ...(pauseTime !== undefined && pauseTime > 0 ? {
+          stepActs: [
+            {
+              type: ActType.TaskPaused,
+              data: {
+                pauseTime: pauseTime
+              }
             }
-          }
-        ]
+          ]
+        } : {})
       }
     ],
     ...(isV3 && { dispatchType: priority ? DispatchType.Ordinary : DispatchType.Queue })
@@ -83,7 +86,12 @@ export async function handleCreateDeliveryTask(
 
   if (actionCreator.fulfilled.match(response)) {
     if (execute) {
-      await dispatch(executeTask(response.payload.data.taskId));
+      const res = await dispatch(executeTask(response.payload.data.taskId));
+      if (executeTask.fulfilled.match(res)) {
+        toast.success(i18n.t('tasks.notifications.executed', { defaultValue: 'Task executed' }));
+      } else {
+        toast.error(i18n.t('tasks.notifications.executeFailed', { defaultValue: 'Failed to execute task' }));
+      }
     }
     await refreshTasks(dispatch, businessId);
   } else {
@@ -122,7 +130,7 @@ export async function handleCreateMultiPointTask(
         {
           type: ActType.TaskPaused,
           data: {
-            pauseTime: 120 // stop for two mins after reaching dest
+            pauseTime: 10 // stop for two mins after reaching dest
           }
         }
       ]
@@ -134,9 +142,13 @@ export async function handleCreateMultiPointTask(
   const response = await dispatch(actionCreator(task));
 
   if (actionCreator.fulfilled.match(response)) {
-    toast.success(i18n.t('tasks.notifications.multiPointCreated', { defaultValue: 'Multi-point task created' }));
     if (execute) {
-      await dispatch(executeTask(response.payload.data.taskId));
+      const res = await dispatch(executeTask(response.payload.data.taskId));
+      if (executeTask.fulfilled.match(res)) {
+        toast.success(i18n.t('tasks.notifications.executed', { defaultValue: 'Task executed' }));
+      } else {
+        toast.error(i18n.t('tasks.notifications.executeFailed', { defaultValue: 'Failed to execute task' }));
+      }
     }
     await refreshTasks(dispatch, businessId);
   } else {
@@ -146,11 +158,12 @@ export async function handleCreateMultiPointTask(
 }
 
 export async function handleCreateDropOffTask(
-  { dispatch, businessId, pois, robotId, execute = false, priority = false, isV3 = true }:
+  { dispatch, businessId, pickup, dropoff, robotId, execute = false, priority = false, isV3 = true }:
     {
       dispatch: AppDispatch,
       businessId: string,
-      pois: PointOfInterest[],
+      pickup: PointOfInterest,
+      dropoff: PointOfInterest,
       robotId?: string,
       execute: boolean,
       priority: boolean,
@@ -159,7 +172,7 @@ export async function handleCreateDropOffTask(
 ) {
 
   const task: CreateTaskRequest = {
-    name: `Drop Off: ${pois.map(p => p.name || p.id).join(' -> ')}`,
+    name: `Drop Off: ${pickup.name || pickup.id} -> ${dropoff.name || dropoff.id}`,
     robotId: robotId || "",
     businessId,
     routeMode: RouteMode.ShortestDistanceRouting,
@@ -168,19 +181,34 @@ export async function handleCreateDropOffTask(
     runMode: 1,
     runNum: 1,
     ignorePublicSite: false,
-    taskPts: pois.map((poi, index) => ({
-      areaId: poi.areaId || "",
-      poiId: poi.id,
-      x: poi.coordinate[0],
-      y: poi.coordinate[1],
-      stepActs: [{
-        type: index === 0 ? ActType.JackingLift : ActType.JackingLower,
-        data: {}
-      }],
-      ...(isV3 && {
-        ext: { name: poi.name || "", id: poi.id }
-      })
-    })),
+    taskPts: [
+      {
+        areaId: pickup.areaId || "",
+        poiId: pickup.id,
+        x: pickup.coordinate[0],
+        y: pickup.coordinate[1],
+        stepActs: [{
+          type: ActType.JackingLift,
+          data: {}
+        }],
+        ...(isV3 && {
+          ext: { name: pickup.name || "", id: pickup.id }
+        })
+      },
+      {
+        areaId: dropoff.areaId || "",
+        poiId: dropoff.id,
+        x: dropoff.coordinate[0],
+        y: dropoff.coordinate[1],
+        stepActs: [{
+          type: ActType.JackingLower,
+          data: {}
+        }],
+        ...(isV3 && {
+          ext: { name: dropoff.name || "", id: dropoff.id }
+        })
+      }
+    ],
     ...(isV3 && { dispatchType: priority ? DispatchType.Ordinary : DispatchType.Queue })
   };
 
@@ -189,7 +217,12 @@ export async function handleCreateDropOffTask(
 
   if (actionCreator.fulfilled.match(response)) {
     if (execute) {
-      await dispatch(executeTask(response.payload.data.taskId));
+      const res = await dispatch(executeTask(response.payload.data.taskId));
+      if (executeTask.fulfilled.match(res)) {
+        toast.success(i18n.t('tasks.notifications.executed', { defaultValue: 'Task executed' }));
+      } else {
+        toast.error(i18n.t('tasks.notifications.executeFailed', { defaultValue: 'Failed to execute task' }));
+      }
     }
     await refreshTasks(dispatch, businessId);
   } else {
@@ -223,8 +256,6 @@ export async function handleCreateDockingTask(
       {
         x: poi.coordinate[0],
         y: poi.coordinate[1],
-        yaw: poi.yaw,
-        stopRadius: 1,
         areaId: poi.areaId || "",
         poiId: poi.id,
         ...(isV3 && {
@@ -240,7 +271,12 @@ export async function handleCreateDockingTask(
 
   if (actionCreator.fulfilled.match(response)) {
     if (execute) {
-      await dispatch(executeTask(response.payload.data.taskId));
+      const res = await dispatch(executeTask(response.payload.data.taskId));
+      if (executeTask.fulfilled.match(res)) {
+        toast.success(i18n.t('tasks.notifications.executed', { defaultValue: 'Task executed' }));
+      } else {
+        toast.error(i18n.t('tasks.notifications.executeFailed', { defaultValue: 'Failed to execute task' }));
+      }
     }
     await refreshTasks(dispatch, businessId);
   } else {
@@ -253,12 +289,7 @@ export async function handleExecuteTask(
   { dispatch, businessId, taskId }:
     { dispatch: AppDispatch, businessId: string, taskId: string }) {
   await performTaskAction(async () => {
-    const response = await dispatch(executeTask(taskId));
-    if (executeTask.fulfilled.match(response)) {
-      toast.success(i18n.t('tasks.notifications.executed', { defaultValue: 'Task executed' }));
-    } else {
-      toast.error(i18n.t('tasks.notifications.executeFailed', { defaultValue: 'Failed to execute task' }));
-    }
+    await dispatch(executeTask(taskId));
   }, () => refreshTasks(dispatch, businessId));
 }
 

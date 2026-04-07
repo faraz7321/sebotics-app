@@ -135,36 +135,34 @@ export default function Dashboard() {
   const [selectedPoiForCall, setSelectedPoiForCall] = useState<PointOfInterest | null>(null);
   const [activeTab, setActiveTab] = useState<'robots' | 'tasks'>('robots');
 
-  const getChargingDock = (robot: Robot) => {
-    if (!robot) return null;
-    const dock = pointsOfInterest.find((p: PointOfInterest) => p.areaId === robot.areaId && p.type === PoiType.ChargingPile);
+  const getChargingDock = (areaId?: string) => {
+    if (!areaId) return null;
+    const dock = pointsOfInterest.find((p: PointOfInterest) => p.areaId === areaId && p.type === PoiType.ChargingPile);
     return dock || null;
   };
 
   const handleCallRobot = (poi: PointOfInterest, options?: TaskOptions) => {
-    let backPt: TaskPoint[] | undefined;
+    let backPt: TaskPoint | undefined;
     let returnDest = 2; // no return by default
     const robot = options?.robot;
 
-    if (robot) {
-      returnDest = 3;
-
-      if (options?.returnType === 'current') {
-        backPt = [{
-          areaId: robot.areaId,
-          x: robot.x,
-          y: robot.y,
-        }];
-      } else if (options?.returnType === 'docking') {
-        const dock = getChargingDock(robot);
-        if (dock) {
-          backPt = [{
-            areaId: dock.areaId,
-            poiId: dock.id,
-            x: dock.coordinate[0],
-            y: dock.coordinate[1],
-          }];
-        }
+    if (options?.returnType === 'current' && robot) {
+      returnDest = 0;
+      backPt = {
+        areaId: robot.areaId,
+        x: robot.x,
+        y: robot.y,
+      };
+    } else if (options?.returnType === 'docking') {
+      returnDest = 0;
+      const dock = getChargingDock(robot?.areaId || poi.areaId);
+      if (dock) {
+        backPt = {
+          areaId: dock.areaId,
+          poiId: dock.id,
+          x: dock.coordinate[0],
+          y: dock.coordinate[1],
+        };
       }
     }
 
@@ -176,6 +174,7 @@ export default function Dashboard() {
       speed: options?.speed,
       returnDest: returnDest,
       backPt: backPt,
+      pauseTime: options?.pauseTime !== undefined ? options.pauseTime * 60 : undefined,
       execute: true,
       priority: options?.priority ?? false,
       isV3: true
@@ -195,7 +194,7 @@ export default function Dashboard() {
   };
 
   const handleReturnToDock = (robot: Robot) => {
-    const chargingDock = getChargingDock(robot);
+    const chargingDock = getChargingDock(robot.areaId);
     if (!chargingDock) {
       console.error("No charging dock found for the robot's area");
       return;
@@ -334,7 +333,8 @@ export default function Dashboard() {
           handleCreateDropOffTask({
             dispatch: dispatch,
             businessId: selectedBusinessId!,
-            pois: [pickup, dropoff],
+            pickup: pickup,
+            dropoff: dropoff,
             execute: true,
             priority: false,
             isV3: true

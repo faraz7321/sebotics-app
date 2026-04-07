@@ -116,7 +116,7 @@ export function ViewRobotSheet({ open, onOpenChange, robot, onReturnToDock }: Vi
                 <Zap className="h-3 w-3" />
                 {t('robots.actions.callTitle')}
               </h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <Button
                   variant="outline"
                   className="h-10 text-xs hover:cursor-pointer border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all font-bold rounded-lg shadow-sm active:scale-95"

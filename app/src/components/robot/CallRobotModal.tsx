@@ -19,7 +19,8 @@ import {
   MapPin,
   Zap,
   ChevronDown,
-  AlertCircle
+  AlertCircle,
+  Timer
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,6 +48,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
   const [targetRobot, setTargetRobot] = useState<Robot | 'automatic'>('automatic');
   const [speed, setSpeed] = useState<number>(1);
   const [returnType, setReturnType] = useState<'none' | 'current' | 'docking'>('none');
+  const [pauseTime, setPauseTime] = useState<number>(2);
   const [selectedPoi, setSelectedPoi] = useState<PointOfInterest | null>(null);
   const [priority, setPriority] = useState(false);
 
@@ -57,6 +59,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
     if (open) {
       setTargetRobot('automatic');
       setSpeed(1);
+      setPauseTime(2);
       setReturnType('none');
       setSelectedPoi(null);
       setPriority(false);
@@ -66,12 +69,13 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
   useEffect(() => {
     if (targetRobot === 'automatic') {
       setPriority(false);
+      setReturnType((prev) => (prev === 'current' ? 'none' : prev));
     }
   }, [targetRobot]);
 
   const onlineRobots = useMemo(() => {
-    return robots.filter((r: Robot) => r.isOnLine && r.businessId === selectedBusinessId);
-  }, [robots, selectedBusinessId]);
+    return robots.filter((r: Robot) => r.isOnLine && r.businessId === selectedBusinessId && r.areaId === selectedAreaId);
+  }, [robots, selectedBusinessId, selectedAreaId]);
 
   const filteredPois = useMemo(() => {
     if (targetRobot !== 'automatic') {
@@ -84,6 +88,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
     onCall(poi, {
       robot: targetRobot === 'automatic' ? undefined : targetRobot,
       speed: speed,
+      pauseTime: pauseTime,
       returnType: returnType,
       priority: priority && targetRobot !== 'automatic'
     });
@@ -128,7 +133,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
                     <span className="truncate">
                       {targetRobot === 'automatic'
                         ? t('common.automatic', 'Automatic')
-                        : targetRobot.name}
+                        : targetRobot.robotId}
                     </span>
                     <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
                   </Button>
@@ -201,7 +206,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
                       <span className="truncate">
                         {[
                           { value: 'none', label: t('tasks.return.none', 'No return') },
-                          { value: 'current', label: t('tasks.return.current', 'Current position') },
+                          ...(targetRobot !== 'automatic' ? [{ value: 'current', label: t('tasks.return.current', 'Current position') }] : []),
                           { value: 'docking', label: t('tasks.return.docking', 'Docking point') },
                         ].find(item => item.value === returnType)?.label}
                       </span>
@@ -212,7 +217,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
                 <DropdownMenuContent align="start" className="w-[calc(100vw-4rem)] md:w-[200px] rounded-xl shadow-lg border-slate-100 p-1">
                   {[
                     { value: 'none', label: t('tasks.return.none', 'No return') },
-                    { value: 'current', label: t('tasks.return.current', 'Current position') },
+                    ...(targetRobot !== 'automatic' ? [{ value: 'current', label: t('tasks.return.current', 'Current position') }] : []),
                     { value: 'docking', label: t('tasks.return.docking', 'Docking point') },
                   ].map((item) => (
                     <DropdownMenuItem
@@ -227,8 +232,40 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
               </DropdownMenu>
             </div>
 
+            {/* Pause Time Selection */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
+                <Timer className="h-3.5 w-3.5 text-primary" />
+                <span>{t('tasks.fields.pauseTime', 'Pause Time (min)')}</span>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between rounded-xl px-3 py-2 h-10 border-slate-200 text-xs font-semibold hover:bg-slate-50 transition-all"
+                  >
+                    <span className="truncate">
+                      {pauseTime}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[140px] rounded-xl shadow-lg border-slate-100 p-1">
+                  {[0, 1, 2, 3, 4, 5].map(pt => (
+                    <DropdownMenuItem
+                      key={pt}
+                      className="rounded-lg cursor-pointer py-2 focus:bg-blue-600 focus:text-white"
+                      onClick={() => setPauseTime(pt)}
+                    >
+                      {pt}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             {/* Priority Selection */}
-            <div className={`space-y-2 transition-opacity ${targetRobot === 'automatic' ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className={`col-span-2 space-y-2 transition-opacity ${targetRobot === 'automatic' ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
                 <AlertCircle className="h-3.5 w-3.5 text-primary" />
                 <span>{t('tasks.fields.priority', 'Priority')}</span>
@@ -271,7 +308,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
               </div>
             ) : (
               /* Selectable list — tap to set destination, then call from footer */
-              <div className="space-y-2 max-h-52 overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                 {!loading ? (
                   <>
                     {filteredPois && filteredPois.length > 0 ? (
@@ -328,7 +365,7 @@ export function CallRobotModal({ open, onOpenChange, onCall, initialPoi }: CallR
           {activePoi && (
             <Button
               disabled={onlineRobots.length === 0}
-              className="flex-[2] h-10 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 animate-in slide-in-from-right-4 duration-300 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              className="flex-[2] h-10 cursor-pointer rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 animate-in slide-in-from-right-4 duration-300 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
               onClick={() => handleCall(activePoi)}
             >
               <Zap className="h-4 w-4" />
