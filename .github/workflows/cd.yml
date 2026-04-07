@@ -99,14 +99,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          test -n "${GCP_CLOUDSQL_CONNECTION}" || {
-            echo "Missing GCP_CLOUDSQL_CONNECTION variable."
-            exit 1
-          }
-          test -n "${GCP_DATABASE_URL_SECRET}" || {
-            echo "Missing GCP_DATABASE_URL_SECRET variable."
-            exit 1
-          }
+          test -n "${GCP_CLOUDSQL_CONNECTION}" || { echo "Missing GCP_CLOUDSQL_CONNECTION variable."; exit 1; }
+          test -n "${GCP_DATABASE_URL_SECRET}" || { echo "Missing GCP_DATABASE_URL_SECRET variable."; exit 1; }
 
           ACCESS_TOKEN="$(gcloud auth print-access-token)"
           DATABASE_URL_RAW="$(gcloud secrets versions access latest \
@@ -135,33 +129,44 @@ jobs:
           )"
 
           docker rm -f sebotics-ax-sql-proxy >/dev/null 2>&1 || true
-          docker run -d --rm --name sebotics-ax-sql-proxy \
+
+          docker run -d --name sebotics-ax-sql-proxy \
             -p 127.0.0.1:6543:5432 \
             gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.18.2 \
+            --debug-logs \
             --token "${ACCESS_TOKEN}" \
             --address 0.0.0.0 \
             "${GCP_CLOUDSQL_CONNECTION}" >/dev/null
 
           cleanup() {
+            docker logs sebotics-ax-sql-proxy || true
             docker rm -f sebotics-ax-sql-proxy >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
 
-          for i in $(seq 1 20); do
-            if (echo > /dev/tcp/127.0.0.1/6543) >/dev/null 2>&1; then
+          # Wait until the proxy is actually usable by Prisma (not just a port open)
+          cd server
+          npm ci
+
+          for i in $(seq 1 10); do
+            if DATABASE_URL="${DATABASE_URL}" npx prisma db execute --stdin <<<'SELECT 1;' >/dev/null 2>&1; then
+              echo "Cloud SQL proxy is ready."
               break
             fi
-            sleep 1
+            echo "Waiting for Cloud SQL proxy/DB... ($i/10)"
+            sleep 2
           done
 
-          if ! (echo > /dev/tcp/127.0.0.1/6543) >/dev/null 2>&1; then
-            echo "Cloud SQL proxy did not start."
+          # If we never became ready, show proxy logs and fail clearly
+          if ! docker ps --format '{{.Names}}' | grep -q '^sebotics-ax-sql-proxy$'; then
+            echo "Cloud SQL proxy container is not running. Logs:"
             docker logs sebotics-ax-sql-proxy || true
             exit 1
           fi
 
-          cd server
-          npm ci
+          # Final check (and show logs if it fails)
+          DATABASE_URL="${DATABASE_URL}" npx prisma db execute --stdin <<<'SELECT 1;' >/dev/null
+
           DATABASE_URL="${DATABASE_URL}" npx prisma migrate deploy
 
       - name: Deploy server image and service

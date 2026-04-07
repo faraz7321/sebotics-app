@@ -22,15 +22,13 @@ type DropOffSheetProps = {
 export function DropOffSheet({ open, onOpenChange, onDropOff }: DropOffSheetProps) {
   const { t } = useTranslation();
   const { loading, pointsOfInterest } = useAppSelector((state) => state.map);
-  const robots = useAppSelector((state) => state.robot.robots);
+  const selectedAreaId = useAppSelector((state) => state.map.selectedAreaId);
 
   const [pickup, setPickup] = useState<PointOfInterest | null>(null);
   const [dropoff, setDropoff] = useState<PointOfInterest | null>(null);
 
-  // Filter POIs that belong to areas with robots
-  const filteredPois = pointsOfInterest.filter((poi) =>
-    robots.some((robot) => robot.areaId === poi.areaId)
-  );
+  // Filter POIs that belong to selectedArea
+  const filteredPois = pointsOfInterest.filter((poi: PointOfInterest) => poi.areaId === selectedAreaId);
 
   const handleCreate = () => {
     if (pickup && dropoff) {
