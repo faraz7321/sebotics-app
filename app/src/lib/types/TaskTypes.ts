@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import type { Robot } from "./RobotTypes";
 
 export const ActType = {
   TaskStarted: 1000,
@@ -78,6 +79,7 @@ export type Task = {
   sourceType: string;
   busiType: string;
   isExcute: boolean;
+  isCancel?: boolean;
 };
 
 export const TaskType = {
@@ -158,6 +160,14 @@ export type TaskPoint = {
   stepActs?: JsonObject[];
 };
 
+export type TaskOptions = {
+  robot?: Robot;
+  speed?: number;
+  returnType: 'none' | 'current' | 'docking';
+  priority?: boolean;
+  pauseTime?: number;
+};
+
 export interface CreateTaskRequest {
   name: string;
   robotId?: string;
@@ -172,11 +182,12 @@ export interface CreateTaskRequest {
   ignorePublicSite?: boolean;
   speed?: number;
   detourRadius?: number;
-  curPt?: TaskPoint[];
+  curPt?: TaskPoint;
   taskPts: TaskPoint[];
-  backPt?: TaskPoint[];
+  backPt?: TaskPoint;
   returnDest?: number;
   returnTime?: number;
+  ext?: Record<string, string>;
 };
 
 export interface TaskState {

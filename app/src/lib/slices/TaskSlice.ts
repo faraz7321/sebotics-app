@@ -44,6 +44,7 @@ export const createTask = createAsyncThunk(
     try {
       const response = await api.post(API_ENDPOINTS.TASK.CREATE, task);
 
+      response.data.data = { ...response.data.data, robotId: task.robotId, businessId: task.businessId };
       return response.data;
     } catch (err: unknown) {
       return thunkAPI.rejectWithValue(getErrorMessage(err, 'Failed to create task'));
@@ -57,6 +58,7 @@ export const createTaskv3 = createAsyncThunk(
     try {
       const response = await api.post(API_ENDPOINTS.TASK.CREATE_V3, task);
 
+      response.data.data = { ...response.data.data, robotId: task.robotId, businessId: task.businessId };
       return response.data;
     } catch (err: unknown) {
       return thunkAPI.rejectWithValue(getErrorMessage(err, 'Failed to create task'));
@@ -166,9 +168,7 @@ const TaskSlice = createSlice({
         state.loading = false;
         state.error = null;
 
-        console.log("Task created successfully:", action.payload.data);
-
-        // state.tasks.push(action.payload.data);
+        state.tasks.push(action.payload.data);
       })
       .addCase(createTask.rejected, (state, action) => {
         state.loading = false;
@@ -182,7 +182,7 @@ const TaskSlice = createSlice({
         state.loading = false;
         state.error = null;
 
-        console.log("Task created successfully (V3):", action.payload.data);
+        state.tasks.push(action.payload.data);
       })
       .addCase(createTaskv3.rejected, (state, action) => {
         state.loading = false;
@@ -192,11 +192,9 @@ const TaskSlice = createSlice({
       .addCase(executeTask.pending, (state) => {
         state.loading = true;
       })
-      .addCase(executeTask.fulfilled, (state, action) => {
+      .addCase(executeTask.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
-
-        console.log("Task executed successfully:", action.payload.message);
       })
       .addCase(executeTask.rejected, (state, action) => {
         state.loading = false;
@@ -209,10 +207,8 @@ const TaskSlice = createSlice({
       .addCase(cancelTask.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-
-        console.log("Task cancelled successfully:", action.payload.message);
-        // const cancelledTaskId = action.payload.data.taskId;
-        // state.tasks = state.tasks.filter(task => task.taskId !== cancelledTaskId);
+        const cancelledTaskId = action.payload.data.taskId;
+        state.tasks = state.tasks.filter(task => task.taskId !== cancelledTaskId);
       })
       .addCase(cancelTask.rejected, (state, action) => {
         state.loading = false;

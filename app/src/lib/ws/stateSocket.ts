@@ -49,6 +49,20 @@ export class StateSocket {
     this.socket.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data);
+
+        // Auto re-subscribe if subscription closed (e.g. expired)
+        if (
+          data &&
+          data.event === "subscribe.closed" &&
+          this.subscriptions.has(data.robotId)
+        ) {
+          console.warn(`[StateSocket] Subscription closed for ${data.robotId} (${data.reason || "no reason"}), re-subscribing...`);
+          this.send({
+            action: this.subscribeAction,
+            robotId: data.robotId,
+          });
+        }
+
         this.onMessage(data);
       } catch {
         console.error("Invalid JSON:", e.data);

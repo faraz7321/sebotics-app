@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "./store";
 import { refreshToken } from "./lib/slices/AuthSlice";
 import { listBusinesses } from "./lib/slices/BusinessSlice";
 import { useRobotSockets } from "./lib/hooks/useRobotSockets";
+import { Toaster } from "sonner";
 
 export default function RootLayout() {
   const dispatch = useAppDispatch();
@@ -56,6 +57,9 @@ export default function RootLayout() {
       <main className="flex-1 overflow-hidden">
         <Outlet />
       </main>
+
+      <Toaster richColors position="top-right" />
     </div>
   );
 }
+

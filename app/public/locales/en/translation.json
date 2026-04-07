@@ -187,8 +187,12 @@
       "unnamed": "Unnamed",
       "noDestinations": "No destinations available",
       "targetLocation": "Target Location",
+      "destination": "Destination",
       "successCall": "Robot called successfully",
       "successStop": "Emergency stop signal sent"
+    },
+    "fields": {
+      "robot": "Robot"
     }
   },
   "tasks": {
@@ -260,6 +264,27 @@
       "yes": "Yes",
       "no": "No",
       "close": "Close"
+    },
+    "fields": {
+      "speed": "Speed",
+      "return": "Return Behavior"
+    },
+    "return": {
+      "none": "No return",
+      "current": "Current position",
+      "docking": "Docking point"
+    },
+    "notifications": {
+      "created": "Task created successfully",
+      "multiPointCreated": "Multi-point task created successfully",
+      "roundTripCreated": "Round trip task created successfully",
+      "dropOffCreated": "Drop off task created successfully",
+      "dockingCreated": "Return to dock task created successfully",
+      "createFailed": "Failed to create task",
+      "executed": "Task executed successfully",
+      "executeFailed": "Failed to execute task",
+      "cancelled": "Task cancelled successfully",
+      "cancelFailed": "Failed to cancel task"
     }
   },
   "common": {
@@ -267,6 +292,8 @@
     "close": "Close",
     "cancel": "Cancel",
     "save": "Save",
+    "automatic": "Automatic",
+    "default": "Default",
     "none": "None",
     "unknown": "Unknown",
     "active": "Active",
@@ -284,7 +311,16 @@
   },
   "dashboard": {
     "callRobot": "Call Robot",
-    "stop": "Stop"
+    "stop": "Stop",
+    "dropOff": "Drop Off",
+    "dropOffTask": "New Drop Off Task",
+    "dropOffDescription": "Select both pick-up and drop-off points",
+    "multiPoint": "Multi-point Delivery",
+    "multiPointDescription": "Select multiple points for sequential delivery",
+    "liftRobotNotice": "Only works with lift robots",
+    "pointsMustDiffer": "Points must be different",
+    "startTask": "Start Drop Off Task",
+    "regularDelivery": "Regular Delivery"
   },
   "businessPanel": {
     "selectPlaceholder": "Select a business to view details",

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   AlertOctagon,
   Zap,
@@ -7,43 +8,62 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { listBusinesses } from "@/lib/slices/BusinessSlice";
-import { useAppDispatch, useAppSelector } from "@/store";
-import { useEffect, useState } from "react";
+import { getBaseMap, listPointsOfInterest, listAreas } from "@/lib/slices/mapSlice";
+import { useAppDispatch, useAppSelector, type RootState } from "@/store";
 import { fetchUser, listUsers } from "@/lib/slices/UserSlice";
 
-import { CallRobotSheet } from "@/components/robot/CallRobotSheet";
-import { EmergencyStopSheet } from "@/components/robot/EmergencyStopSheet";
-import { DropOffSheet } from "@/components/robot/DropOffSheet";
-import ViewRobotSheet from "@/components/robot/ViewRobotSheet";
-
-import { listRobots } from "@/lib/slices/RobotSlice";
-import { ROLES } from "@/config/constants";
-import { listTasks } from "@/lib/slices/TaskSlice";
-import { listPointsOfInterest } from "@/lib/slices/mapSlice";
 import { RobotList } from "@/components/robot/RobotList";
 import { TaskList } from "@/components/task/TaskList";
-import ViewTaskSheet from "@/components/task/ViewTaskSheet";
-import type { Task } from "@/lib/types/TaskTypes";
+
+import { CallRobotModal } from "@/components/robot/CallRobotModal";
+import { EmergencyStopSheet } from "@/components/robot/EmergencyStopSheet";
+import { DropOffSheet } from "@/components/robot/DropOffSheet";
+import { ViewRobotSheet } from "@/components/robot/ViewRobotSheet";
+import { ViewTaskSheet } from "@/components/task/ViewTaskSheet";
+import { IndoorMap } from "@/components/map/IndoorMap";
+
+import { listRobots } from "@/lib/slices/RobotSlice";
+import { listTasks } from "@/lib/slices/TaskSlice";
+
+import { ROLES } from "@/config/constants";
+import { API_ENDPOINTS } from "@/config/routes";
+import type { Task, TaskOptions, TaskPoint } from "@/lib/types/TaskTypes";
+import { PoiType, type PointOfInterest } from "@/lib/types/MapTypes";
+import type { Robot } from "@/lib/types/RobotTypes";
+import { getCestTimestamp } from "@/lib/utils";
+import api from "@/lib/api/axios";
 
 import {
-  handleCreateTask,
-  handleCreateMultiPointTask,
+  handleCreateDeliveryTask,
+  handleCreateDropOffTask,
+  handleCreateDockingTask,
   handleCancelTask,
 } from "@/lib/tasks/taskHandlers";
-import { PoiType } from "@/lib/types/MapTypes";
-import type { Robot } from "@/lib/types/RobotTypes";
+
 import { useTranslation } from "react-i18next";
-import { getCestTimestamp } from "@/lib/utils";
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
-  const robots = useAppSelector((state) => state.robot.robots);
-  const selectedBusinessId = useAppSelector((state) => state.business.selectedBusinessId);
-  const tasks = useAppSelector((state) => state.task.tasks);
-  const pois = useAppSelector((state) => state.map.pointsOfInterest);
-  const selectedBusinessRobots = robots.filter((r) => r.businessId === selectedBusinessId);
+  const robots = useAppSelector((state: RootState) => state.robot.robots);
+  const selectedBusinessId = useAppSelector((state: RootState) => state.business.selectedBusinessId);
+  const tasks = useAppSelector((state: RootState) => state.task.tasks);
+  const { selectedAreaId, pointsOfInterest } = useAppSelector((state: RootState) => state.map);
+
+  const selectedAreaRobots = robots.filter((r: Robot) => r.businessId === selectedBusinessId && r.areaId === selectedAreaId);
+
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get(API_ENDPOINTS.CONFIG.MAPBOX_TOKEN)
+      .then(res => {
+        setMapboxToken(res.data.token);
+      })
+      .catch(err => {
+        console.error('Failed to fetch mapbox token:', err);
+      });
+  }, []);
 
   useEffect(() => {
     const getBusinesses = async () => {
@@ -85,9 +105,24 @@ export default function Dashboard() {
       await dispatch(listPointsOfInterest(selectedBusinessId));
     }
 
+    const fetchAreas = async () => {
+      await dispatch(listAreas(selectedBusinessId));
+    }
+
     fetchTasks();
     fetchPointsOfInterest();
+    fetchAreas();
   }, [selectedBusinessId, dispatch]);
+
+  useEffect(() => {
+    if (!selectedAreaId) return;
+
+    const fetchBaseMap = async () => {
+      await dispatch(getBaseMap(selectedAreaId));
+    }
+
+    fetchBaseMap();
+  }, [selectedAreaId, dispatch]);
 
   const [callOpen, setCallOpen] = useState(false);
   const [dropOffOpen, setDropOffOpen] = useState(false);
@@ -95,74 +130,62 @@ export default function Dashboard() {
   const [viewOpen, setViewOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
 
-  const [priorityCall, setPriorityCall] = useState(false);
-  const [selectedRobotForCall, setSelectedRobotForCall] = useState<Robot | null>(null);
   const [selectedRobotForView, setSelectedRobotForView] = useState<Robot | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedPoiForCall, setSelectedPoiForCall] = useState<PointOfInterest | null>(null);
+  const [activeTab, setActiveTab] = useState<'robots' | 'tasks'>('robots');
 
-  const handleCallRobot = (robot: Robot, isPriority: boolean) => {
-    if (isPriority) {
-      setPriorityCall(true);
-    }
-    setSelectedRobotForCall(robot);
-    setCallOpen(true);
+  const getChargingDock = (areaId?: string) => {
+    if (!areaId) return null;
+    const dock = pointsOfInterest.find((p: PointOfInterest) => p.areaId === areaId && p.type === PoiType.ChargingPile);
+    return dock || null;
   };
 
-  const getPoisByRobotArea = (robot: Robot, poiType: PoiType) => {
-    return pois.filter((poi) => {
-      if (robot.areaId !== poi.areaId) {
-        return false;
+  const handleCallRobot = (poi: PointOfInterest, options?: TaskOptions) => {
+    let backPt: TaskPoint | undefined;
+    let returnDest = 2; // no return by default
+    const robot = options?.robot;
+
+    if (options?.returnType === 'current' && robot) {
+      returnDest = 0;
+      backPt = {
+        areaId: robot.areaId,
+        x: robot.x,
+        y: robot.y,
+      };
+    } else if (options?.returnType === 'docking') {
+      returnDest = 0;
+      const dock = getChargingDock(robot?.areaId || poi.areaId);
+      if (dock) {
+        backPt = {
+          areaId: dock.areaId,
+          poiId: dock.id,
+          x: dock.coordinate[0],
+          y: dock.coordinate[1],
+        };
       }
-      if (poiType !== undefined && poi.type !== poiType) {
-        return false;
-      }
-      return true;
-    });
-  };
-
-  const getChargingDock = (robot: Robot) => {
-    if (!robot) {
-      console.warn("Robot not found");
-      return null;
     }
 
-    const dock = getPoisByRobotArea(robot, PoiType.ChargingPile)[0];
-    console.log(dock);
-
-    if (!dock) {
-      console.warn("No charging dock found in the same area as the robot");
-      return null;
-    }
-    return dock;
-  }
-
-  const handleReturnToDock = (robot: Robot) => {
-    const chargingDock = getChargingDock(robot);
-    if (!chargingDock) {
-      console.error("No charging dock found for the robot's area");
-      return;
-    }
-
-    handleCreateTask({
+    handleCreateDeliveryTask({
       dispatch: dispatch,
       businessId: selectedBusinessId!,
-      poi: chargingDock,
-      robotId: robot.robotId,
+      poi: poi,
+      robotId: robot?.robotId,
+      speed: options?.speed,
+      returnDest: returnDest,
+      backPt: backPt,
+      pauseTime: options?.pauseTime !== undefined ? options.pauseTime * 60 : undefined,
       execute: true,
-      priority: true, // immediately send to charging dock
-      isV3: false
+      priority: options?.priority ?? false,
+      isV3: true
     });
   };
 
   const handleEmergencyStop = (robotId: string) => {
-    const activeTasks = tasks.filter((t) => t.robotId === robotId && t.isExcute);
-
-    console.log("Emergency stop for robot:", robotId);
-    console.log("Active tasks found:", activeTasks.length);
+    const activeTasks = tasks.filter((t: Task) => t.robotId === robotId && !t.isCancel);
 
     if (activeTasks.length > 0) {
       activeTasks.forEach((task) => {
-        console.log("Stopping task:", task.taskId);
         handleCancelTask({ dispatch: dispatch, businessId: selectedBusinessId!, taskId: task.taskId });
       });
     } else {
@@ -170,54 +193,103 @@ export default function Dashboard() {
     }
   };
 
+  const handleReturnToDock = (robot: Robot) => {
+    const chargingDock = getChargingDock(robot.areaId);
+    if (!chargingDock) {
+      console.error("No charging dock found for the robot's area");
+      return;
+    }
+
+    handleEmergencyStop(robot.robotId); // cancel all ongoing tasks
+
+    handleCreateDockingTask({
+      dispatch: dispatch,
+      businessId: selectedBusinessId!,
+      poi: chargingDock,
+      robotId: robot.robotId,
+      execute: true,
+      priority: true, // immediately send to charging dock
+      isV3: true
+    });
+  };
+
   return (
     <div className="h-full overflow-y-auto bg-slate-50 font-sans text-slate-900">
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 p-4 md:p-6 pb-32 md:pb-28 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+      <div className="flex-1 p-2 md:p-4 pb-32 md:pb-28 w-full grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
 
-        {/* LEFT PANEL - ROBOTS */}
-        <div className="lg:col-span-4">
-          <RobotList
-            robots={selectedBusinessRobots}
-            selectedRobotId={selectedRobotForView?.robotId}
-            onViewRobot={(robot) => {
-              setSelectedRobotForView(robot);
-              setViewOpen(true);
+        {/* LEFT PANEL - MAP CONTAINER */}
+        <div className="lg:col-span-8 flex">
+          <IndoorMap
+            mapboxToken={mapboxToken}
+            onRobotSend={(poi) => {
+              setSelectedPoiForCall(poi);
+              setCallOpen(true);
             }}
           />
         </div>
 
+        {/* RIGHT PANEL - TABS (ROBOTS & TASKS) */}
+        <div className="lg:col-span-4 flex flex-col gap-3">
+          <div className="flex bg-slate-200/60 p-1 rounded-xl shrink-0">
+            <button
+              onClick={() => setActiveTab('robots')}
+              className={`flex-1 cursor-pointer py-1.5 md:py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'robots' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              {t('dashboard.robots', 'Robots')}
+            </button>
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className={`flex-1 cursor-pointer py-1.5 md:py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === 'tasks' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              {t('dashboard.tasks', 'Tasks')}
+            </button>
+          </div>
 
-        {/* RIGHT PANEL - TASKS */}
-        <div className="lg:col-span-8">
-          <TaskList
-            tasks={tasks}
-            selectedBusinessId={selectedBusinessId}
-            selectedTaskId={selectedTask?.taskId}
-            onViewTask={(task) => {
-              setSelectedTask(task);
-              setTaskOpen(true);
-            }}
-          />
+          {activeTab === 'robots' ? (
+            <div className="flex-1">
+              <RobotList
+                robots={selectedAreaRobots}
+                selectedRobotId={selectedRobotForView?.robotId}
+                onViewRobot={(robot: Robot) => {
+                  setSelectedRobotForView(robot);
+                  setViewOpen(true);
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex-1">
+              <TaskList
+                tasks={tasks}
+                selectedBusinessId={selectedBusinessId}
+                selectedTaskId={selectedTask?.taskId}
+                onViewTask={(task: Task) => {
+                  setSelectedTask(task);
+                  setTaskOpen(true);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
 
       {/* BOTTOM ACTION BAR */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-4">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white p-2">
         <div className="border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <Button
               disabled={!selectedBusinessId}
               onClick={() => {
-                setSelectedRobotForCall(null);
+                setSelectedPoiForCall(null);
                 setCallOpen(true);
               }}
-              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-blue-300 disabled:hover:bg-blue-300 disabled:cursor-not-allowed transition-all"
+              className="h-12 md:h-14 rounded-xl bg-green-700 hover:bg-green-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:hover:bg-slate-200 disabled:cursor-not-allowed transition-all"
             >
               <Zap className="h-5 w-5" />
-              {t('dashboard.callRobot')}
+              <span className="hidden sm:inline">{t('dashboard.callRobot')}</span>
+              <span className="sm:hidden text-xs">Call</span>
             </Button>
 
             <Button
@@ -225,52 +297,44 @@ export default function Dashboard() {
               onClick={() => {
                 setDropOffOpen(true);
               }}
-              className="h-12 md:h-14 rounded-xl bg-orange-700 hover:bg-orange-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-green-300 disabled:hover:bg-green-300 disabled:cursor-not-allowed transition-all"
+              className="h-12 md:h-14 rounded-xl bg-orange-700 hover:bg-orange-600 text-white font-bold gap-2 hover:cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:hover:bg-slate-200 disabled:cursor-not-allowed transition-all"
             >
               <Package className="h-5 w-5" />
-              {t('dashboard.dropOff', 'Drop Off')}
+              <span className="hidden sm:inline">{t('dashboard.dropOff', 'Drop Off')}</span>
+              <span className="sm:hidden text-xs">Drop Off</span>
             </Button>
 
             <Button
               variant="outline"
               disabled={!selectedBusinessId}
               onClick={() => setStopOpen(true)}
-              className="h-12 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-bold gap-2 hover:cursor-pointer disabled:border-red-300 disabled:text-red-300 disabled:hover:bg-white disabled:cursor-not-allowed transition-all"
+              className="h-12 md:h-14 rounded-xl border-red-500 bg-white text-red-600 hover:bg-red-100 font-bold gap-2 hover:cursor-pointer disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-white disabled:cursor-not-allowed transition-all"
             >
               <AlertOctagon className="h-5 w-5 text-red-500" />
-              {t('dashboard.stop')}
+              <span className="hidden sm:inline">{t('dashboard.stop')}</span>
+              <span className="sm:hidden text-xs">Stop</span>
             </Button>
           </div>
         </div>
       </div>
 
       { /* SHEETS / MODALS */}
-      <CallRobotSheet
+      <CallRobotModal
         open={callOpen}
         onOpenChange={setCallOpen}
-        selectedRobot={selectedRobotForCall}
-        onCall={(poi) => {
-          handleCreateTask({
-            dispatch: dispatch,
-            businessId: selectedBusinessId!,
-            poi: poi,
-            robotId: selectedRobotForCall?.robotId || "",
-            execute: true,
-            priority: priorityCall,
-            isV3: true
-          });
-          setPriorityCall(false);
-        }}
+        onCall={handleCallRobot}
+        initialPoi={selectedPoiForCall}
       />
 
       <DropOffSheet
         open={dropOffOpen}
         onOpenChange={setDropOffOpen}
         onDropOff={(pickup, dropoff) => {
-          handleCreateMultiPointTask({
+          handleCreateDropOffTask({
             dispatch: dispatch,
             businessId: selectedBusinessId!,
-            pois: [pickup, dropoff],
+            pickup: pickup,
+            dropoff: dropoff,
             execute: true,
             priority: false,
             isV3: true
@@ -281,7 +345,7 @@ export default function Dashboard() {
       <EmergencyStopSheet
         open={stopOpen}
         onOpenChange={setStopOpen}
-        robots={selectedBusinessRobots}
+        robots={selectedAreaRobots}
         onStop={(robotId) => handleEmergencyStop(robotId)}
       />
 
@@ -289,7 +353,6 @@ export default function Dashboard() {
         open={viewOpen}
         onOpenChange={setViewOpen}
         robot={selectedRobotForView}
-        onCall={(robot, isPriority) => handleCallRobot(robot, isPriority)}
         onReturnToDock={handleReturnToDock}
       />
 
@@ -297,11 +360,8 @@ export default function Dashboard() {
         open={taskOpen}
         onOpenChange={setTaskOpen}
         task={selectedTask}
-        //onExecuteTask={(taskId) =>
-        // handleExecuteTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
-        //}
         onCancelTask={(taskId) =>
-          handleCancelTask({ dispatch, businessId: selectedBusinessId!, taskId: taskId })
+          handleCancelTask({ dispatch: dispatch, businessId: selectedBusinessId!, taskId: taskId })
         }
       />
 

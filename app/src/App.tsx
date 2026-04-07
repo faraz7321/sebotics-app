@@ -15,7 +15,6 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import DashBoard from './pages/dashboard/Dashboard';
 import Businesses from './pages/businesses/Businesses';
 import Profile from './pages/profile/Profile';
-import Maps from './pages/maps/Maps';
 
 import { useAppSelector } from './store';
 
@@ -43,8 +42,6 @@ function App() {
               <Route path={ROUTES.BUSINESSES.PAGE} element={<Businesses />} />
             </Route>
             <Route path={ROUTES.USER.PROFILE} element={<Profile />} />
-            <Route path={ROUTES.USER.CHANGE_PASSWORD} element={<Profile />} />
-            <Route path={ROUTES.MAPS.PAGE} element={<Maps />} />
             <Route path="*" element={<Navigate to={ROUTES.DASHBOARD.HOME} replace />} />
           </Route>
         </Route>

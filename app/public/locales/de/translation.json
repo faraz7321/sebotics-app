@@ -260,6 +260,18 @@
       "yes": "Ja",
       "no": "Nein",
       "close": "Schließen"
+    },
+    "notifications": {
+      "created": "Aufgabe erfolgreich erstellt",
+      "multiPointCreated": "Mehrpunkt-Aufgabe erfolgreich erstellt",
+      "roundTripCreated": "Rundreise-Aufgabe erfolgreich erstellt",
+      "dropOffCreated": "Ablage-Aufgabe erfolgreich erstellt",
+      "dockingCreated": "Rückkehr zur Station erfolgreich erstellt",
+      "createFailed": "Aufgabe konnte nicht erstellt werden",
+      "executed": "Aufgabe erfolgreich ausgeführt",
+      "executeFailed": "Aufgabe konnte nicht ausgeführt werden",
+      "cancelled": "Aufgabe erfolgreich abgebrochen",
+      "cancelFailed": "Aufgabe konnte nicht abgebrochen werden"
     }
   },
   "common": {
@@ -284,7 +296,16 @@
   },
   "dashboard": {
     "callRobot": "Roboter rufen",
-    "stop": "Stopp"
+    "stop": "Stopp",
+    "dropOff": "Abladen",
+    "dropOffTask": "Neue Ablageaufgabe",
+    "dropOffDescription": "Wählen Sie Abhol- und Abgabepunkte aus",
+    "multiPoint": "Mehrpunkt-Lieferung",
+    "multiPointDescription": "Wählen Sie mehrere Punkte für die sequentielle Lieferung aus",
+    "liftRobotNotice": "Funktioniert nur mit Lift-Robotern",
+    "pointsMustDiffer": "Punkte müssen unterschiedlich sein",
+    "startTask": "Ablageaufgabe starten",
+    "regularDelivery": "Reguläre Lieferung"
   },
   "businessPanel": {
     "selectPlaceholder": "Unternehmen zur Detailansicht wählen",
