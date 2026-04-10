@@ -107,7 +107,6 @@ export class AutoxingWsBridgeService implements OnModuleInit, OnModuleDestroy {
   ) => {
     const url = new URL(request.url ?? '/', 'http://localhost');
     if (url.pathname !== this.wsPath) {
-      socket.destroy();
       return;
     }
 

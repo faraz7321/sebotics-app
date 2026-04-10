@@ -60,6 +60,15 @@ async function bootstrap() {
         },
         'JWT-auth',
       )
+      .addApiKey(
+        {
+          type: 'apiKey',
+          name: 'Authorization',
+          in: 'header',
+          description: 'Enter APPCODE value (sent as "APPCODE code")',
+        },
+        'APPCODE-auth',
+      )
       .build();
 
     const documentFactory = () => SwaggerModule.createDocument(app, config);

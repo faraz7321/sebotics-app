@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { AutoxingModule } from './autoxing/autoxing.module';
+import { ElevatorModule } from './elevator/elevator.module';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -52,6 +53,7 @@ function readPositiveInt(configService: ConfigService, key: string, fallback: nu
     }),
     PrismaModule,
     AutoxingModule,
+    ElevatorModule,
     AuthModule,
     HealthModule,
     UsersModule,
