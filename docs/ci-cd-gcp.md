@@ -15,7 +15,7 @@ This repository uses:
   2. Read server URL
   3. Deploy app via `cloudbuild.app.yaml` with runtime `VITE_PUBLIC_API_URL`
   4. Read app URL
-  5. Update server `CORS_ORIGIN` to app URL (or override)
+  5. Update server `CORS_ORIGIN` and `ELEVATOR_WS_BASE_URL` to correct URLs
 
 ## Required Google Secret Manager secrets
 
@@ -57,6 +57,15 @@ Set these in `Settings > Secrets and variables > Actions > Variables`.
 - `GCP_API_BASE_URL` (default: `https://ax-server.sebotics.com/api`)
 - `GCP_APP_PUBLIC_URL` (default: `https://ax-app.sebotics.com`)
 - `GCP_SERVER_CORS_ORIGIN` (default: `https://ax-app.sebotics.com`)
+
+## One-time IAM setup checklist
+
+## Elevator system
+
+The server's `ELEVATOR_WS_BASE_URL` is set automatically during CD to the
+Cloud Run server URL (read after deploy). Robots receive WebSocket URLs
+derived from this value. No extra secret is needed; `AUTOXING_APP_CODE`
+(already in Secret Manager) is reused as the elevator APPCODE.
 
 ## One-time IAM setup checklist
 

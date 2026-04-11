@@ -234,16 +234,17 @@ jobs:
             --config cloudbuild.app.yaml \
             --substitutions "$(IFS=,; echo "${substitutions[*]}")"
 
-      - name: Update server CORS origin
+      - name: Update server runtime env vars
         run: |
           set -euo pipefail
 
           CORS_ORIGIN="${GCP_APP_PUBLIC_URL}"
+          ELEVATOR_WS_BASE_URL="${{ steps.server_url.outputs.url }}"
 
           gcloud run services update "${GCP_SERVER_SERVICE}" \
             --project "${GCP_PROJECT_ID}" \
             --region "${GCP_REGION}" \
-            --update-env-vars "CORS_ORIGIN=${CORS_ORIGIN}"
+            --update-env-vars "CORS_ORIGIN=${CORS_ORIGIN},ELEVATOR_WS_BASE_URL=${ELEVATOR_WS_BASE_URL}"
 
       - name: Deployment summary
         run: |
